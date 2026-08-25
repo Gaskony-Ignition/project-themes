@@ -82,7 +82,7 @@ Found in the course of adapting it — not in the author's 3-item list:
   while doing nothing) and against IA's own 8.1/8.3 scripting-function
   reference (width/height are keys *inside* the `position` dict, typed
   `Dictionary[String, Integer]` — pixels only, no CSS `calc()`/`min()`/`vw`
-  units). Corrected to `position={'width': 560, 'height': 480}`, still
+  units). Corrected to `position={'width': 560, 'height': 500}`, still
   entirely at the call site and never `props.defaultSize`.
   `viewportBound=True` (already in the call) turns out to already do the
   "never bigger than a short viewport" job the `min()`/`vw` forms were
@@ -173,7 +173,7 @@ system.perspective.openPopup(
     resizable=False,
     overlayDismiss=True,
     viewportBound=True,
-    position={'width': 560, 'height': 480})
+    position={'width': 560, 'height': 500})
 ```
 
 Nothing else is required — the popup writes `session.props.theme` on its own,

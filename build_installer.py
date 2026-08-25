@@ -389,7 +389,7 @@ def build_view_json(themes, version):
         "\t\tresizable=False,\n"
         "\t\toverlayDismiss=True,\n"
         "\t\tviewportBound=True,\n"
-        "\t\tposition={'width': 560, 'height': 480})"
+        "\t\tposition={'width': 560, 'height': 500})"
     )
 
     root = {

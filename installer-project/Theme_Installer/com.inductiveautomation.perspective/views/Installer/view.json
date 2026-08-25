@@ -94,7 +94,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Installs Gaskony's 9 curated Perspective gateway themes as config resources. Safe to re-run; safe to delete this project afterwards. v1.1.0",
+              "text": "Installs Gaskony's 9 curated Perspective gateway themes as config resources. Safe to re-run; safe to delete this project afterwards. v1.1.1",
               "style": {
                 "fontSize": "13px",
                 "color": "var(--label--disabled)"
@@ -196,7 +196,7 @@
               "component": {
                 "onActionPerformed": {
                   "config": {
-                    "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 480})"
+                    "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 500})"
                   },
                   "scope": "G",
                   "type": "script"

@@ -498,7 +498,7 @@ To use it in another project:
        resizable=False,
        overlayDismiss=True,
        viewportBound=True,
-       position={'width': 560, 'height': 480})
+       position={'width': 560, 'height': 500})
    ```
    (`width`/`height` are NOT top-level `openPopup` kwargs on this Ignition
    version — confirmed live and against IA's own scripting reference; they

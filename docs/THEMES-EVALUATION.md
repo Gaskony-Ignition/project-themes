@@ -154,8 +154,10 @@ that found them (some found by the Work-Dockers consumer session, 25/08/2026):
   resizable, draggable, overlayDismiss, viewportBound, showCloseIcon, title,
   type, params, id, and nothing else. Prefer `position` when size varies per
   call, `props.defaultSize` for a constant.
-- **The popup shell adds a 32px title bar ON TOP of the declared height** — ask
-  for 460, measure 492. Fit budgets are `declared + 32`, and nothing says so.
+- **The popup shell adds a 32px title bar ON TOP of the declared height — for
+  `defaultSize`-sized popups.** A `position`-sized popup measures exactly the
+  height you passed (500 asked, 500 rendered — verified 26/08/2026). Ask 460
+  via defaultSize, measure 492. Fit budgets are `declared + 32`, and nothing says so.
   The tell that catches this whole class of trap: a confirming measurement that
   disagrees with what you asked for IS the finding, not a rounding error.
 - **`viewportBound=True` does not resize a popup to fit** — at a 420px-high

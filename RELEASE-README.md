@@ -32,7 +32,7 @@ If you can import a Perspective project but would rather not touch the gateway's
 
 **Uninstalling**: open the same page and click **Remove all themes** — goes through `system.config.delete()`, which removes the resource AND its files in one call, no scan needed.
 
-**Trying them on**: once installed, click **Theme switcher** on the same page to open a popup and click through every custom theme (plus the 6 IA built-ins) live in your own session — no reload, no separate picker to build. It's a copy-me artefact (`views/SelectorPopup`) — copy the directory into any other project and open it with `system.perspective.openPopup('theme-selector', 'SelectorPopup', title='Theme switcher', modal=True, draggable=True, resizable=False, overlayDismiss=True, viewportBound=True, position={'width': 560, 'height': 480})` to get the same picker there.
+**Trying them on**: once installed, click **Theme switcher** on the same page to open a popup and click through every custom theme (plus the 6 IA built-ins) live in your own session — no reload, no separate picker to build. It's a copy-me artefact (`views/SelectorPopup`) — copy the directory into any other project and open it with `system.perspective.openPopup('theme-selector', 'SelectorPopup', title='Theme switcher', modal=True, draggable=True, resizable=False, overlayDismiss=True, viewportBound=True, position={'width': 560, 'height': 500})` to get the same picker there.
 
 Prefer the `install.sh` route below if you want to inspect or script the install without a Designer/Gateway UI round-trip, or if you're deploying to several gateways from one place.
 
