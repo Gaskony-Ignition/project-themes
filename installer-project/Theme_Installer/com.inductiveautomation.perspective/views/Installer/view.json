@@ -1,0 +1,263 @@
+{
+  "custom": {
+    "tick": 0,
+    "themes": []
+  },
+  "params": {},
+  "props": {
+    "defaultSize": {
+      "width": 900,
+      "height": 720
+    }
+  },
+  "propConfig": {
+    "custom.themes": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.tick"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\trows = themepack.status()\n\tfor row in rows:\n\t\trow['mode'] = 'Dark' if row['dark'] else 'Light'\n\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n\treturn rows"
+          }
+        ]
+      }
+    }
+  },
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "position": {
+      "grow": 0,
+      "shrink": 0,
+      "basis": "auto"
+    },
+    "props": {
+      "direction": "column",
+      "style": {
+        "height": "100%",
+        "overflow": "auto",
+        "padding": "24px",
+        "gap": "16px",
+        "backgroundColor": "var(--containerRoot)"
+      }
+    },
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "header"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "column",
+          "style": {
+            "gap": "4px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "heading"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Theme Installer",
+              "style": {
+                "fontSize": "26px",
+                "fontWeight": 600,
+                "color": "var(--label)"
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "subtitle"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Installs Gaskony's 9 curated Perspective gateway themes as config resources. Safe to re-run; safe to delete this project afterwards. v1.1.0",
+              "style": {
+                "fontSize": "13px",
+                "color": "var(--label--disabled)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "actions"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {
+            "gap": "12px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "install_all_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Install all themes"
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\tthemepack.install_all()\n\tself.view.custom.tick += 1"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "remove_all_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Remove all themes",
+              "style": {
+                "backgroundColor": "var(--containerNested)",
+                "color": "var(--label)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\tthemepack.uninstall_all()\n\tself.view.custom.tick += 1"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "theme_switcher_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Theme switcher",
+              "style": {
+                "backgroundColor": "transparent",
+                "border": "1px solid var(--border)",
+                "color": "var(--label)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 480})"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.table",
+        "meta": {
+          "name": "themes_table"
+        },
+        "position": {
+          "grow": 1,
+          "shrink": 1,
+          "basis": "0px"
+        },
+        "props": {
+          "data": [],
+          "pager": {
+            "top": false,
+            "bottom": false
+          },
+          "columns": [
+            {
+              "field": "label",
+              "header": {
+                "title": "Theme"
+              }
+            },
+            {
+              "field": "mode",
+              "header": {
+                "title": "Mode"
+              },
+              "width": 100,
+              "strictWidth": true
+            },
+            {
+              "field": "state",
+              "header": {
+                "title": "Status"
+              },
+              "width": 160,
+              "strictWidth": true
+            }
+          ]
+        },
+        "propConfig": {
+          "props.data": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.themes"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

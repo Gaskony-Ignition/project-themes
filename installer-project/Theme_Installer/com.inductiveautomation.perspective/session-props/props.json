@@ -1,0 +1,9 @@
+{
+  "custom": {},
+  "props": {
+    "appBar": {
+      "togglePosition": "hidden"
+    }
+  },
+  "propConfig": {}
+}

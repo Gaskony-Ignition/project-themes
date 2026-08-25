@@ -1,0 +1,800 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {
+    "defaultSize": {
+      "width": 1280,
+      "height": 800
+    }
+  },
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "position": {
+      "grow": 0,
+      "shrink": 0,
+      "basis": "auto"
+    },
+    "props": {
+      "direction": "column",
+      "style": {
+        "height": "100%",
+        "overflow": "auto",
+        "padding": "24px",
+        "gap": "20px"
+      }
+    },
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "header"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "16px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "header_text"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "4px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "heading"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Themes Test",
+                  "style": {
+                    "fontSize": "26px"
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "subtitle"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Parent-free project, zero style classes -- restyled entirely by a gateway theme.",
+                  "style": {
+                    "fontSize": "14px"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.input.dropdown",
+            "meta": {
+              "name": "theme_selector"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "240px"
+            },
+            "props": {
+              "options": [
+                {
+                  "value": "glass-violet",
+                  "label": "Glass Violet"
+                },
+                {
+                  "value": "glass-green",
+                  "label": "Glass Green"
+                },
+                {
+                  "value": "leather-dark",
+                  "label": "Leather Dark"
+                },
+                {
+                  "value": "leather-light",
+                  "label": "Leather Light"
+                },
+                {
+                  "value": "finance-ledger",
+                  "label": "Finance Ledger"
+                },
+                {
+                  "value": "nord-dark",
+                  "label": "Nord Dark"
+                },
+                {
+                  "value": "nord-light",
+                  "label": "Nord Light"
+                },
+                {
+                  "value": "industrial-dark",
+                  "label": "Industrial Dark"
+                },
+                {
+                  "value": "industrial-light",
+                  "label": "Industrial Light"
+                }
+              ],
+              "placeholder": "Theme"
+            },
+            "propConfig": {
+              "props.value": {
+                "binding": {
+                  "type": "property",
+                  "config": {
+                    "path": "session.props.theme",
+                    "bidirectional": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "kpi_row"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "wrap": "wrap",
+          "style": {
+            "gap": "20px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "kpi_flow"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "calc((100% - 60px) / 4)"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "16px",
+                "gap": "6px",
+                "classes": "kpi-tile"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_flow_title"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Feed Flow"
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_flow_value"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "412.6 L/min",
+                  "style": {
+                    "fontSize": "28px"
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_flow_sub"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "FT-101",
+                  "style": {
+                    "fontSize": "12px"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "kpi_pressure"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "calc((100% - 60px) / 4)"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "16px",
+                "gap": "6px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_pressure_title"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Discharge Pressure"
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_pressure_value"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "3.8 bar",
+                  "style": {
+                    "fontSize": "28px"
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_pressure_sub"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "PT-204",
+                  "style": {
+                    "fontSize": "12px"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "kpi_level"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "calc((100% - 60px) / 4)"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "16px",
+                "gap": "6px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_level_title"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Clarifier Level"
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_level_value"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "71.2 %",
+                  "style": {
+                    "fontSize": "28px"
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_level_sub"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "LT-310",
+                  "style": {
+                    "fontSize": "12px"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "kpi_chlorine"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "calc((100% - 60px) / 4)"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "16px",
+                "gap": "6px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_chlorine_title"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Cl Residual"
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_chlorine_value"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "0.6 mg/L",
+                  "style": {
+                    "fontSize": "28px"
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "kpi_chlorine_sub"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "AT-405",
+                  "style": {
+                    "fontSize": "12px"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "controls_row"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "wrap": "wrap",
+          "style": {
+            "gap": "16px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "primary_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Acknowledge All"
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "secondary_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Refresh"
+            }
+          },
+          {
+            "type": "ia.input.text-field",
+            "meta": {
+              "name": "search_field"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "220px"
+            },
+            "props": {
+              "placeholder": "Search tags...",
+              "value": ""
+            }
+          },
+          {
+            "type": "ia.input.dropdown",
+            "meta": {
+              "name": "site_dropdown"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "180px"
+            },
+            "props": {
+              "value": "northfield",
+              "options": [
+                {
+                  "value": "pump-station-1",
+                  "label": "Pump Station 1"
+                },
+                {
+                  "value": "pump-station-2",
+                  "label": "Pump Station 2"
+                },
+                {
+                  "value": "treatment",
+                  "label": "Treatment Plant"
+                }
+              ]
+            }
+          },
+          {
+            "type": "ia.input.toggle-switch",
+            "meta": {
+              "name": "auto_refresh_toggle"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "value": true
+            }
+          },
+          {
+            "type": "ia.input.checkbox",
+            "meta": {
+              "name": "show_alarms_checkbox"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "selected": false,
+              "text": "Show alarms only"
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "table_section"
+        },
+        "position": {
+          "grow": 1,
+          "shrink": 1,
+          "basis": "0px"
+        },
+        "props": {
+          "direction": "column",
+          "style": {
+            "gap": "8px",
+            "minHeight": "0px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "table_title"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Live Tags"
+            }
+          },
+          {
+            "type": "ia.display.table",
+            "meta": {
+              "name": "tag_table"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "data": [
+                {
+                  "tag": "FT-101 Feed Flow",
+                  "value": 412.6,
+                  "unit": "L/min",
+                  "status": "Normal",
+                  "updated": "24/08/2026 09:12"
+                },
+                {
+                  "tag": "PT-204 Discharge Pressure",
+                  "value": 3.8,
+                  "unit": "bar",
+                  "status": "Normal",
+                  "updated": "24/08/2026 09:12"
+                },
+                {
+                  "tag": "LT-310 Clarifier Level",
+                  "value": 71.2,
+                  "unit": "%",
+                  "status": "Warning",
+                  "updated": "24/08/2026 09:11"
+                },
+                {
+                  "tag": "AT-405 Chlorine Residual",
+                  "value": 0.6,
+                  "unit": "mg/L",
+                  "status": "Normal",
+                  "updated": "24/08/2026 09:12"
+                },
+                {
+                  "tag": "MT-112 Blower Motor",
+                  "value": 62.4,
+                  "unit": "A",
+                  "status": "Alarm",
+                  "updated": "24/08/2026 09:10"
+                }
+              ],
+              "pager": {
+                "top": false,
+                "bottom": false
+              },
+              "columns": [
+                {
+                  "field": "tag",
+                  "header": {
+                    "title": "Tag"
+                  },
+                  "width": 220,
+                  "strictWidth": true
+                },
+                {
+                  "field": "value",
+                  "header": {
+                    "title": "Value"
+                  },
+                  "width": 100,
+                  "strictWidth": true
+                },
+                {
+                  "field": "unit",
+                  "header": {
+                    "title": "Unit"
+                  },
+                  "width": 80,
+                  "strictWidth": true
+                },
+                {
+                  "field": "status",
+                  "header": {
+                    "title": "Status"
+                  }
+                },
+                {
+                  "field": "updated",
+                  "header": {
+                    "title": "Updated"
+                  },
+                  "width": 160,
+                  "strictWidth": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "icons_row"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "12px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.icon",
+            "meta": {
+              "name": "icon_check"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "path": "material/check_circle",
+              "style": {
+                "width": "28px",
+                "height": "28px"
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "icon_check_label"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "System healthy",
+              "style": {
+                "classes": "pill-ok"
+              }
+            }
+          },
+          {
+            "type": "ia.display.icon",
+            "meta": {
+              "name": "icon_bell"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "path": "material/notifications",
+              "style": {
+                "width": "28px",
+                "height": "28px"
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "icon_bell_label"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "3 active alarms",
+              "style": {
+                "classes": "status/ok"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

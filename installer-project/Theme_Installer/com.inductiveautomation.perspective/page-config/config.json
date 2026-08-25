@@ -1,0 +1,8 @@
+{
+  "pages": {
+    "/": {
+      "title": "Theme Installer",
+      "viewPath": "Installer"
+    }
+  }
+}
