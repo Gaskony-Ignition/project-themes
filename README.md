@@ -357,9 +357,13 @@ variant's own `var(--border)` so the scrollbar matches each variant. **Restore
 stock themes** deletes the file and the line — verified byte-identical served
 css after restore. `light` and `dark` live inside the Perspective module jar
 (no files on disk), so they are never touched — pick `light-cool`/`dark-cool`
-to get the additions. An Ignition upgrade may replace the variants' files;
-press **Update stock themes** again afterwards, same as the custom repair
-path.
+to get the additions. Upgrades: tested empirically on a throwaway gateway,
+8.3.8 → 8.3.9 on the same data volume — the custom themes AND the updated
+stock variants all survived intact (the gateway writes stock theme files at
+first commissioning; this upgrade did not rewrite them). A future version
+that ships changed stock themes may still replace the variants' files — if a
+variant's row ever drops back to "Stock - not modified", press **Update stock
+themes** again, same as the custom repair path.
 
 **Uninstalling**: open the same page and click **Remove all themes** — goes
 through `system.config.delete()`, which removes the resource AND its files in
