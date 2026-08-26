@@ -554,6 +554,23 @@ def build_globals(pack, page_solid, globals_tweak, sb_thumb, sb_hover, accent_he
     lines.append(".ia_alarmStatusTableComponent__selection {")
     lines.append("  background-color: rgba(%d,%d,%d,0.20) !important;" % (int(ar), int(ag), int(ab)))
     lines.append("}")
+    lines.append("")
+    lines.append("/* Dropdown option rows: IA paints the SELECTED option with")
+    lines.append(" * --callToAction--hover and the focused one with --callToAction--activeAlt,")
+    lines.append(" * both under plain --label text. That pairing only reads when the accent is")
+    lines.append(" * a mid-tone -- a dark-accent light theme (finance-ledger, 1.1:1) went")
+    lines.append(" * ink-on-ink, and 6 of the 10 themes measured under 3:1. Repaint with the")
+    lines.append(" * same accent WASH the table rows above use (same alpha steps), which keeps")
+    lines.append(" * the surface/label pairing readable by construction on every theme. The")
+    lines.append(" * extra ancestor class outranks IA's two-class selectors. */")
+    lines.append(".ia_dropdown__optionsModal .ia_dropdown__option--focused:not(.ia_dropdown__option--selected) {")
+    lines.append("  background-color: rgba(%d,%d,%d,0.10);" % (int(ar), int(ag), int(ab)))
+    lines.append("  color: var(--label);")
+    lines.append("}")
+    lines.append(".ia_dropdown__optionsModal .ia_dropdown__option.ia_dropdown__option--selected {")
+    lines.append("  background-color: rgba(%d,%d,%d,0.25);" % (int(ar), int(ag), int(ab)))
+    lines.append("  color: var(--label);")
+    lines.append("}")
     return "\n".join(lines) + "\n"
 
 

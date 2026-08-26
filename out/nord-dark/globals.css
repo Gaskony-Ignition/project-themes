@@ -80,3 +80,20 @@
 .ia_alarmStatusTableComponent__selection {
   background-color: rgba(85,116,155,0.20) !important;
 }
+
+/* Dropdown option rows: IA paints the SELECTED option with
+ * --callToAction--hover and the focused one with --callToAction--activeAlt,
+ * both under plain --label text. That pairing only reads when the accent is
+ * a mid-tone -- a dark-accent light theme (finance-ledger, 1.1:1) went
+ * ink-on-ink, and 6 of the 10 themes measured under 3:1. Repaint with the
+ * same accent WASH the table rows above use (same alpha steps), which keeps
+ * the surface/label pairing readable by construction on every theme. The
+ * extra ancestor class outranks IA's two-class selectors. */
+.ia_dropdown__optionsModal .ia_dropdown__option--focused:not(.ia_dropdown__option--selected) {
+  background-color: rgba(85,116,155,0.10);
+  color: var(--label);
+}
+.ia_dropdown__optionsModal .ia_dropdown__option.ia_dropdown__option--selected {
+  background-color: rgba(85,116,155,0.25);
+  color: var(--label);
+}
