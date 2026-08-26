@@ -30,7 +30,9 @@ If you can import a Perspective project but would rather not touch the gateway's
 4. The page's table updates itself: the Status column flips to "Installed" for all 10 rows once the scan lands (a couple of seconds). Cross-check with step 3 below if you want the `curl` version too.
 5. Optional: delete the `Theme_Installer` project afterwards. It is parent-free and self-contained — removing it does not touch the themes it already wrote, because those are gateway config resources, not project resources.
 
-Re-running **Install all themes** overwrites whatever is on the gateway with the embedded copies — so importing a newer release of the installer and pressing the button again is the repair path if an Ignition upgrade (or anything else) ever damages the installed themes.
+Re-running **Install custom themes** overwrites whatever is on the gateway with the embedded copies — so importing a newer release of the installer and pressing the button again is the repair path if an Ignition upgrade (or anything else) ever damages the installed themes. Installing the custom themes never touches a stock theme, and the table says so per row.
+
+**Updating the stock themes (optional)**: the stock themes ship no scrollbar styling and no `color-scheme` declaration. **Update stock themes** adds exactly those two things to the four on-disk stock variants (`light-cool`, `light-warm`, `dark-cool`, `dark-warm`) — their look does not change — and **Restore stock themes** puts them back exactly. `light` and `dark` live inside the Perspective module (no files on disk), so they are never touched; pick `light-cool`/`dark-cool` to get the additions. An Ignition upgrade may replace the variants' files; press **Update stock themes** again afterwards.
 
 **Uninstalling**: open the same page and click **Remove all themes** — goes through `system.config.delete()`, which removes the resource AND its files in one call, no scan needed.
 

@@ -337,12 +337,29 @@ shipping the payload:
    already wrote, because those are gateway config resources, not project
    resources.
 
-Re-running **Install all themes** overwrites whatever is on the gateway with
-the embedded copies — so importing a newer release of the installer and
+Re-running **Install custom themes** overwrites whatever is on the gateway
+with the embedded copies — so importing a newer release of the installer and
 pressing the button again is the repair path if an Ignition upgrade (or
 anything else) ever damages the installed themes. Verified live: a
 hand-corrupted `glass-green` variable was restored on disk and in the served
-css by one press.
+css by one press. Installing the custom themes never touches a stock theme,
+and the table says so per row.
+
+**Updating the stock themes (optional, since v1.3.0)**: the stock themes ship
+no scrollbar styling and no `color-scheme` declaration, so a dark stock
+session shows the OS's light scrollbar and Chrome's auto dark mode can
+repaint SVG fills. **Update stock themes** adds exactly those two things to
+the four on-disk stock variants (`light-cool`, `light-warm`, `dark-cool`,
+`dark-warm`) as one `gaskony-additions.css` plus one `@import` line appended
+to each variant's `index.css` — their look does not change (verified: the
+served css diff is purely the appended block), and the additions read the
+variant's own `var(--border)` so the scrollbar matches each variant. **Restore
+stock themes** deletes the file and the line — verified byte-identical served
+css after restore. `light` and `dark` live inside the Perspective module jar
+(no files on disk), so they are never touched — pick `light-cool`/`dark-cool`
+to get the additions. An Ignition upgrade may replace the variants' files;
+press **Update stock themes** again afterwards, same as the custom repair
+path.
 
 **Uninstalling**: open the same page and click **Remove all themes** — goes
 through `system.config.delete()`, which removes the resource AND its files in

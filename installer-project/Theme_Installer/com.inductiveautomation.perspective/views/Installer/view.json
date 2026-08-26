@@ -20,7 +20,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\trows = themepack.status()\n\tfor row in rows:\n\t\trow['mode'] = 'Dark' if row['dark'] else 'Light'\n\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n\treturn rows"
+            "code": "\timport themepack\n\trows = themepack.status()\n\tSTOCK_STATE = {\n\t\t'stock': 'Stock - not modified',\n\t\t'updated': 'Updated (scrollbars + colour scheme)',\n\t\t'builtin': 'Inside the Perspective module - never touched',\n\t\t'missing': 'Not on this gateway',\n\t}\n\tfor row in rows:\n\t\trow['mode'] = 'Dark' if row['dark'] else 'Light'\n\t\trow['set'] = 'Custom' if row.get('kind') == 'custom' else 'Stock'\n\t\tif row.get('kind') == 'custom':\n\t\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n\t\telse:\n\t\t\trow['state'] = STOCK_STATE.get(row.get('stock'), '?')\n\treturn rows"
           }
         ]
       }
@@ -94,7 +94,25 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources. Safe to re-run -- installing overwrites what is on the gateway, so it also repairs themes after an Ignition upgrade. Safe to delete this project afterwards. v1.2.0",
+              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources - the stock themes are never touched by this. Safe to re-run: installing overwrites the gateway's copies, which repairs the themes after an Ignition upgrade. Safe to delete this project afterwards. v1.3.0",
+              "style": {
+                "fontSize": "13px",
+                "color": "var(--label--disabled)"
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "subtitle_stock"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Optional: 'Update stock themes' adds ONLY themed scrollbars and a colour-scheme declaration to the four on-disk stock variants - their look does not change, and 'Restore stock themes' puts them back exactly. Light and Dark live inside the Perspective module, so they are never touched.",
               "style": {
                 "fontSize": "13px",
                 "color": "var(--label--disabled)"
@@ -131,7 +149,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Install all themes"
+              "text": "Install custom themes"
             },
             "events": {
               "component": {
@@ -156,7 +174,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Remove all themes",
+              "text": "Remove custom themes",
               "style": {
                 "backgroundColor": "var(--containerNested)",
                 "color": "var(--label)"
@@ -167,6 +185,64 @@
                 "onActionPerformed": {
                   "config": {
                     "script": "\timport themepack\n\tthemepack.uninstall_all()\n\tself.view.custom.tick += 1"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "update_stock_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Update stock themes",
+              "style": {
+                "backgroundColor": "var(--containerNested)",
+                "color": "var(--label)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\tthemepack.stock_update_all()\n\tself.view.custom.tick += 1"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "restore_stock_btn"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Restore stock themes",
+              "style": {
+                "backgroundColor": "var(--containerNested)",
+                "color": "var(--label)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\tthemepack.stock_restore_all()\n\tself.view.custom.tick += 1"
                   },
                   "scope": "G",
                   "type": "script"
@@ -224,6 +300,14 @@
           },
           "columns": [
             {
+              "field": "set",
+              "header": {
+                "title": "Set"
+              },
+              "width": 90,
+              "strictWidth": true
+            },
+            {
               "field": "label",
               "header": {
                 "title": "Theme"
@@ -242,7 +326,7 @@
               "header": {
                 "title": "Status"
               },
-              "width": 160,
+              "width": 320,
               "strictWidth": true
             }
           ]

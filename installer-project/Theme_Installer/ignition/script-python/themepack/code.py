@@ -7,17 +7,22 @@ build_installer.py from out/ -- DO NOT EDIT
 BY HAND. Regenerate with:
     python3 build_installer.py
 
-Version 1.2.0. Gateway scope only -- install()/install_all() write
+Version 1.3.0. Gateway scope only -- install()/install_all() write
 files under <dataDir>/config/resources/core/
 com.inductiveautomation.perspective/themes/<id>/ and request a
 config scan; uninstall()/uninstall_all() go through
 system.config.delete() instead, which removes the resource AND
 its files in one call (no scan needed for a delete). Every write
-path is a WHITELIST against THEMES below -- there is no code path
-that can touch light/dark/light-cool/light-warm/dark-cool/dark-warm
-or any name this module was not built to know about.
+path is a WHITELIST: custom installs against THEMES below (which can
+never name a stock theme), the OPTIONAL stock update against
+STOCK_UPDATABLE -- and that path only ever adds/removes the one
+additions file and its @import line (stock_update_all() /
+stock_restore_all()); it cannot replace stock content, and light/dark
+have no on-disk files at all. No code path touches any name this
+module was not built to know about.
 """
 
+import json
 import os
 
 from java.lang import Throwable
@@ -259,9 +264,143 @@ def uninstall_all():
     return removed
 
 
+# ---- optional stock-theme update ----------------------------------------
+# Installing the custom themes NEVER touches a stock theme. Separately and
+# optionally, the four ON-DISK stock variants can take a small additions
+# file (color-scheme + themed scrollbars) appended via one @import line at
+# the end of their index.css -- their look is unchanged, and restoring is
+# deleting that file and that line. light and dark live INSIDE the
+# Perspective module jar: there are no files on disk to update, so they
+# are never touched (pick light-cool / dark-cool to get the additions).
+
+STOCK_BUILTIN = ["light", "dark"]
+STOCK_UPDATABLE = ["light-cool", "light-warm", "dark-cool", "dark-warm"]
+STOCK_ORDER = ["light", "light-cool", "light-warm",
+               "dark", "dark-cool", "dark-warm"]
+STOCK_DARK = {"light": False, "light-cool": False, "light-warm": False,
+              "dark": True, "dark-cool": True, "dark-warm": True}
+ADDITIONS_FILE = "gaskony-additions.css"
+ADDITIONS_IMPORT = '@import "./gaskony-additions.css";'
+ADDITIONS_CSS = {
+    False: "/* gaskony-additions.css -- written by the Theme Installer\n * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n *   - color-scheme declaration (without it Chrome's auto dark mode\n *     repaints SVG fills client-side)\n *   - scrollbars follow the theme (stock themes leave them at the\n *     browser default)\n * Restore = delete this file and the import line at the end of\n * index.css -- the Restore button does exactly that. */\n:root { color-scheme: light; }\n* {\n  scrollbar-color: var(--border) transparent;\n  scrollbar-width: thin;\n}\n::-webkit-scrollbar { width: 10px; height: 10px; }\n::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 6px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n",
+    True: "/* gaskony-additions.css -- written by the Theme Installer\n * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n *   - color-scheme declaration (without it Chrome's auto dark mode\n *     repaints SVG fills client-side)\n *   - scrollbars follow the theme (stock themes leave them at the\n *     browser default)\n * Restore = delete this file and the import line at the end of\n * index.css -- the Restore button does exactly that. */\n:root { color-scheme: dark; }\n* {\n  scrollbar-color: var(--border) transparent;\n  scrollbar-width: thin;\n}\n::-webkit-scrollbar { width: 10px; height: 10px; }\n::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 6px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n",
+}
+
+
+def _read(path):
+    fh = open(path, "rb")
+    try:
+        return fh.read().decode("utf-8")
+    finally:
+        fh.close()
+
+
+def _write(path, text):
+    fh = open(path, "wb")
+    try:
+        fh.write(text.encode("utf-8"))
+    finally:
+        fh.close()
+
+
+def _stock_rewrite_manifest(theme_dir):
+    """resource.json must list the files actually in the directory (and
+    the now-stale signature must go, the same unstamped way the custom
+    themes ship -- the scan re-stamps it). The description survives."""
+    path = os.path.join(theme_dir, "resource.json")
+    doc = {"scope": "G", "version": 1, "restricted": False,
+           "overridable": True, "attributes": {}}
+    try:
+        old = json.loads(_read(path))
+        if old.get("description"):
+            doc["description"] = old["description"]
+    except (Exception, Throwable), e:
+        pass
+    doc["files"] = [n for n in sorted(os.listdir(theme_dir))
+                    if n != "resource.json"]
+    _write(path, json.dumps(doc, indent=2))
+
+
+def stock_state(name):
+    """'builtin' (jar-served, never touched) | 'missing' (not on this
+    gateway) | 'updated' (carries the additions) | 'stock'."""
+    if name in STOCK_BUILTIN:
+        return "builtin"
+    d = os.path.join(_themes_root(), name)
+    idx = os.path.join(d, "index.css")
+    if not os.path.isfile(idx):
+        return "missing"
+    try:
+        has_import = ADDITIONS_IMPORT in _read(idx)
+    except (Exception, Throwable), e:
+        return "missing"
+    if has_import and os.path.isfile(os.path.join(d, ADDITIONS_FILE)):
+        return "updated"
+    return "stock"
+
+
+def _stock_update_files(name):
+    if name not in STOCK_UPDATABLE:
+        raise ValueError("'%s' is not an updatable stock theme" % name)
+    d = os.path.join(_themes_root(), name)
+    if not os.path.isfile(os.path.join(d, "index.css")):
+        return False    # variant absent on this gateway -- skip, not an error
+    _write(os.path.join(d, ADDITIONS_FILE), ADDITIONS_CSS[STOCK_DARK[name]])
+    idx_path = os.path.join(d, "index.css")
+    idx = _read(idx_path)
+    if ADDITIONS_IMPORT not in idx:
+        # index.css is @import lines only, so one more AT THE END is valid
+        # css and the gateway flattener inlines it after everything stock.
+        if not idx.endswith("\n"):
+            idx += "\n"
+        _write(idx_path, idx + ADDITIONS_IMPORT + "\n")
+    _stock_rewrite_manifest(d)
+    return True
+
+
+def _stock_restore_files(name):
+    if name not in STOCK_UPDATABLE:
+        raise ValueError("'%s' is not an updatable stock theme" % name)
+    d = os.path.join(_themes_root(), name)
+    idx_path = os.path.join(d, "index.css")
+    changed = False
+    add_path = os.path.join(d, ADDITIONS_FILE)
+    if os.path.isfile(add_path):
+        os.remove(add_path)
+        changed = True
+    if os.path.isfile(idx_path):
+        idx = _read(idx_path)
+        if ADDITIONS_IMPORT in idx:
+            kept = [l for l in idx.splitlines()
+                    if l.strip() != ADDITIONS_IMPORT]
+            _write(idx_path, "\n".join(kept) + "\n")
+            changed = True
+    if changed:
+        _stock_rewrite_manifest(d)
+    return changed
+
+
+def stock_update_all():
+    """Add the additions to every on-disk stock variant, then ONE scan.
+    Safe to re-run (idempotent); their look does not change."""
+    updated = [n for n in STOCK_UPDATABLE if _stock_update_files(n)]
+    if updated:
+        _rescan()
+    return updated
+
+
+def stock_restore_all():
+    """Put every updated stock variant back exactly as stock."""
+    restored = [n for n in STOCK_UPDATABLE if _stock_restore_files(n)]
+    if restored:
+        _rescan()
+    return restored
+
+
 def status():
-    """[{id, label, dark, installed}, ...] in THEME_ORDER, for the
-    Installer view's table."""
+    """Custom rows ({kind: "custom", installed}) in THEME_ORDER, then
+    stock rows ({kind: "stock", stock: stock_state}) in STOCK_ORDER,
+    for the Installer view's table."""
     installed = set()
     try:
         for res in system.config.getResources(
@@ -276,6 +415,15 @@ def status():
             "id": name,
             "label": theme["label"],
             "dark": theme["dark"],
+            "kind": "custom",
             "installed": name in installed,
+        })
+    for name in STOCK_ORDER:
+        out.append({
+            "id": name,
+            "label": name.replace("-", " ").capitalize(),
+            "dark": STOCK_DARK[name],
+            "kind": "stock",
+            "stock": stock_state(name),
         })
     return out

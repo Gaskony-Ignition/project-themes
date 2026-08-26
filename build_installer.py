@@ -146,6 +146,38 @@ def build_project_json(version, themes):
     }
 
 
+def additions_css(dark):
+    """The optional stock-theme additions: ONLY what every stock theme lacks
+    (a color-scheme declaration and themed scrollbars), never a colour or
+    layout change -- an updated stock theme must look identical. Matches the
+    scrollbar block the custom themes carry in their globals.css, except the
+    thumb reads the theme's own var(--border) so one file fits any variant."""
+    scheme = "dark" if dark else "light"
+    return (
+        "/* gaskony-additions.css -- written by the Theme Installer\n"
+        " * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n"
+        " *   - color-scheme declaration (without it Chrome's auto dark mode\n"
+        " *     repaints SVG fills client-side)\n"
+        " *   - scrollbars follow the theme (stock themes leave them at the\n"
+        " *     browser default)\n"
+        " * Restore = delete this file and the import line at the end of\n"
+        " * index.css -- the Restore button does exactly that. */\n"
+        ":root { color-scheme: %s; }\n"
+        "* {\n"
+        "  scrollbar-color: var(--border) transparent;\n"
+        "  scrollbar-width: thin;\n"
+        "}\n"
+        "::-webkit-scrollbar { width: 10px; height: 10px; }\n"
+        "::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n"
+        "::-webkit-scrollbar-thumb {\n"
+        "  background: var(--border);\n"
+        "  border-radius: 6px;\n"
+        "  border: 2px solid transparent;\n"
+        "  background-clip: content-box;\n"
+        "}\n" % scheme
+    )
+
+
 def build_themepack_code(themes, version):
     """ignition/script-python/themepack/code.py -- gateway-scope module
     embedding every theme's file contents plus install/uninstall/status.
@@ -170,11 +202,16 @@ def build_themepack_code(themes, version):
     lines.append('config scan; uninstall()/uninstall_all() go through')
     lines.append('system.config.delete() instead, which removes the resource AND')
     lines.append('its files in one call (no scan needed for a delete). Every write')
-    lines.append('path is a WHITELIST against THEMES below -- there is no code path')
-    lines.append('that can touch light/dark/light-cool/light-warm/dark-cool/dark-warm')
-    lines.append('or any name this module was not built to know about.')
+    lines.append('path is a WHITELIST: custom installs against THEMES below (which can')
+    lines.append('never name a stock theme), the OPTIONAL stock update against')
+    lines.append('STOCK_UPDATABLE -- and that path only ever adds/removes the one')
+    lines.append('additions file and its @import line (stock_update_all() /')
+    lines.append('stock_restore_all()); it cannot replace stock content, and light/dark')
+    lines.append('have no on-disk files at all. No code path touches any name this')
+    lines.append('module was not built to know about.')
     lines.append('"""')
     lines.append('')
+    lines.append('import json')
     lines.append('import os')
     lines.append('')
     lines.append('from java.lang import Throwable')
@@ -298,9 +335,143 @@ def build_themepack_code(themes, version):
     lines.append('    return removed')
     lines.append('')
     lines.append('')
+    lines.append('# ---- optional stock-theme update ----------------------------------------')
+    lines.append('# Installing the custom themes NEVER touches a stock theme. Separately and')
+    lines.append('# optionally, the four ON-DISK stock variants can take a small additions')
+    lines.append('# file (color-scheme + themed scrollbars) appended via one @import line at')
+    lines.append('# the end of their index.css -- their look is unchanged, and restoring is')
+    lines.append('# deleting that file and that line. light and dark live INSIDE the')
+    lines.append('# Perspective module jar: there are no files on disk to update, so they')
+    lines.append('# are never touched (pick light-cool / dark-cool to get the additions).')
+    lines.append('')
+    lines.append('STOCK_BUILTIN = ["light", "dark"]')
+    lines.append('STOCK_UPDATABLE = ["light-cool", "light-warm", "dark-cool", "dark-warm"]')
+    lines.append('STOCK_ORDER = ["light", "light-cool", "light-warm",')
+    lines.append('               "dark", "dark-cool", "dark-warm"]')
+    lines.append('STOCK_DARK = {"light": False, "light-cool": False, "light-warm": False,')
+    lines.append('              "dark": True, "dark-cool": True, "dark-warm": True}')
+    lines.append('ADDITIONS_FILE = "gaskony-additions.css"')
+    lines.append("ADDITIONS_IMPORT = '@import \"./gaskony-additions.css\";'")
+    lines.append('ADDITIONS_CSS = {')
+    lines.append('    False: %s,' % py_repr(additions_css(False)))
+    lines.append('    True: %s,' % py_repr(additions_css(True)))
+    lines.append('}')
+    lines.append('')
+    lines.append('')
+    lines.append('def _read(path):')
+    lines.append('    fh = open(path, "rb")')
+    lines.append('    try:')
+    lines.append('        return fh.read().decode("utf-8")')
+    lines.append('    finally:')
+    lines.append('        fh.close()')
+    lines.append('')
+    lines.append('')
+    lines.append('def _write(path, text):')
+    lines.append('    fh = open(path, "wb")')
+    lines.append('    try:')
+    lines.append('        fh.write(text.encode("utf-8"))')
+    lines.append('    finally:')
+    lines.append('        fh.close()')
+    lines.append('')
+    lines.append('')
+    lines.append('def _stock_rewrite_manifest(theme_dir):')
+    lines.append('    """resource.json must list the files actually in the directory (and')
+    lines.append('    the now-stale signature must go, the same unstamped way the custom')
+    lines.append('    themes ship -- the scan re-stamps it). The description survives."""')
+    lines.append('    path = os.path.join(theme_dir, "resource.json")')
+    lines.append('    doc = {"scope": "G", "version": 1, "restricted": False,')
+    lines.append('           "overridable": True, "attributes": {}}')
+    lines.append('    try:')
+    lines.append('        old = json.loads(_read(path))')
+    lines.append('        if old.get("description"):')
+    lines.append('            doc["description"] = old["description"]')
+    lines.append('    except (Exception, Throwable), e:')
+    lines.append('        pass')
+    lines.append('    doc["files"] = [n for n in sorted(os.listdir(theme_dir))')
+    lines.append('                    if n != "resource.json"]')
+    lines.append('    _write(path, json.dumps(doc, indent=2))')
+    lines.append('')
+    lines.append('')
+    lines.append('def stock_state(name):')
+    lines.append('    """\'builtin\' (jar-served, never touched) | \'missing\' (not on this')
+    lines.append('    gateway) | \'updated\' (carries the additions) | \'stock\'."""')
+    lines.append('    if name in STOCK_BUILTIN:')
+    lines.append('        return "builtin"')
+    lines.append('    d = os.path.join(_themes_root(), name)')
+    lines.append('    idx = os.path.join(d, "index.css")')
+    lines.append('    if not os.path.isfile(idx):')
+    lines.append('        return "missing"')
+    lines.append('    try:')
+    lines.append('        has_import = ADDITIONS_IMPORT in _read(idx)')
+    lines.append('    except (Exception, Throwable), e:')
+    lines.append('        return "missing"')
+    lines.append('    if has_import and os.path.isfile(os.path.join(d, ADDITIONS_FILE)):')
+    lines.append('        return "updated"')
+    lines.append('    return "stock"')
+    lines.append('')
+    lines.append('')
+    lines.append('def _stock_update_files(name):')
+    lines.append('    if name not in STOCK_UPDATABLE:')
+    lines.append('        raise ValueError("\'%s\' is not an updatable stock theme" % name)')
+    lines.append('    d = os.path.join(_themes_root(), name)')
+    lines.append('    if not os.path.isfile(os.path.join(d, "index.css")):')
+    lines.append('        return False    # variant absent on this gateway -- skip, not an error')
+    lines.append('    _write(os.path.join(d, ADDITIONS_FILE), ADDITIONS_CSS[STOCK_DARK[name]])')
+    lines.append('    idx_path = os.path.join(d, "index.css")')
+    lines.append('    idx = _read(idx_path)')
+    lines.append('    if ADDITIONS_IMPORT not in idx:')
+    lines.append('        # index.css is @import lines only, so one more AT THE END is valid')
+    lines.append('        # css and the gateway flattener inlines it after everything stock.')
+    lines.append('        if not idx.endswith("\\n"):')
+    lines.append('            idx += "\\n"')
+    lines.append('        _write(idx_path, idx + ADDITIONS_IMPORT + "\\n")')
+    lines.append('    _stock_rewrite_manifest(d)')
+    lines.append('    return True')
+    lines.append('')
+    lines.append('')
+    lines.append('def _stock_restore_files(name):')
+    lines.append('    if name not in STOCK_UPDATABLE:')
+    lines.append('        raise ValueError("\'%s\' is not an updatable stock theme" % name)')
+    lines.append('    d = os.path.join(_themes_root(), name)')
+    lines.append('    idx_path = os.path.join(d, "index.css")')
+    lines.append('    changed = False')
+    lines.append('    add_path = os.path.join(d, ADDITIONS_FILE)')
+    lines.append('    if os.path.isfile(add_path):')
+    lines.append('        os.remove(add_path)')
+    lines.append('        changed = True')
+    lines.append('    if os.path.isfile(idx_path):')
+    lines.append('        idx = _read(idx_path)')
+    lines.append('        if ADDITIONS_IMPORT in idx:')
+    lines.append('            kept = [l for l in idx.splitlines()')
+    lines.append('                    if l.strip() != ADDITIONS_IMPORT]')
+    lines.append('            _write(idx_path, "\\n".join(kept) + "\\n")')
+    lines.append('            changed = True')
+    lines.append('    if changed:')
+    lines.append('        _stock_rewrite_manifest(d)')
+    lines.append('    return changed')
+    lines.append('')
+    lines.append('')
+    lines.append('def stock_update_all():')
+    lines.append('    """Add the additions to every on-disk stock variant, then ONE scan.')
+    lines.append('    Safe to re-run (idempotent); their look does not change."""')
+    lines.append('    updated = [n for n in STOCK_UPDATABLE if _stock_update_files(n)]')
+    lines.append('    if updated:')
+    lines.append('        _rescan()')
+    lines.append('    return updated')
+    lines.append('')
+    lines.append('')
+    lines.append('def stock_restore_all():')
+    lines.append('    """Put every updated stock variant back exactly as stock."""')
+    lines.append('    restored = [n for n in STOCK_UPDATABLE if _stock_restore_files(n)]')
+    lines.append('    if restored:')
+    lines.append('        _rescan()')
+    lines.append('    return restored')
+    lines.append('')
+    lines.append('')
     lines.append('def status():')
-    lines.append('    """[{id, label, dark, installed}, ...] in THEME_ORDER, for the')
-    lines.append('    Installer view\'s table."""')
+    lines.append('    """Custom rows ({kind: "custom", installed}) in THEME_ORDER, then')
+    lines.append('    stock rows ({kind: "stock", stock: stock_state}) in STOCK_ORDER,')
+    lines.append('    for the Installer view\'s table."""')
     lines.append('    installed = set()')
     lines.append('    try:')
     lines.append('        for res in system.config.getResources(')
@@ -315,7 +486,16 @@ def build_themepack_code(themes, version):
     lines.append('            "id": name,')
     lines.append('            "label": theme["label"],')
     lines.append('            "dark": theme["dark"],')
+    lines.append('            "kind": "custom",')
     lines.append('            "installed": name in installed,')
+    lines.append('        })')
+    lines.append('    for name in STOCK_ORDER:')
+    lines.append('        out.append({')
+    lines.append('            "id": name,')
+    lines.append('            "label": name.replace("-", " ").capitalize(),')
+    lines.append('            "dark": STOCK_DARK[name],')
+    lines.append('            "kind": "stock",')
+    lines.append('            "stock": stock_state(name),')
     lines.append('        })')
     lines.append('    return out')
     lines.append('')
@@ -341,9 +521,19 @@ def build_view_json(themes, version):
     status_transform_code = (
         "\timport themepack\n"
         "\trows = themepack.status()\n"
+        "\tSTOCK_STATE = {\n"
+        "\t\t'stock': 'Stock - not modified',\n"
+        "\t\t'updated': 'Updated (scrollbars + colour scheme)',\n"
+        "\t\t'builtin': 'Inside the Perspective module - never touched',\n"
+        "\t\t'missing': 'Not on this gateway',\n"
+        "\t}\n"
         "\tfor row in rows:\n"
         "\t\trow['mode'] = 'Dark' if row['dark'] else 'Light'\n"
-        "\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n"
+        "\t\trow['set'] = 'Custom' if row.get('kind') == 'custom' else 'Stock'\n"
+        "\t\tif row.get('kind') == 'custom':\n"
+        "\t\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n"
+        "\t\telse:\n"
+        "\t\t\trow['state'] = STOCK_STATE.get(row.get('stock'), '?')\n"
         "\treturn rows"
     )
     install_all_script = (
@@ -354,6 +544,16 @@ def build_view_json(themes, version):
     remove_all_script = (
         "\timport themepack\n"
         "\tthemepack.uninstall_all()\n"
+        "\tself.view.custom.tick += 1"
+    )
+    update_stock_script = (
+        "\timport themepack\n"
+        "\tthemepack.stock_update_all()\n"
+        "\tself.view.custom.tick += 1"
+    )
+    restore_stock_script = (
+        "\timport themepack\n"
+        "\tthemepack.stock_restore_all()\n"
         "\tself.view.custom.tick += 1"
     )
     # Size is passed HERE, at the call, not as the popup view's own
@@ -462,11 +662,31 @@ def build_view_json(themes, version):
                             "props": {
                                 "text": (
                                     "Installs Gaskony's %d curated Perspective gateway "
-                                    "themes as config resources. Safe to re-run -- "
-                                    "installing overwrites what is on the gateway, so "
-                                    "it also repairs themes after an Ignition upgrade. "
-                                    "Safe to delete this project afterwards. v%s"
+                                    "themes as config resources - the stock themes are "
+                                    "never touched by this. Safe to re-run: installing "
+                                    "overwrites the gateway's copies, which repairs the "
+                                    "themes after an Ignition upgrade. Safe to delete "
+                                    "this project afterwards. v%s"
                                     % (len(themes), version)
+                                ),
+                                "style": {
+                                    "fontSize": "13px",
+                                    "color": "var(--label--disabled)",
+                                },
+                            },
+                        },
+                        {
+                            "type": "ia.display.label",
+                            "meta": {"name": "subtitle_stock"},
+                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                            "props": {
+                                "text": (
+                                    "Optional: 'Update stock themes' adds ONLY themed "
+                                    "scrollbars and a colour-scheme declaration to the "
+                                    "four on-disk stock variants - their look does not "
+                                    "change, and 'Restore stock themes' puts them back "
+                                    "exactly. Light and Dark live inside the "
+                                    "Perspective module, so they are never touched."
                                 ),
                                 "style": {
                                     "fontSize": "13px",
@@ -489,7 +709,7 @@ def build_view_json(themes, version):
                             "type": "ia.input.button",
                             "meta": {"name": "install_all_btn"},
                             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {"text": "Install all themes"},
+                            "props": {"text": "Install custom themes"},
                             "events": {
                                 "component": {
                                     "onActionPerformed": {
@@ -505,7 +725,7 @@ def build_view_json(themes, version):
                             "meta": {"name": "remove_all_btn"},
                             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                             "props": {
-                                "text": "Remove all themes",
+                                "text": "Remove custom themes",
                                 "style": {
                                     "backgroundColor": "var(--containerNested)",
                                     "color": "var(--label)",
@@ -515,6 +735,48 @@ def build_view_json(themes, version):
                                 "component": {
                                     "onActionPerformed": {
                                         "config": {"script": remove_all_script},
+                                        "scope": "G",
+                                        "type": "script",
+                                    }
+                                }
+                            },
+                        },
+                        {
+                            "type": "ia.input.button",
+                            "meta": {"name": "update_stock_btn"},
+                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                            "props": {
+                                "text": "Update stock themes",
+                                "style": {
+                                    "backgroundColor": "var(--containerNested)",
+                                    "color": "var(--label)",
+                                },
+                            },
+                            "events": {
+                                "component": {
+                                    "onActionPerformed": {
+                                        "config": {"script": update_stock_script},
+                                        "scope": "G",
+                                        "type": "script",
+                                    }
+                                }
+                            },
+                        },
+                        {
+                            "type": "ia.input.button",
+                            "meta": {"name": "restore_stock_btn"},
+                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                            "props": {
+                                "text": "Restore stock themes",
+                                "style": {
+                                    "backgroundColor": "var(--containerNested)",
+                                    "color": "var(--label)",
+                                },
+                            },
+                            "events": {
+                                "component": {
+                                    "onActionPerformed": {
+                                        "config": {"script": restore_stock_script},
                                         "scope": "G",
                                         "type": "script",
                                     }
@@ -554,6 +816,12 @@ def build_view_json(themes, version):
                         "pager": {"top": False, "bottom": False},
                         "columns": [
                             {
+                                "field": "set",
+                                "header": {"title": "Set"},
+                                "width": 90,
+                                "strictWidth": True,
+                            },
+                            {
                                 "field": "label",
                                 "header": {"title": "Theme"},
                             },
@@ -566,7 +834,7 @@ def build_view_json(themes, version):
                             {
                                 "field": "state",
                                 "header": {"title": "Status"},
-                                "width": 160,
+                                "width": 320,
                                 "strictWidth": True,
                             },
                         ],
