@@ -1,4 +1,4 @@
-# Theme generator — 9 curated packs as Perspective gateway themes
+# Theme generator — 10 curated packs as Perspective gateway themes
 
 | Glass Violet | Newsprint Dark | Finance Ledger |
 |---|---|---|
@@ -8,7 +8,7 @@ The included switcher popup (copy `views/SelectorPopup` into any project):
 
 ![Switcher popup](images/switcher-popup.png)
 
-Delivers 9 existing packs as Perspective gateway **themes** (a config resource,
+Delivers 10 existing packs as Perspective gateway **themes** (a config resource,
 distinct from this repo's usual project-stylesheet-plus-style-class delivery).
 Started as a 2-pack throwaway experiment (`test-aurora-violet` /
 `test-leather-night-tan`, evaluated in `docs/THEMES-EVALUATION.md` — read that
@@ -27,7 +27,7 @@ is never read or written by `tools/build_all.py`, and nothing under
 touched by anything in this directory. `mapping.py` and `build_theme.py` only
 *read* files under `packs/`.
 
-## The 9 themes
+## The 10 themes
 
 Theme **id** is now Nigel's exact name, independent of the source pack's own
 id/label — kept traceable via the table below and via `out/themes.json` (a
@@ -78,7 +78,7 @@ leave a stale directory under an old theme id sitting next to the new one.
   `overrides["containers/page"]`, or from `TWEAKS[id]["globals"]` when
   present, plus the occlusion-fix rule, theme-following scrollbars, and the
   hard-coded-colour compensating rules — see below for each).
-- `out/<theme-id>/` — the 9 generated theme directories, each with
+- `out/<theme-id>/` — the 10 generated theme directories, each with
   `config.json`, `index.css`, `variables.css`, `globals.css`,
   `resource.json`. This is exactly what gets deployed to
   `data/config/resources/core/com.inductiveautomation.perspective/themes/<id>/`
@@ -238,7 +238,7 @@ already computed, so a `TWEAKS` override propagates automatically):
     `--neutral-10`, zero saturation) to the error hue (strong at `div-16`).
   - Every `--qual-*` is checked (warn-only) for contrast ≥1.5 against
     `--neutral-10` and for RGB distance ≥40 from its neighbour (wraparound
-    included) — see the `SWATCH`/`WARNING` lines from a regen. All 9 themes
+    included) — see the `SWATCH`/`WARNING` lines from a regen. All 10 themes
     currently pass with zero chart-scale warnings.
 
 **Deliberately still NOT overridden** — the remaining 10 of the 120: pure IA
@@ -304,7 +304,7 @@ any `ia_container--primary` root container, not a bug in any project's view
 JSON — which hides the page background on every ordinary page in every theme
 unless punched through. The selector is a structural Perspective shell
 pattern, not specific to any one pack or project, so the fix generalises
-unchanged to all 9 themes without a separate live check per theme.
+unchanged to all 10 themes without a separate live check per theme.
 
 ## Installing on a gateway
 
@@ -320,7 +320,7 @@ If you can import a Perspective project but would rather not touch the
 gateway's filesystem or open a terminal at all, skip everything below and use
 `Theme_Installer-<VERSION>.zip` instead — built alongside
 `gaskony-themes-<VERSION>.zip` by the same `package.sh`, from the project
-`build_installer.py` generates. It embeds all 9 themes'
+`build_installer.py` generates. It embeds all 10 themes'
 files as data inside a gateway-scope script, so importing the project *is*
 shipping the payload:
 
@@ -330,12 +330,19 @@ shipping the payload:
 3. Click **Install all themes**. It writes the files AND runs the config scan
    itself — no separate "Scan File System" step, nothing else to do.
 4. The page's table updates itself: the Status column flips to "Installed"
-   for all 9 rows once the scan lands (a couple of seconds). Cross-check with
+   for all 10 rows once the scan lands (a couple of seconds). Cross-check with
    step 3 below if you want the `curl` version too.
 5. Optional: delete the `Theme_Installer` project afterwards. It is
    parent-free and self-contained — removing it does not touch the themes it
    already wrote, because those are gateway config resources, not project
    resources.
+
+Re-running **Install all themes** overwrites whatever is on the gateway with
+the embedded copies — so importing a newer release of the installer and
+pressing the button again is the repair path if an Ignition upgrade (or
+anything else) ever damages the installed themes. Verified live: a
+hand-corrupted `glass-green` variable was restored on disk and in the served
+css by one press.
 
 **Uninstalling**: open the same page and click **Remove all themes** — goes
 through `system.config.delete()`, which removes the resource AND its files in

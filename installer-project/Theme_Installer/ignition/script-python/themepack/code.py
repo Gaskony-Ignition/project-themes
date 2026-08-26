@@ -1,4 +1,4 @@
-"""themepack -- embeds Gaskony's 9 curated Perspective
+"""themepack -- embeds Gaskony's 10 curated Perspective
 gateway themes as data and installs/uninstalls them as
 gateway config resources.
 
@@ -7,7 +7,7 @@ build_installer.py from out/ -- DO NOT EDIT
 BY HAND. Regenerate with:
     python3 build_installer.py
 
-Version 1.1.1. Gateway scope only -- install()/install_all() write
+Version 1.2.0. Gateway scope only -- install()/install_all() write
 files under <dataDir>/config/resources/core/
 com.inductiveautomation.perspective/themes/<id>/ and request a
 config scan; uninstall()/uninstall_all() go through

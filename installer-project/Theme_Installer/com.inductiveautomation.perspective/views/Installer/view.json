@@ -94,7 +94,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Installs Gaskony's 9 curated Perspective gateway themes as config resources. Safe to re-run; safe to delete this project afterwards. v1.1.1",
+              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources. Safe to re-run -- installing overwrites what is on the gateway, so it also repairs themes after an Ignition upgrade. Safe to delete this project afterwards. v1.2.0",
               "style": {
                 "fontSize": "13px",
                 "color": "var(--label--disabled)"
