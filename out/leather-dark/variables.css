@@ -10,7 +10,7 @@
   --container:                          #241a13; /* card surface flattened over the page (token:surface.card) */
   --neutral-20:                         #241a13; /* same derivation as --container (literal reuse) (token:surface.card) */
   --containerNested:                    #241a13; /* a tile/nested-card surface flattened over --container (one level deeper than a card) (token:surface.kpi-tile) */
-  --containerBorder:                    #3d2c1e; /* card border flattened over --container (token:border.card) */
+  --containerBorder:                    1px solid #3d2c1e; /* card border flattened over --container (token:border.card) -- IA reads this as a shorthand */
   --border:                             #3d2c1e; /* input border flattened over the page (token:border.input) */
   --border--disabled:                   rgba(61,44,30,0.5); /* half-opacity --border (no separate disabled-border token in either pack) (ref:--border) */
   --input:                              #241a13; /* input surface flattened over the page (token:surface.input) */
@@ -28,7 +28,7 @@
   --callToAction--active:               #a3753f; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
   --callToAction--disabled:             rgba(192,138,74,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #291d15; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #e08a7a; /* danger accent (falls back to the high-priority alarm colour) (token:accent.danger) */
+  --error:                              #e08a7a; /* danger accent -- first candidate legible as ink on a card (token:accent.danger) */
   --warning:                            #d29922; /* medium-priority alarm colour (token:accent.alarm-med) */
   --success:                            #8cc08e; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #58a6ff; /* low-priority alarm colour (token:accent.alarm-low) */

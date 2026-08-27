@@ -302,11 +302,39 @@ MAPPING = [
 
     # ---- status colours -----------------------------------------------
     {
+        # IA paints --error as INK -- alarm text, error labels, invalid-input
+        # messages -- so it has to read against the card it sits on, and
+        # `accent.danger` cannot be trusted to be that. The token means three
+        # different things across the packs: the danger colour (nord-light,
+        # both glass packs, both leather packs), the INK ON a danger fill
+        # (finance-ledger and industrial-light both set it #ffffff, which
+        # landed white-on-white), and a 12% background WASH (industrial-dark's
+        # rgba(255,77,77,.12), flattening to #251317 on its own near-black
+        # page at 1.03:1).
+        #
+        # So the chain is gated on legibility rather than existence: each
+        # candidate must clear 3:1 against --container or the resolver falls
+        # through to the next. `border.danger` is the reliable second -- every
+        # pack carries it and a border colour is ink-grade by construction --
+        # and it is `transparent` in exactly the packs whose accent.danger was
+        # already right, so it is skipped there rather than preferred.
+        #
+        # accent.alarm-high is LAST, not second, because it is the amber/orange
+        # high-priority alarm colour in the industrial packs (#D97706, #F6B93B)
+        # and an error rendered as a warning is worse than one that is merely
+        # dim.
+        #
+        # Measured 28/08/2026: this leaves five themes on their existing value
+        # and lifts five that were under 3:1 -- finance-ledger 1.00 -> 7.45,
+        # industrial-light 1.00 -> 4.83, industrial-dark 1.03 -> 5.56,
+        # nord-dark 1.93 -> 3.72, newsprint-dark 2.82 -> 3.29.
         "var": "--error",
-        "sources": ["token:accent.danger", "token:accent.alarm-high"],
+        "sources": ["token:accent.danger", "token:border.danger",
+                    "token:accent.alarm-high"],
         "transform": "flatten",
         "behind": PAGE,
-        "note": "danger accent (falls back to the high-priority alarm colour)",
+        "require": {"contrast_with": "ref:--container", "min": 3.0},
+        "note": "danger accent -- first candidate legible as ink on a card",
     },
     {
         "var": "--warning",
@@ -562,6 +590,41 @@ EXTENDED_MAPPING = [
 # downstream. Only "vars" (theme custom properties) and "globals"
 # (background-image/background-color for globals.css) may be overridden.
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Variables IA consumes as a CSS SHORTHAND rather than as a colour.
+#
+# Ignition's own Perspective CSS says, in 85 separate rules:
+#
+#     .ia_inputField { border: var(--containerBorder); ... }
+#
+# so --containerBorder has to hold `1px solid <colour>`, not `<colour>`. A bare
+# colour makes every one of those 85 declarations invalid at once and the
+# borders simply vanish -- inputs, dropdowns, buttons, alarm tables, accordions,
+# dashboard tiles. On a light theme a text field is then white on a white card
+# with nothing to say where it is. All six stock IA themes hold the shorthand;
+# every one of these ten held a bare colour until 28/08/2026.
+#
+# Counted against a SERVED theme (8.3.8, /data/perspective/themes/dark.css, 83 KB
+# -- the Perspective module bundle itself has only one of the 85; the rest come
+# from the theme base). All 85 are `border` (32) or `border-top`/`-bottom`/
+# `-left`/`-right` (53), and in every one the variable is the ENTIRE value.
+# There is no `border-color: var(--containerBorder)` anywhere, which is what
+# makes emitting a shorthand safe rather than a trade -- checked, not assumed.
+#
+# This is applied at EMIT time, not in the mapping, because computed[] must keep
+# the bare colour: --symbolStroke--default and --progressLinearTrack--determinate
+# both `ref:--containerBorder` and need something a `stroke` can take, and
+# build_globals() is handed it as a colour too. So the variable is written as a
+# shorthand and used internally as a colour.
+#
+# The width comes from the pack's own border.width rather than a hardcoded 1px,
+# so a pack that wants heavier chrome gets it. Every pack says 1px today.
+SHORTHAND_VARS = {
+    "--containerBorder": {"style": "solid", "width_token": "border.width",
+                          "width_default": "1px"},
+}
+
 
 TWEAKS = {
     "newsprint-dark": {

@@ -5,7 +5,7 @@
   color-scheme: dark; /* this pack declares "dark": true --
                          workspace standing rule, see repo CLAUDE.md */
 
-  --error:                              #d76368; /* danger accent (falls back to the high-priority alarm colour) (token:accent.danger) */
+  --error:                              #d76368; /* danger accent -- first candidate legible as ink on a card (token:accent.danger) */
   --warning:                            #fbbf24; /* medium-priority alarm colour (token:accent.alarm-med) */
   --info:                               #38bdf8; /* low-priority alarm colour (token:accent.alarm-low) */
   --borderRadius:                       8px; /* control radius (token:radius.control) */
@@ -20,7 +20,7 @@
   --container:                          #252c2a; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */
   --neutral-20:                         #252c2a; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */
   --containerNested:                    #3b413f; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */
-  --containerBorder:                    #555a59; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */
+  --containerBorder:                    1px solid #555a59; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) -- IA reads this as a shorthand */
   --border:                             #424846; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */
   --border--disabled:                   rgba(66,72,70,0.5); /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */
   --input:                              #202725; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[glass-green]) */

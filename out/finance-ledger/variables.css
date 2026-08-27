@@ -10,7 +10,7 @@
   --container:                          #ffffff; /* card surface flattened over the page (token:surface.card) */
   --neutral-20:                         #ffffff; /* same derivation as --container (literal reuse) (token:surface.card) */
   --containerNested:                    #ffffff; /* a tile/nested-card surface flattened over --container (one level deeper than a card) (token:surface.kpi-tile) */
-  --containerBorder:                    #d3dbd8; /* card border flattened over --container (token:border.card) */
+  --containerBorder:                    1px solid #d3dbd8; /* card border flattened over --container (token:border.card) -- IA reads this as a shorthand */
   --border:                             #d3dbd8; /* input border flattened over the page (token:border.input) */
   --border--disabled:                   rgba(211,219,216,0.5); /* half-opacity --border (no separate disabled-border token in either pack) (ref:--border) */
   --input:                              #ffffff; /* input surface flattened over the page (token:surface.input) */
@@ -28,7 +28,7 @@
   --callToAction--active:               #09344e; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
   --callToAction--disabled:             rgba(11,61,92,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #f0f3f2; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #ffffff; /* danger accent (falls back to the high-priority alarm colour) (token:accent.danger) */
+  --error:                              #9e2a2a; /* danger accent -- first candidate legible as ink on a card (token:border.danger) */
   --warning:                            #a85b00; /* medium-priority alarm colour (token:accent.alarm-med) */
   --success:                            #0f7a4a; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #2a5f7a; /* low-priority alarm colour (token:accent.alarm-low) */
@@ -62,11 +62,11 @@
   --infoSecondary:                      rgba(42,95,122,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #ffffff; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #0f7a4a; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #ffffff; /* reuses --error (ref:--error) */
+  --symbolFill--faulted:                #9e2a2a; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #5b6b74; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #d3dbd8; /* reuses --containerBorder (ref:--containerBorder) */
   --symbolStroke--running:              #0c623b; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #cccccc; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--faulted:              #7e2222; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #49565d; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #d3dbd8; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #5b6b74; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */

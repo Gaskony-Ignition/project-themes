@@ -45,7 +45,8 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mapping import MAPPING, EXTENDED_MAPPING, TWEAKS  # noqa: E402
+from mapping import (MAPPING, EXTENDED_MAPPING, TWEAKS,  # noqa: E402
+                     SHORTHAND_VARS)
 
 # Standalone repo: the 10 source packs are VENDORED under packs/ (copied from
 # ignition-styles-template-v2, the design source of truth for colours --
@@ -230,6 +231,51 @@ def apply_transform(transform, raw_value, pack, entry, computed):
     raise ValueError("unrecognised transform: %r" % transform)
 
 
+def emit_value(var, value, pack):
+    """The text written into variables.css for `var`.
+
+    Identical to the computed value except for the handful of variables IA
+    consumes as a CSS shorthand -- see mapping.SHORTHAND_VARS for why this is
+    an emit-time concern and not a mapping one. computed[] keeps the colour.
+    """
+    spec = SHORTHAND_VARS.get(var)
+    if not spec:
+        return value
+    width = _lookup_token(pack, spec["width_token"]) or spec["width_default"]
+    return "%s %s %s" % (width, spec["style"], value)
+
+
+def requirement_failure(entry, raw_value, pack, computed):
+    """Does `raw_value` satisfy entry["require"]? Returns None if it does (or if
+    there is no requirement), else a short reason for the warning.
+
+    The value is transformed FIRST, because the constraint is about what will
+    actually be painted: a 12% danger wash only becomes #251317 once it has been
+    flattened over the page, and it is the flattened result that has to be
+    legible, not the token.
+
+    Only `contrast_with` today -- a minimum WCAG ratio against another variable,
+    for a colour IA uses as INK. --error is the case that needs it: Ignition
+    paints alarm text and error labels with it, so it has to read against the
+    card it sits on, and three packs supplied something that cannot.
+    """
+    req = entry.get("require")
+    if not req:
+        return None
+    value = apply_transform(entry["transform"], raw_value, pack, entry, computed)
+    against = resolve_one(pack, req["contrast_with"], computed)
+    if against is None:
+        # The thing to contrast against is not computed yet -- a mapping.py
+        # ordering bug. Fail loudly rather than silently skipping the check.
+        raise SystemExit(
+            "FATAL %s: require.contrast_with=%r is not computed yet; move the "
+            "entry after it in MAPPING" % (entry["var"], req["contrast_with"]))
+    ratio = contrast_ratio(value, against)
+    if ratio >= req["min"]:
+        return None
+    return "%s on %s is %.2f:1, under %.1f" % (value, against, ratio, req["min"])
+
+
 def resolve_entry(pack, entry, computed, theme_name):
     var = entry["var"]
     sources = entry["sources"]
@@ -237,27 +283,36 @@ def resolve_entry(pack, entry, computed, theme_name):
     used_spec = None
     raw_value = None
 
+    # An entry may also declare `require`, a legibility constraint the RESOLVED
+    # value has to satisfy. A candidate that resolves but fails it is treated
+    # exactly like one that did not resolve at all -- the chain keeps trying --
+    # which is the same principle resolve_colour_for_transform already applies
+    # to an unparsable colour. Without this a source only has to EXIST to be
+    # accepted, and a token whose name matches can still be the wrong kind of
+    # value (see mapping.py's --error note).
+    rejected = []
+
     for i, spec in enumerate(sources):
         if transform in ("flatten",):
             val, parsed = resolve_colour_for_transform(pack, spec, computed)
-            if val is not None:
-                raw_value = val
-                used_spec = spec
-                if i > 0:
-                    warn(theme_name,
-                         "%s: fell back to %r (earlier source(s) %r missing or unparsable)"
-                         % (var, spec, sources[:i]))
-                break
         else:
             val = resolve_one(pack, spec, computed)
-            if val is not None:
-                raw_value = val
-                used_spec = spec
-                if i > 0:
-                    warn(theme_name,
-                         "%s: fell back to %r (earlier source(s) %r missing)"
-                         % (var, spec, sources[:i]))
-                break
+        if val is None:
+            continue
+
+        why = requirement_failure(entry, val, pack, computed)
+        if why is not None:
+            rejected.append((spec, why))
+            continue
+
+        raw_value = val
+        used_spec = spec
+        if i > 0:
+            detail = "earlier source(s) %r missing or unparsable" % (sources[:i],)
+            if rejected:
+                detail = "; ".join("%s rejected (%s)" % (s, w) for s, w in rejected)
+            warn(theme_name, "%s: fell back to %r (%s)" % (var, spec, detail))
+        break
 
     if raw_value is None:
         # Hard failure: nothing in the fallback chain resolved, and there was
@@ -688,7 +743,10 @@ def build_theme(theme):
     ]
     for var, value, used_spec, note in resolutions:
         comment = "%s (%s)" % (note, used_spec)
-        lines.append("  %-*s %s; /* %s */" % (width + 1, var + ":", value, comment))
+        emitted = emit_value(var, value, pack)
+        if emitted != value:
+            comment += " -- IA reads this as a shorthand"
+        lines.append("  %-*s %s; /* %s */" % (width + 1, var + ":", emitted, comment))
     lines.append("}")
     variables_css = "\n".join(lines) + "\n"
     with open(os.path.join(theme_dir, "variables.css"), "w") as fh:

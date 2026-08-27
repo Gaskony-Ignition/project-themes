@@ -10,7 +10,7 @@
   --container:                          #3b4452; /* card surface flattened over the page (token:surface.card) */
   --neutral-20:                         #3b4452; /* same derivation as --container (literal reuse) (token:surface.card) */
   --containerNested:                    #3b4452; /* a tile/nested-card surface flattened over --container (one level deeper than a card) (token:surface.kpi-tile) */
-  --containerBorder:                    #4c566a; /* card border flattened over --container (token:border.card) */
+  --containerBorder:                    1px solid #4c566a; /* card border flattened over --container (token:border.card) -- IA reads this as a shorthand */
   --border:                             #4c566a; /* input border flattened over the page (token:border.input) */
   --border--disabled:                   rgba(76,86,106,0.5); /* half-opacity --border (no separate disabled-border token in either pack) (ref:--border) */
   --input:                              #434d5e; /* input surface flattened over the page (token:surface.input) */
@@ -28,7 +28,7 @@
   --callToAction--active:               #486384; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
   --callToAction--disabled:             rgba(85,116,155,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #46566f; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #b64b55; /* danger accent (falls back to the high-priority alarm colour) (token:accent.danger) */
+  --error:                              #d18d93; /* danger accent -- first candidate legible as ink on a card (token:accent.alarm-high) */
   --warning:                            #d89a87; /* medium-priority alarm colour (token:accent.alarm-med) */
   --success:                            #a3be8c; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #88c0d0; /* low-priority alarm colour (token:accent.alarm-low) */
@@ -62,11 +62,11 @@
   --infoSecondary:                      rgba(136,192,208,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #3b4452; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #a3be8c; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #b64b55; /* reuses --error (ref:--error) */
+  --symbolFill--faulted:                #d18d93; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #d8dee9; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #4c566a; /* reuses --containerBorder (ref:--containerBorder) */
   --symbolStroke--running:              #829870; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #923c44; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--faulted:              #a77176; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #adb2ba; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #4c566a; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #d8dee9; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */
@@ -111,8 +111,8 @@
   --div-10:                             #5e4446; /* step 10/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-11:                             #74474b; /* step 11/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-12:                             #8d484e; /* step 12/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-13:                             #a84750; /* step 13/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-14:                             #c04954; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-13:                             #a8474f; /* step 13/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-14:                             #c04953; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-15:                             #d0535e; /* step 15/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-16:                             #dd5f6b; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-16:                             #dd5f6a; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
 }
