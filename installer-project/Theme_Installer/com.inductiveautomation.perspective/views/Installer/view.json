@@ -94,7 +94,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources - the stock themes are never touched by this. Safe to re-run: installing overwrites the gateway's copies, which repairs the themes after an Ignition upgrade. Safe to delete this project afterwards. v1.4.0",
+              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources - the stock themes are never touched by this. Safe to re-run: installing overwrites the gateway's copies, which repairs the themes after an Ignition upgrade. Safe to delete this project afterwards. v1.5.0",
               "style": {
                 "fontSize": "13px",
                 "color": "var(--label--disabled)"
@@ -130,12 +130,6 @@
           "grow": 0,
           "shrink": 0,
           "basis": "auto"
-        },
-        "props": {
-          "direction": "row",
-          "style": {
-            "gap": "12px"
-          }
         },
         "children": [
           {
@@ -272,15 +266,51 @@
               "component": {
                 "onActionPerformed": {
                   "config": {
-                    "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 500})"
+                    "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 590})"
                   },
                   "scope": "G",
                   "type": "script"
                 }
               }
             }
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "actions_spacer"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {}
+          },
+          {
+            "type": "ia.display.view",
+            "meta": {
+              "name": "theme_dropdown"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "260px"
+            },
+            "props": {
+              "path": "ThemeDropdown",
+              "style": {
+                "minHeight": "34px"
+              }
+            }
           }
-        ]
+        ],
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "12px"
+          }
+        }
       },
       {
         "type": "ia.display.table",

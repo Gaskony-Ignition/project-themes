@@ -1,14 +1,78 @@
-# The theme selector popup
+# The theme switchers
 
-`SelectorPopup.view.json` is `views/SelectorPopup` inside `Theme_Installer` — the
-copy-me artefact any project can drop in to let a user switch between the 10
-custom themes (and the 6 IA built-ins) live, in their own session. It is
-**hand-adapted and commit-tracked**, not generated: `build_installer.py` copies
-this file verbatim into the built project and writes its `resource.json`
-(no signature, timestamp from the clock) — the same way it treats
-`ignition/script-python/themepack/`. It is not derived from `out/` at build
-time; the 10 swatches' hex values are static, hand-verified against `out/`
-once per swatch (see below), the way the original author built it.
+Two copy-me views, either of which lets a user change the theme of their own
+session. A project takes whichever suits it, or both:
+
+| File | `Theme_Installer` view | What it is |
+| ---- | ---------------------- | ---------- |
+| `SelectorPopup.view.json` | `views/SelectorPopup` | The swatch grid, opened as a popup. Each theme is a button in its own colours, so you can see what you are picking. |
+| `ThemeDropdown.view.json` | `views/ThemeDropdown` | One dropdown, 34px tall. Embeds in a header or a settings row and takes no space. |
+
+`Theme_Installer`'s own page demonstrates both: the **Theme switcher** button
+opens the popup, and the dropdown beside it is `views/ThemeDropdown` embedded
+rather than duplicated, so what is on that page is the same file a project
+would copy.
+
+The two are **independent on purpose** — each carries its own copy of the
+listing script rather than sharing one — so copying either into a project
+drags nothing else in. That duplication is the price of self-containment and
+is deliberate.
+
+## Both read the gateway, not a list in the file
+
+Neither view is allowed to offer a theme that is not on the gateway. Both ask
+`system.config.getResources(moduleId="com.inductiveautomation.perspective",
+typeId="themes")` when they open, and both add Ignition's six stock themes as
+a fixed base — `light` and `dark` live inside the Perspective module's own jar
+and never appear as config resources, so they cannot be discovered.
+
+That matters because these views are meant to be copied into projects on
+gateways that this pack was never installed on (Nigel, 28/08/2026). A hard
+coded row for `glass-violet` on a gateway without it writes an id Perspective
+cannot resolve into `session.props.theme`; a listed one cannot be offered at
+all. It also means a theme from somewhere else entirely — another vendor's
+pack, a hand-written one — appears in both without either file being edited.
+
+The **swatch grid stays a fixed, hand-coloured list** (the colours cannot be
+read out of a theme's CSS by a view binding), but the listing decides which of
+its buttons are *offered*: each swatch binds `props.style.display` to
+`indexOf({view.custom.gateway.have}, ",<id>,") >= 0`. The section heading
+counts what is there — "Custom · 10 themes" when all ten are, "Custom · 3 of
+10 on this gateway" when they are not — and when none are, the grid is
+replaced by a line saying so and pointing at the dropdown below it.
+
+Both halves of the popup read **one** listing (`view.custom.gateway`, bound
+once when the popup opens), so the swatches and the dropdown can never
+disagree about what the gateway has.
+
+Two things learned wiring that up, both measured on 8.3.8:
+
+- **`ia.display.label` ignores `props.style.display`.** It writes its own
+  `display: flex` into the same inline style and wins, so a label bound to
+  `"none"` stays on screen. `ia.input.button` and `ia.container.flex` both
+  honour it. The empty-state line is therefore a one-child flex container with
+  the binding on the container.
+- **A dropdown's menu is not inside the popup.** Perspective renders it in a
+  portal at document level (`.ia_componentModal`), so it is not clipped by a
+  short popup frame — and, checked directly, picking from it does **not**
+  dismiss a popup opened with `overlayDismiss=True`.
+- **A config scan racing a `system.config.delete()` can leave a resource
+  listed.** Ignition renames a deleted resource's directory to
+  `<name>.deleted-<id>`; with a scan fired straight after **Remove custom
+  themes**, two of the ten stayed in `getResources()` — and so in both
+  switchers — across repeated reads several minutes apart, before being reaped.
+  Pressing the button on its own is clean: 16 themes to 6 within five seconds,
+  and 6 back to 16 within five of pressing Install. `system.config.delete()`
+  needs no scan of its own, so do not give it one.
+
+## How the popup is built
+
+It is **hand-adapted and commit-tracked**, not generated: `build_installer.py`
+copies this file verbatim into the built project and writes its
+`resource.json` (no signature, timestamp from the clock) — the same way it
+treats `ignition/script-python/themepack/`. It is not derived from `out/` at
+build time; the 10 swatches' hex values are static, hand-verified against
+`out/` once per swatch (see below), the way the original author built it.
 
 **We own this file outright now.** `source-switcher-view.json` next to it is
 kept only for provenance/audit trail — it is the as-handed-over popup from the
@@ -91,8 +155,11 @@ Found in the course of adapting it — not in the author's 3-item list:
   clipped. Separately, 460 (the originally specified height) left the swatch
   grid needing 17px of internal scroll to reach the bottom row, at every
   viewport height tried, not just the short one — bumped to 480, which
-  clears it with zero internal scroll for the current (10 custom + 6 stock)
-  swatch count.
+  cleared it with zero internal scroll for the swatch count of the day
+  (10 custom + 6 stock). It is **590** now: the popup has since grown an
+  "Any theme on this gateway" dropdown below the grid, worth 62px with its
+  divider, measured the same way (`scrollHeight` vs `clientHeight` on the
+  root container) at both a 900px and a 530px viewport.
 
 ## A mid-adaptation correction: Newsprint Dark
 
@@ -157,7 +224,27 @@ The hard-won layout geometry, verified still present in
   dark, light-cool, dark-cool, light-warm, dark-warm) is IA's own
   stem-derived order and was left as-is.
 
-## Using this in another project
+## Using these in another project
+
+### The dropdown
+
+Copy the whole `views/ThemeDropdown` directory into the target project, then
+drop an **Embedded View** component wherever it should sit, with
+`props.path = "ThemeDropdown"`. Give it about 260px of width and 34px of
+height — `views/Installer`'s own action row is a worked example.
+
+Nothing else is required: the view reads the gateway's theme list itself and
+writes `session.props.theme` itself. There is no script package to copy, no
+session or custom prop to wire up, and no parent project.
+
+If you would rather have the bare control than an embedded view, lift the
+`Theme` dropdown component out of `ThemeDropdown.view.json` and paste it into
+a view of your own — it is self-contained, both of its bindings included.
+Watch one thing: `bidirectional` lives **inside** the value binding's
+`config`, and Perspective silently ignores it anywhere else, which turns the
+dropdown read-only.
+
+### The swatch popup
 
 Copy the whole `views/SelectorPopup` directory into the target project (or
 regenerate `Theme_Installer` and lift it from there), then add a button
@@ -173,10 +260,14 @@ system.perspective.openPopup(
     resizable=False,
     overlayDismiss=True,
     viewportBound=True,
-    position={'width': 560, 'height': 500})
+    position={'width': 560, 'height': 590})
 ```
 
 Nothing else is required — the popup writes `session.props.theme` on its own,
 no parent project, no style classes, no other session/custom props to wire
 up. See `views/Installer/view.json`'s own "Theme switcher" button for a
 working example.
+
+The popup carries the ten swatches this pack ships. On a gateway that has
+none of them it still works: the grid says so and the dropdown at its foot
+offers whatever that gateway does have.

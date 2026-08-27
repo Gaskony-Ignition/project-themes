@@ -38,6 +38,13 @@ PROJECT_DIR = os.path.join(INSTALLER_ROOT, "Theme_Installer")
 # snapshot it started from.
 SELECTOR_POPUP_SRC = os.path.join(HERE, "selector-popup", "SelectorPopup.view.json")
 
+# The other copy-me view: the swatch popup's alternative, a plain dropdown that
+# lists whatever themes the gateway has. Same rules as the popup -- hand
+# authored, commit-tracked, copied verbatim. The two are INDEPENDENT on
+# purpose (each carries its own listing script rather than sharing one): a
+# project takes whichever it wants, and neither drags the other in.
+THEME_DROPDOWN_SRC = os.path.join(HERE, "selector-popup", "ThemeDropdown.view.json")
+
 THEME_FILES = ["config.json", "index.css", "variables.css", "globals.css", "resource.json"]
 
 NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -582,9 +589,14 @@ def build_view_json(themes, version):
     # -- confirmed by measuring scrollHeight vs clientHeight on the "rows"
     # container at both 900px and 530px viewports, identical overflow both
     # times), so the bottom row needed the rows container's own
-    # `overflow: auto` to reach at all. 480 clears it with the current
-    # content (10 custom + 6 stock swatches, two section labels, one hint
-    # line) with zero internal scroll, confirmed the same way.
+    # `overflow: auto` to reach at all. 480 cleared it with the content of the
+    # day (10 custom + 6 stock swatches, two section labels, one hint line)
+    # with zero internal scroll, confirmed the same way.
+    #
+    # The popup has since grown an "Any theme on this gateway" dropdown below
+    # the grid -- a bordered section worth 62px -- and an empty-state line
+    # that only appears when no pack is installed, so the frame is 590,
+    # checked the same way at both viewport heights.
     open_switcher_script = (
         "\tsystem.perspective.openPopup(\n"
         "\t\t'theme-installer-selector',\n"
@@ -595,7 +607,7 @@ def build_view_json(themes, version):
         "\t\tresizable=False,\n"
         "\t\toverlayDismiss=True,\n"
         "\t\tviewportBound=True,\n"
-        "\t\tposition={'width': 560, 'height': 500})"
+        "\t\tposition={'width': 560, 'height': 590})"
     )
 
     root = {
@@ -700,10 +712,6 @@ def build_view_json(themes, version):
                     "type": "ia.container.flex",
                     "meta": {"name": "actions"},
                     "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                    "props": {
-                        "direction": "row",
-                        "style": {"gap": "12px"},
-                    },
                     "children": [
                         {
                             "type": "ia.input.button",
@@ -805,7 +813,32 @@ def build_view_json(themes, version):
                                 }
                             },
                         },
+                        # Both switchers are on this page on purpose: the
+                        # button opens the swatch popup, and the dropdown
+                        # beside it is the other copy-me view, embedded rather
+                        # than duplicated so what is demonstrated here is the
+                        # same file a project would copy.
+                        {
+                            "type": "ia.container.flex",
+                            "meta": {"name": "actions_spacer"},
+                            "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+                            "props": {},
+                        },
+                        {
+                            "type": "ia.display.view",
+                            "meta": {"name": "theme_dropdown"},
+                            "position": {"grow": 0, "shrink": 0, "basis": "260px"},
+                            "props": {
+                                "path": "ThemeDropdown",
+                                "style": {"minHeight": "34px"},
+                            },
+                        },
                     ],
+                    "props": {
+                        "direction": "row",
+                        "alignItems": "center",
+                        "style": {"gap": "12px"},
+                    },
                 },
                 {
                     "type": "ia.display.table",
@@ -861,11 +894,12 @@ def main():
     if os.path.isdir(INSTALLER_ROOT):
         shutil.rmtree(INSTALLER_ROOT)
 
-    if not os.path.isfile(SELECTOR_POPUP_SRC):
-        print("build_installer.py: %s not found -- the selector popup template "
-              "is hand-authored, not generated; see selector-popup/README.md" %
-              os.path.relpath(SELECTOR_POPUP_SRC, HERE))
-        sys.exit(1)
+    for src in (SELECTOR_POPUP_SRC, THEME_DROPDOWN_SRC):
+        if not os.path.isfile(src):
+            print("build_installer.py: %s not found -- the theme-switcher views "
+                  "are hand-authored, not generated; see "
+                  "selector-popup/README.md" % os.path.relpath(src, HERE))
+            sys.exit(1)
 
     script_dir = os.path.join(PROJECT_DIR, "ignition", "script-python", "themepack")
     persp_dir = os.path.join(PROJECT_DIR, "com.inductiveautomation.perspective")
@@ -874,8 +908,10 @@ def main():
     stylesheet_dir = os.path.join(persp_dir, "stylesheet")
     view_dir = os.path.join(persp_dir, "views", "Installer")
     popup_dir = os.path.join(persp_dir, "views", "SelectorPopup")
+    dropdown_dir = os.path.join(persp_dir, "views", "ThemeDropdown")
 
-    for d in (script_dir, session_props_dir, page_config_dir, stylesheet_dir, view_dir, popup_dir):
+    for d in (script_dir, session_props_dir, page_config_dir, stylesheet_dir,
+              view_dir, popup_dir, dropdown_dir):
         os.makedirs(d)
 
     # project.json
@@ -940,6 +976,12 @@ def main():
         popup_view = json.load(fh)
     write_json(os.path.join(popup_dir, "view.json"), popup_view)
     write_json(os.path.join(popup_dir, "resource.json"), resource_json(["view.json"]))
+
+    # views/ThemeDropdown -- the other copy-me view, same treatment.
+    with open(THEME_DROPDOWN_SRC) as fh:
+        dropdown_view = json.load(fh)
+    write_json(os.path.join(dropdown_dir, "view.json"), dropdown_view)
+    write_json(os.path.join(dropdown_dir, "resource.json"), resource_json(["view.json"]))
 
     print("build_installer.py: wrote %s (%d themes, v%s)" % (
         os.path.relpath(PROJECT_DIR, os.path.dirname(os.path.dirname(HERE))),

@@ -1,0 +1,97 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {
+    "defaultSize": {
+      "height": 34,
+      "width": 260
+    }
+  },
+  "root": {
+    "children": [
+      {
+        "meta": {
+          "name": "caption"
+        },
+        "position": {
+          "basis": "auto",
+          "grow": 0,
+          "shrink": 0
+        },
+        "props": {
+          "style": {
+            "color": "var(--label)",
+            "fontSize": "13px",
+            "fontWeight": "600",
+            "lineHeight": 1.4,
+            "whiteSpace": "nowrap"
+          },
+          "text": "Theme"
+        },
+        "type": "ia.display.label"
+      },
+      {
+        "meta": {
+          "name": "Theme",
+          "tooltip": {
+            "enabled": true,
+            "text": "Theme for this session"
+          }
+        },
+        "position": {
+          "basis": "0px",
+          "grow": 1,
+          "shrink": 1
+        },
+        "propConfig": {
+          "props.options": {
+            "binding": {
+              "config": {
+                "expression": "1"
+              },
+              "transforms": [
+                {
+                  "code": "\t# Deliberately self-contained: this view is a copy-me artefact, so it\n\t# must not depend on a script package existing in the host project.\n\t# The list is read from the GATEWAY, not written here, so a theme pack\n\t# installed after this view was copied appears without editing it, and\n\t# a theme that is not installed can never be picked.\n\tfrom java.lang import Throwable as JThrowable\n\t# light and dark live inside the Perspective module's own jar and never\n\t# appear as config resources, so the stock six are a fixed base rather\n\t# than something read from the gateway. Order is Ignition's own.\n\tstock = [u\"light\", u\"light-warm\", u\"light-cool\",\n\t         u\"dark\", u\"dark-warm\", u\"dark-cool\"]\n\textra = []\n\ttry:\n\t\tfor res in system.config.getResources(\n\t\t\t\tmoduleId=\"com.inductiveautomation.perspective\", typeId=\"themes\"):\n\t\t\tname = unicode(res.getName())\n\t\t\tif name not in stock and name not in extra:\n\t\t\t\textra.append(name)\n\texcept (JThrowable, Exception) as e:\n\t\t# a dropdown offering the stock six beats one offering nothing\n\t\tsystem.util.getLogger(\"ThemeSelector\").warn(\n\t\t\tu\"theme listing failed, offering the stock themes only: %s\" % e)\n\treturn [{u\"value\": n, u\"label\": n.replace(u\"-\", u\" \").capitalize()}\n\t        for n in stock + sorted(extra)]\n",
+                  "type": "script"
+                }
+              ],
+              "type": "expr"
+            }
+          },
+          "props.value": {
+            "binding": {
+              "config": {
+                "bidirectional": true,
+                "path": "session.props.theme"
+              },
+              "type": "property"
+            }
+          }
+        },
+        "props": {
+          "allowClearing": false,
+          "options": [],
+          "placeholder": "Theme",
+          "showSearch": false,
+          "style": {
+            "height": "34px"
+          }
+        },
+        "type": "ia.input.dropdown"
+      }
+    ],
+    "meta": {
+      "name": "root"
+    },
+    "props": {
+      "alignItems": "center",
+      "direction": "row",
+      "style": {
+        "gap": "10px",
+        "height": "100%",
+        "width": "100%"
+      }
+    },
+    "type": "ia.container.flex"
+  }
+}

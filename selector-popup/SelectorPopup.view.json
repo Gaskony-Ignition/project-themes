@@ -1,6 +1,28 @@
 {
-  "custom": {},
+  "custom": {
+    "gateway": {
+      "all": [],
+      "have": "",
+      "packCount": 0
+    }
+  },
   "params": {},
+  "propConfig": {
+    "custom.gateway": {
+      "binding": {
+        "config": {
+          "expression": "1"
+        },
+        "transforms": [
+          {
+            "code": "\t# What this gateway ACTUALLY has. The 16 swatches below are a fixed,\n\t# hand-coloured grid, but whether each one is offered is decided here,\n\t# at open time, by asking the gateway -- a swatch for a theme that is\n\t# not installed would set session.props.theme to an id Perspective\n\t# cannot resolve.\n\t#\n\t# Deliberately self-contained: this view is a copy-me artefact, so it\n\t# must not depend on a script package existing in the host project.\n\tfrom java.lang import Throwable as JThrowable\n\t# light and dark live inside the Perspective module's own jar and never\n\t# appear as config resources, so the stock six are a fixed base rather\n\t# than something read from the gateway. Order is Ignition's own.\n\tSTOCK = [u\"light\", u\"light-warm\", u\"light-cool\",\n\t         u\"dark\", u\"dark-warm\", u\"dark-cool\"]\n\t# the ten packs this repo ships -- only used to count the grid below\n\tPACK = [u\"glass-violet\", u\"glass-green\",\n\t        u\"leather-light\", u\"leather-dark\",\n\t        u\"finance-ledger\", u\"newsprint-dark\",\n\t        u\"nord-light\", u\"nord-dark\",\n\t        u\"industrial-light\", u\"industrial-dark\"]\n\textra = []\n\ttry:\n\t\tfor res in system.config.getResources(\n\t\t\t\tmoduleId=\"com.inductiveautomation.perspective\", typeId=\"themes\"):\n\t\t\tname = unicode(res.getName())\n\t\t\tif name not in STOCK and name not in extra:\n\t\t\t\textra.append(name)\n\texcept (JThrowable, Exception) as e:\n\t\t# a picker offering the stock six beats one offering nothing\n\t\tsystem.util.getLogger(\"ThemeSelector\").warn(\n\t\t\tu\"theme listing failed, offering the stock themes only: %s\" % e)\n\tnames = STOCK + sorted(extra)\n\treturn {\n\t\t# every theme on the gateway, whoever shipped it -- the dropdown\n\t\tu\"all\": [{u\"value\": n, u\"label\": n.replace(u\"-\", u\" \").capitalize()}\n\t\t          for n in names],\n\t\t# comma-DELIMITED, leading and trailing: the swatches test membership\n\t\t# with indexOf(..., \",<id>,\"), and without the delimiters \"nord-dark\"\n\t\t# would match inside \"nord-darker\"\n\t\tu\"have\": u\",\" + u\",\".join(names) + u\",\",\n\t\tu\"packCount\": len([n for n in PACK if n in names]),\n\t}\n",
+            "type": "script"
+          }
+        ],
+        "type": "expr"
+      }
+    }
+  },
   "props": {},
   "root": {
     "children": [
@@ -30,6 +52,16 @@
             "position": {
               "shrink": 0
             },
+            "propConfig": {
+              "props.text": {
+                "binding": {
+                  "config": {
+                    "expression": "if({view.custom.gateway.packCount} = 10, \"Custom \u00b7 10 themes\", \"Custom \u00b7 \" + toStr({view.custom.gateway.packCount}) + \" of 10 on this gateway\")"
+                  },
+                  "type": "expr"
+                }
+              }
+            },
             "props": {
               "style": {
                 "color": "var(--label--disabled)",
@@ -39,9 +71,50 @@
                 "lineHeight": 1.4,
                 "textTransform": "uppercase"
               },
-              "text": "Custom \u00b7 10 themes"
+              "text": "Custom"
             },
             "type": "ia.display.label"
+          },
+          {
+            "children": [
+              {
+                "meta": {
+                  "name": "text"
+                },
+                "position": {
+                  "shrink": 0
+                },
+                "props": {
+                  "style": {
+                    "color": "var(--label--disabled)",
+                    "fontSize": "11px",
+                    "lineHeight": 1.4
+                  },
+                  "text": "None of them are installed on this gateway. Install them from the Theme Installer page, or pick from what the gateway does have, below."
+                },
+                "type": "ia.display.label"
+              }
+            ],
+            "meta": {
+              "name": "customEmpty"
+            },
+            "position": {
+              "shrink": 0
+            },
+            "propConfig": {
+              "props.style.display": {
+                "binding": {
+                  "config": {
+                    "expression": "if({view.custom.gateway.packCount} = 0, \"block\", \"none\")"
+                  },
+                  "type": "expr"
+                }
+              }
+            },
+            "props": {
+              "direction": "column"
+            },
+            "type": "ia.container.flex"
           },
           {
             "children": [
@@ -64,6 +137,16 @@
                   "basis": "48%",
                   "grow": 0,
                   "shrink": 1
+                },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",glass-violet,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
                 },
                 "props": {
                   "style": {
@@ -103,6 +186,16 @@
                   "grow": 0,
                   "shrink": 1
                 },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",glass-green,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
+                },
                 "props": {
                   "style": {
                     "backgroundColor": "#252c2a",
@@ -140,6 +233,16 @@
                   "basis": "48%",
                   "grow": 0,
                   "shrink": 1
+                },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",leather-light,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
                 },
                 "props": {
                   "style": {
@@ -179,6 +282,16 @@
                   "grow": 0,
                   "shrink": 1
                 },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",leather-dark,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
+                },
                 "props": {
                   "style": {
                     "backgroundColor": "#241a13",
@@ -216,6 +329,16 @@
                   "basis": "48%",
                   "grow": 0,
                   "shrink": 1
+                },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",finance-ledger,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
                 },
                 "props": {
                   "style": {
@@ -255,6 +378,16 @@
                   "grow": 0,
                   "shrink": 1
                 },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",newsprint-dark,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
+                },
                 "props": {
                   "style": {
                     "backgroundColor": "#2a2723",
@@ -292,6 +425,16 @@
                   "basis": "48%",
                   "grow": 0,
                   "shrink": 1
+                },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",nord-light,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
                 },
                 "props": {
                   "style": {
@@ -331,6 +474,16 @@
                   "grow": 0,
                   "shrink": 1
                 },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",nord-dark,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
+                },
                 "props": {
                   "style": {
                     "backgroundColor": "#3b4452",
@@ -369,6 +522,16 @@
                   "grow": 0,
                   "shrink": 1
                 },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",industrial-light,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
+                },
                 "props": {
                   "style": {
                     "backgroundColor": "#ffffff",
@@ -406,6 +569,16 @@
                   "basis": "48%",
                   "grow": 0,
                   "shrink": 1
+                },
+                "propConfig": {
+                  "props.style.display": {
+                    "binding": {
+                      "config": {
+                        "expression": "if(indexOf({view.custom.gateway.have}, \",industrial-dark,\") >= 0, \"flex\", \"none\")"
+                      },
+                      "type": "expr"
+                    }
+                  }
                 },
                 "props": {
                   "style": {
@@ -725,6 +898,88 @@
             "minHeight": "0",
             "overflow": "auto",
             "width": "100%"
+          }
+        },
+        "type": "ia.container.flex"
+      },
+      {
+        "children": [
+          {
+            "meta": {
+              "name": "anyLabel"
+            },
+            "position": {
+              "shrink": 0
+            },
+            "props": {
+              "style": {
+                "color": "var(--label--disabled)",
+                "fontSize": "10px",
+                "fontWeight": "700",
+                "letterSpacing": "0.08em",
+                "lineHeight": 1.4,
+                "textTransform": "uppercase"
+              },
+              "text": "Any theme on this gateway"
+            },
+            "type": "ia.display.label"
+          },
+          {
+            "meta": {
+              "name": "Theme",
+              "tooltip": {
+                "enabled": true,
+                "text": "Every theme this gateway has, whoever shipped it"
+              }
+            },
+            "position": {
+              "basis": "auto",
+              "grow": 0,
+              "shrink": 0
+            },
+            "propConfig": {
+              "props.options": {
+                "binding": {
+                  "config": {
+                    "path": "view.custom.gateway.all"
+                  },
+                  "type": "property"
+                }
+              },
+              "props.value": {
+                "binding": {
+                  "config": {
+                    "bidirectional": true,
+                    "path": "session.props.theme"
+                  },
+                  "type": "property"
+                }
+              }
+            },
+            "props": {
+              "allowClearing": false,
+              "options": [],
+              "placeholder": "Theme",
+              "showSearch": false,
+              "style": {
+                "height": "34px"
+              }
+            },
+            "type": "ia.input.dropdown"
+          }
+        ],
+        "meta": {
+          "name": "any"
+        },
+        "position": {
+          "shrink": 0
+        },
+        "props": {
+          "direction": "column",
+          "style": {
+            "borderTop": "1px solid var(--border)",
+            "gap": "6px",
+            "paddingTop": "10px"
           }
         },
         "type": "ia.container.flex"

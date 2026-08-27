@@ -4,7 +4,9 @@
 |---|---|---|
 | ![Glass Violet](images/glass-violet.png) | ![Newsprint Dark](images/newsprint-dark.png) | ![Finance Ledger](images/finance-ledger.png) |
 
-The included switcher popup (copy `views/SelectorPopup` into any project):
+Two copy-me theme switchers come with it — a swatch popup and a dropdown —
+and both list what the **gateway** has rather than what this repo ships, so
+they work unchanged on a gateway these packs were never installed on:
 
 ![Switcher popup](images/switcher-popup.png)
 
@@ -92,13 +94,14 @@ leave a stale directory under an old theme id sitting next to the new one.
   every theme's file contents (read from `out/`, whatever count that is at
   build time) as data in a gateway-scope script
   (`ignition/script-python/themepack/code.py`), plus a one-page UI
-  (`views/Installer`) with Install/Remove buttons, a live status table, and a
-  "Theme switcher" button that opens `views/SelectorPopup` — a hand-authored,
-  commit-tracked copy-me popup (`selector-popup/SelectorPopup.view.json`, NOT
-  generated from `out/`, so it does not auto-track a theme count change —
-  see that file's own README for the swatch list) for previewing every
-  custom theme + the 6 IA built-ins live. See
-  "Adding the theme selector popup" below. `package.sh` zips it into
+  (`views/Installer`) with Install/Remove buttons, a live status table, a
+  "Theme switcher" button that opens `views/SelectorPopup`, and an embedded
+  `views/ThemeDropdown` beside it. Those two views are the hand-authored,
+  commit-tracked copy-me switchers (`selector-popup/*.view.json`, NOT
+  generated from `out/`) — the popup's swatch grid does not auto-track a
+  theme count change, but which of its swatches are *offered* does, because
+  both views list the gateway's own theme resources at open time. See
+  "Adding a theme switcher" below. `package.sh` zips it into
   `dist/Theme_Installer-<VERSION>.zip`, a normal
   Ignition project-import zip — see "Theme Installer project (easiest)" under
   "Installing on a gateway" below. Regenerate it after any `out/` change with
@@ -365,7 +368,7 @@ that ships changed stock themes may still replace the variants' files — if a
 variant's row ever drops back to "Stock - not modified", press **Update stock
 themes** again, same as the custom repair path.
 
-**Uninstalling**: open the same page and click **Remove all themes** — goes
+**Uninstalling**: open the same page and click **Remove custom themes** — goes
 through `system.config.delete()`, which removes the resource AND its files in
 one call, no scan needed.
 
@@ -503,15 +506,41 @@ and the workspace's `reference-ignition-config-resource-stamp` note).
 `out/themes.json` is not a gateway resource — it's a plain data file for
 whatever selector UI lists these themes for a user.
 
-## Adding the theme selector popup
+## Adding a theme switcher
 
-`Theme_Installer` ships one: `views/SelectorPopup`, a copy-me artefact any
-project can drop in to let a user switch live between every custom theme and
-the 6 IA built-ins, in their own session, with no parent project and no style
-classes. `Theme_Installer`'s own `views/Installer` page opens it from its
-"Theme switcher" button.
+`Theme_Installer` ships **two**, either of which drops into any project to let
+a user change their own session's theme, with no parent project and no style
+classes:
 
-To use it in another project:
+- **`views/ThemeDropdown`** — one 34px dropdown. Embed it with an Embedded
+  View component (`props.path = "ThemeDropdown"`, about 260×34) and that is
+  the whole job.
+- **`views/SelectorPopup`** — the swatch grid, opened as a popup. Each theme
+  is a button in its own colours, so you can see what you are picking.
+
+`Theme_Installer`'s own page has both: the "Theme switcher" button opens the
+popup, and the dropdown to its right is `views/ThemeDropdown` embedded rather
+than duplicated.
+
+**Both list the gateway, not this repo.** Each asks
+`system.config.getResources(moduleId="com.inductiveautomation.perspective",
+typeId="themes")` when it opens and adds Ignition's stock six as a fixed base
+(`light` and `dark` live inside the Perspective module's jar and never appear
+as resources). So a switcher copied onto a gateway that has none of these
+packs offers that gateway's themes instead of writing an id Perspective cannot
+resolve, and a theme from anywhere else shows up without either file being
+edited. The popup's swatch colours are still a fixed hand-verified list — a
+view binding cannot read a colour out of a theme's CSS — but a swatch is only
+*offered* when the gateway has that theme, the section heading counts what is
+there, and when none are, a line says so and points at the dropdown at its
+foot. Neither view depends on a script package: the listing is inline in each,
+duplicated on purpose so that copying one drags nothing else in.
+
+The same popup on a gateway with none of these packs installed:
+
+![The switcher popup where no custom theme is installed](images/switcher-none.png)
+
+To use the popup in another project:
 
 1. Copy the whole `views/SelectorPopup` directory into the target project
    (or regenerate `Theme_Installer` from this repo and lift it from there).
@@ -526,7 +555,7 @@ To use it in another project:
        resizable=False,
        overlayDismiss=True,
        viewportBound=True,
-       position={'width': 560, 'height': 500})
+       position={'width': 560, 'height': 590})
    ```
    (`width`/`height` are NOT top-level `openPopup` kwargs on this Ignition
    version — confirmed live and against IA's own scripting reference; they
@@ -536,10 +565,11 @@ To use it in another project:
 That's it — the popup writes `session.props.theme` on its own when a swatch
 is clicked; nothing else needs wiring up.
 
-The view is hand-authored and commit-tracked at
-`selector-popup/SelectorPopup.view.json` — `build_installer.py`
-copies it into the generated project verbatim (only its `resource.json` is
-built fresh each run). It is NOT derived from `out/` at build time and is not
+Both views are hand-authored and commit-tracked at
+`selector-popup/SelectorPopup.view.json` and
+`selector-popup/ThemeDropdown.view.json` — `build_installer.py`
+copies them into the generated project verbatim (only their `resource.json`
+is built fresh each run). It is NOT derived from `out/` at build time and is not
 touched by `build_theme.py`. It started as a snapshot handed over from a
 Work-Dockers session that built the same picker for their own multi-project
 switcher rig; `selector-popup/README.md` documents exactly
