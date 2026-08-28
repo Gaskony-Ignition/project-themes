@@ -1,0 +1,890 @@
+{
+  "custom": {
+    "theme": "",
+    "against": "",
+    "key": "",
+    "rows": [],
+    "counts": {},
+    "layers": []
+  },
+  "propConfig": {
+    "custom.theme": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "1"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tfor r in themepack.status():\n\t\tif r.get('kind') == 'custom' and r.get('installed'):\n\t\t\treturn r['id']\n\treturn ''"
+          }
+        ]
+      }
+    },
+    "custom.key": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "{view.custom.theme} + '|' + {view.custom.against}"
+        }
+      }
+    },
+    "custom.rows": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme, against = (value + '|').split('|')[:2]\n\tif not theme:\n\t\treturn []\n\treturn themepack.compare(theme, against or None)"
+          }
+        ]
+      }
+    },
+    "custom.counts": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme, against = (value + '|').split('|')[:2]\n\tif not theme:\n\t\treturn {}\n\treturn themepack.summary(theme, against or None)"
+          }
+        ]
+      }
+    },
+    "custom.layers": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.theme"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tif not value:\n\t\treturn []\n\treturn themepack.layers(value)"
+          }
+        ]
+      }
+    }
+  },
+  "params": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {
+      "direction": "column",
+      "style": {
+        "padding": "18px",
+        "gap": "14px",
+        "backgroundColor": "var(--containerRoot)"
+      }
+    },
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "nav"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "10px",
+            "paddingBottom": "4px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navhome"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Installer",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "nav_changes"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "What this theme changes",
+              "style": {
+                "fontSize": "13px",
+                "color": "var(--label)",
+                "fontWeight": 600
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navcontract"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "The contract",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/contract')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "title"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "What this theme changes",
+          "style": {
+            "fontSize": "24px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Every figure here is read from this gateway right now: the page fetches the resolved stylesheet the browser actually gets and compares it with the stock theme underneath. Nothing is written down at build time, so nothing here can quietly go out of date. v1.7.0",
+          "style": {
+            "fontSize": "13px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "pickers"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {
+            "gap": "14px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "pick_theme"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "3px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Theme",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              },
+              {
+                "type": "ia.input.dropdown",
+                "meta": {
+                  "name": "dd"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "allowClearing": false,
+                  "showSearch": false,
+                  "style": {
+                    "height": "34px",
+                    "minWidth": "220px"
+                  }
+                },
+                "propConfig": {
+                  "props.options": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "1"
+                      },
+                      "transforms": [
+                        {
+                          "type": "script",
+                          "code": "\timport themepack\n\treturn [{'value': r['id'], 'label': r['label']}\n\t        for r in themepack.status()\n\t        if r.get('kind') == 'custom' and r.get('installed')]"
+                        }
+                      ]
+                    }
+                  },
+                  "props.value": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.theme",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "pick_against"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "3px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Compared with",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              },
+              {
+                "type": "ia.input.dropdown",
+                "meta": {
+                  "name": "dd"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "allowClearing": false,
+                  "showSearch": false,
+                  "style": {
+                    "height": "34px",
+                    "minWidth": "220px"
+                  }
+                },
+                "propConfig": {
+                  "props.options": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "1"
+                      },
+                      "transforms": [
+                        {
+                          "type": "script",
+                          "code": "\timport themepack\n\topts = [{'value': '', 'label': 'its own base theme'}]\n\tfor r in themepack.status():\n\t\tif r.get('kind') != 'custom' or r.get('installed'):\n\t\t\topts.append({'value': r['id'], 'label': r['label']})\n\treturn opts"
+                        }
+                      ]
+                    }
+                  },
+                  "props.value": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.against",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "stats"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {
+            "gap": "10px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "stat_inherited"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "24px",
+                    "fontWeight": 600,
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.inherited}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "caption"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "inherited untouched",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "stat_overridden"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "24px",
+                    "fontWeight": 600,
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.overridden}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "caption"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "overridden",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "stat_added"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "24px",
+                    "fontWeight": 600,
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.added}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "caption"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "added by us",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "stat_classes"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "24px",
+                    "fontWeight": 600,
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.classes}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "caption"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "style classes published",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "anatomy_h"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "How a theme is put together",
+          "style": {
+            "fontSize": "15px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "anatomy_sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "index.css is three lines. We do not replace Ignition's theme -- we import it and override on top, which is why anything we never name still behaves exactly as stock.",
+          "style": {
+            "fontSize": "12px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.display.table",
+        "meta": {
+          "name": "layers"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "260px"
+        },
+        "props": {
+          "pager": {
+            "top": false,
+            "bottom": false
+          },
+          "columns": [
+            {
+              "field": "layer",
+              "header": {
+                "title": "Layer"
+              },
+              "width": 190,
+              "strictWidth": true
+            },
+            {
+              "field": "what",
+              "header": {
+                "title": "What it does"
+              }
+            },
+            {
+              "field": "here",
+              "header": {
+                "title": "On this theme"
+              },
+              "width": 300,
+              "strictWidth": false
+            }
+          ]
+        },
+        "propConfig": {
+          "props.data": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.layers"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "table_h"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Every variable, and why",
+          "style": {
+            "fontSize": "15px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "table_sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "'Why' is the derivation build_theme.py recorded when it generated the value -- not a description written afterwards. Rows marked inherited are Ignition's own value, kept.",
+          "style": {
+            "fontSize": "12px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.display.table",
+        "meta": {
+          "name": "changes"
+        },
+        "position": {
+          "grow": 1,
+          "shrink": 1,
+          "basis": "0px"
+        },
+        "props": {
+          "pager": {
+            "top": false,
+            "bottom": false
+          },
+          "columns": [
+            {
+              "field": "variable",
+              "header": {
+                "title": "Variable"
+              },
+              "width": 230,
+              "strictWidth": true
+            },
+            {
+              "field": "state",
+              "header": {
+                "title": "State"
+              },
+              "width": 110,
+              "strictWidth": true
+            },
+            {
+              "field": "compared",
+              "header": {
+                "title": "Compared with"
+              },
+              "width": 190,
+              "strictWidth": false
+            },
+            {
+              "field": "value",
+              "header": {
+                "title": "This theme"
+              },
+              "width": 190,
+              "strictWidth": false
+            },
+            {
+              "field": "why",
+              "header": {
+                "title": "Why"
+              }
+            }
+          ]
+        },
+        "propConfig": {
+          "props.data": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.rows"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

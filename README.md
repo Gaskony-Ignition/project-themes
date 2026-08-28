@@ -340,6 +340,28 @@ shipping the payload:
    already wrote, because those are gateway config resources, not project
    resources.
 
+The project carries two more pages, linked from the header of each. Neither
+is required to install anything — they are there so the themes are not a black
+box on someone else's gateway:
+
+* **What this theme changes** — the honest diff against the stock theme
+  underneath. On a typical theme that is 108 of Ignition's own variables
+  overridden, 12 inherited untouched and 42 added; each row shows the stock
+  value beside ours and the derivation `build_theme.py` recorded when it
+  generated the value. A second dropdown re-points the comparison at any other
+  installed theme, which answers "how do these two differ" with the same
+  machinery.
+* **The contract** — the `--st-*` tokens and `st/...` classes a project can
+  use without inheriting anything, each listed with its live value and the
+  selectors in the theme that actually consume it.
+
+Both read the gateway at the moment you open them: they fetch the resolved
+stylesheet the browser is really being served (`/data/perspective/themes/<id>.css`,
+which is also how the stock base is read, since light and dark live inside the
+Perspective module rather than on disk) and measure it. No figure on either
+page is written down at build time, so neither can drift from what is
+installed — and a theme that has been edited on the gateway shows its edits.
+
 Re-running **Install custom themes** overwrites whatever is on the gateway
 with the embedded copies — so importing a newer release of the installer and
 pressing the button again is the repair path if an Ignition upgrade (or

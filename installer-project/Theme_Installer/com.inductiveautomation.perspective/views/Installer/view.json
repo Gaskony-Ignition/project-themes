@@ -50,6 +50,102 @@
       {
         "type": "ia.container.flex",
         "meta": {
+          "name": "nav"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "10px",
+            "paddingBottom": "4px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "nav_"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Installer",
+              "style": {
+                "fontSize": "13px",
+                "color": "var(--label)",
+                "fontWeight": 600
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navchanges"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "What this theme changes",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/changes')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navcontract"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "The contract",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/contract')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
           "name": "header"
         },
         "position": {
@@ -94,7 +190,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources - the stock themes are never touched by this. Safe to re-run: installing overwrites the gateway's copies, which repairs the themes after an Ignition upgrade. Safe to delete this project afterwards. v1.6.0",
+              "text": "Installs Gaskony's 10 curated Perspective gateway themes as config resources - the stock themes are never touched by this. Safe to re-run: installing overwrites the gateway's copies, which repairs the themes after an Ignition upgrade. Safe to delete this project afterwards. v1.7.0",
               "style": {
                 "fontSize": "13px",
                 "color": "var(--label--disabled)"

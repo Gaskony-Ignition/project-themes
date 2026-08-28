@@ -3,6 +3,14 @@
     "/": {
       "title": "Theme Installer",
       "viewPath": "Installer"
+    },
+    "/changes": {
+      "title": "What this theme changes",
+      "viewPath": "Changes"
+    },
+    "/contract": {
+      "title": "The contract",
+      "viewPath": "Contract"
     }
   }
 }

@@ -1,0 +1,466 @@
+{
+  "custom": {
+    "theme": "",
+    "tokens": [],
+    "classes": []
+  },
+  "propConfig": {
+    "custom.theme": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "1"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tfor r in themepack.status():\n\t\tif r.get('kind') == 'custom' and r.get('installed'):\n\t\t\treturn r['id']\n\treturn ''"
+          }
+        ]
+      }
+    },
+    "custom.tokens": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.theme"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tif not value:\n\t\treturn []\n\treturn themepack.contract(value)"
+          }
+        ]
+      }
+    },
+    "custom.classes": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.theme"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tif not value:\n\t\treturn []\n\treturn themepack.contract_classes(value)"
+          }
+        ]
+      }
+    }
+  },
+  "params": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {
+      "direction": "column",
+      "style": {
+        "padding": "18px",
+        "gap": "14px",
+        "backgroundColor": "var(--containerRoot)"
+      }
+    },
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "nav"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "10px",
+            "paddingBottom": "4px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navhome"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Installer",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navchanges"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "What this theme changes",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/changes')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "nav_contract"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "The contract",
+              "style": {
+                "fontSize": "13px",
+                "color": "var(--label)",
+                "fontWeight": 600
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "title"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "The contract",
+          "style": {
+            "fontSize": "24px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "What a project can rely on without inheriting anything. Both lists are read out of the installed theme itself, so this page cannot advertise a token or a class the theme does not actually ship. v1.7.0",
+          "style": {
+            "fontSize": "13px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "pick_theme"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "column",
+          "style": {
+            "gap": "3px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "cap"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Theme",
+              "style": {
+                "fontSize": "12px",
+                "color": "var(--label--disabled)"
+              }
+            }
+          },
+          {
+            "type": "ia.input.dropdown",
+            "meta": {
+              "name": "dd"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "allowClearing": false,
+              "showSearch": false,
+              "style": {
+                "height": "34px",
+                "minWidth": "220px"
+              }
+            },
+            "propConfig": {
+              "props.options": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "1"
+                  },
+                  "transforms": [
+                    {
+                      "type": "script",
+                      "code": "\timport themepack\n\treturn [{'value': r['id'], 'label': r['label']}\n\t        for r in themepack.status()\n\t        if r.get('kind') == 'custom' and r.get('installed')]"
+                    }
+                  ]
+                }
+              },
+              "props.value": {
+                "binding": {
+                  "type": "property",
+                  "config": {
+                    "path": "view.custom.theme",
+                    "bidirectional": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "tok_h"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Tokens",
+          "style": {
+            "fontSize": "15px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "tok_sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Custom properties published at :root. Use them as var(--st-accent) in a style class or an inline style. 'Where' is read from the theme's own rules, so a token shown with no consumers is one the theme publishes for your project to use rather than one it uses itself.",
+          "style": {
+            "fontSize": "12px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.display.table",
+        "meta": {
+          "name": "tokens"
+        },
+        "position": {
+          "grow": 1,
+          "shrink": 1,
+          "basis": "0px"
+        },
+        "props": {
+          "pager": {
+            "top": false,
+            "bottom": false
+          },
+          "columns": [
+            {
+              "field": "token",
+              "header": {
+                "title": "Token"
+              },
+              "width": 230,
+              "strictWidth": true
+            },
+            {
+              "field": "value",
+              "header": {
+                "title": "Value on this theme"
+              },
+              "width": 200,
+              "strictWidth": false
+            },
+            {
+              "field": "uses",
+              "header": {
+                "title": "Selectors"
+              },
+              "width": 90,
+              "strictWidth": true
+            },
+            {
+              "field": "where",
+              "header": {
+                "title": "Where"
+              }
+            }
+          ]
+        },
+        "propConfig": {
+          "props.data": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.tokens"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "cls_h"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Style classes",
+          "style": {
+            "fontSize": "15px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "cls_sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Put the name in a component's style.classes and the theme styles it -- no style-class resource needed in your project. Each selector is doubled in the CSS so it outranks Ignition's own component rules without !important, which would also beat your inline styles.",
+          "style": {
+            "fontSize": "12px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.display.table",
+        "meta": {
+          "name": "classes"
+        },
+        "position": {
+          "grow": 1,
+          "shrink": 1,
+          "basis": "0px"
+        },
+        "props": {
+          "pager": {
+            "top": false,
+            "bottom": false
+          },
+          "columns": [
+            {
+              "field": "klass",
+              "header": {
+                "title": "Class"
+              },
+              "width": 300,
+              "strictWidth": true
+            },
+            {
+              "field": "count",
+              "header": {
+                "title": "Properties"
+              },
+              "width": 100,
+              "strictWidth": true
+            },
+            {
+              "field": "sets",
+              "header": {
+                "title": "What it sets"
+              }
+            }
+          ]
+        },
+        "propConfig": {
+          "props.data": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.classes"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

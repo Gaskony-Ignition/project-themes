@@ -45,6 +45,11 @@ SELECTOR_POPUP_SRC = os.path.join(HERE, "selector-popup", "SelectorPopup.view.js
 # project takes whichever it wants, and neither drags the other in.
 THEME_DROPDOWN_SRC = os.path.join(HERE, "selector-popup", "ThemeDropdown.view.json")
 
+# The insight/ analysis functions -- hand-authored, appended to themepack's
+# generated code.py. See the header of that file for why it reads the live
+# gateway rather than anything baked in here.
+INSIGHT_SRC = os.path.join(HERE, "insight", "insight_code.py")
+
 THEME_FILES = ["config.json", "index.css", "variables.css", "globals.css", "resource.json"]
 
 NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -220,6 +225,7 @@ def build_themepack_code(themes, version):
     lines.append('')
     lines.append('import json')
     lines.append('import os')
+    lines.append('import re')
     lines.append('')
     lines.append('from java.lang import Throwable')
     lines.append('from com.inductiveautomation.ignition.gateway import IgnitionGateway')
@@ -506,6 +512,16 @@ def build_themepack_code(themes, version):
     lines.append('        })')
     lines.append('    return out')
     lines.append('')
+
+    # The insight functions are hand-authored and commit-tracked rather than
+    # emitted line by line -- 200 lines of lines.append() would be unreadable
+    # and unreviewable, and unlike the THEMES data none of this is derived
+    # from out/. Same precedent as selector-popup/: source in the repo, copied
+    # in verbatim at build time. It is appended (not imported) so the shipped
+    # project stays one self-contained script module.
+    with open(INSIGHT_SRC) as handle:
+        lines.append(handle.read().rstrip("\n"))
+    lines.append('')
     return "\n".join(lines)
 
 
@@ -645,6 +661,9 @@ def build_view_json(themes, version):
                 },
             },
             "children": [
+                # Same nav as the insight pages. Without it those pages are
+                # reachable only by typing the URL, which is not shipping them.
+                _nav("Installer"),
                 {
                     "type": "ia.container.flex",
                     "meta": {"name": "header"},
@@ -887,12 +906,342 @@ def build_view_json(themes, version):
     return root
 
 
+
+# ---------------------------------------------------------------------------
+# The two insight pages. Both are thin: every number on them comes from
+# themepack's insight functions reading the live gateway, so these builders
+# lay out components and nothing else -- there is no figure here to go stale.
+# ---------------------------------------------------------------------------
+
+# Only binding forms this project already proves are used: `expr` with a script
+# transform (ThemeDropdown's options) and `property` with one (the Installer's
+# status table). expr-struct appears nowhere in the estate, so a dependency on
+# two properties is expressed as an expr binding that CONCATENATES them into
+# one key, which the rows binding then watches. Guessing an unproven binding
+# type here would fail the way they fail in Perspective: silently, with a blank
+# table and no log line.
+def _expr(expression, code):
+    return {"type": "expr", "config": {"expression": expression},
+            "transforms": [{"type": "script", "code": code}]}
+
+
+def _prop(path, code=None):
+    binding = {"type": "property", "config": {"path": path}}
+    if code:
+        binding["transforms"] = [{"type": "script", "code": code}]
+    return binding
+
+
+def _label(name, text, size="13px", colour="var(--label)", weight=None, grow=0):
+    style = {"fontSize": size, "color": colour}
+    if weight:
+        style["fontWeight"] = weight
+    return {"type": "ia.display.label", "meta": {"name": name},
+            "position": {"grow": grow, "shrink": 0, "basis": "auto"},
+            "props": {"text": text, "style": style}}
+
+
+def _nav(active):
+    """Three page links. The active one is a plain label, so the current page
+    never offers to navigate to itself."""
+    pages = [("Installer", "/"), ("What this theme changes", "/changes"),
+             ("The contract", "/contract")]
+    children = []
+    for title, path in pages:
+        if title == active:
+            children.append(_label("nav_" + path.strip("/") or "nav_home", title,
+                                   size="13px", colour="var(--label)", weight=600))
+            continue
+        children.append({
+            "type": "ia.input.button",
+            "meta": {"name": "nav" + (path.strip("/") or "home")},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"text": title, "style": {"fontSize": "13px"}},
+            "events": {"component": {"onActionPerformed": {
+                "config": {"script": "\tsystem.perspective.navigate(page='%s')" % path},
+                "scope": "G", "type": "script"}}},
+        })
+    return {"type": "ia.container.flex", "meta": {"name": "nav"},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"direction": "row", "alignItems": "center",
+                      "style": {"gap": "10px", "paddingBottom": "4px"}},
+            "children": children}
+
+
+def _stat(key, caption):
+    """One headline number, bound to a field of view.custom.counts."""
+    return {
+        "type": "ia.container.flex", "meta": {"name": "stat_" + key},
+        "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+        "props": {"direction": "column",
+                  "style": {"padding": "10px 12px", "borderRadius": "8px",
+                            "backgroundColor": "var(--container)",
+                            "border": "var(--containerBorder)"}},
+        "children": [
+            {"type": "ia.display.label", "meta": {"name": "n"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"style": {"fontSize": "24px", "fontWeight": 600,
+                                 "color": "var(--label)"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "expr",
+                 "config": {"expression": "{view.custom.counts.%s}" % key}}}}},
+            _label("caption", caption, size="12px", colour="var(--label--disabled)"),
+        ],
+    }
+
+
+def _table(name, columns, path):
+    return {
+        "type": "ia.display.table", "meta": {"name": name},
+        "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+        # No pager, ever (workspace rule) -- these lists are meant to be
+        # scrolled and read, not paged through twenty rows at a time.
+        "props": {"pager": {"top": False, "bottom": False}, "columns": columns},
+        "propConfig": {"props.data": {"binding": _prop(path)}},
+    }
+
+
+def _col(field, title, width=None, strict=False):
+    col = {"field": field, "header": {"title": title}}
+    if width:
+        col["width"] = width
+        col["strictWidth"] = strict
+    return col
+
+
+CHANGES_ROWS = (
+    "\timport themepack\n"
+    "\ttheme, against = (value + '|').split('|')[:2]\n"
+    "\tif not theme:\n"
+    "\t\treturn []\n"
+    "\treturn themepack.compare(theme, against or None)"
+)
+CHANGES_COUNTS = (
+    "\timport themepack\n"
+    "\ttheme, against = (value + '|').split('|')[:2]\n"
+    "\tif not theme:\n"
+    "\t\treturn {}\n"
+    "\treturn themepack.summary(theme, against or None)"
+)
+CHANGES_LAYERS = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn []\n"
+    "\treturn themepack.layers(value)"
+)
+INSTALLED_OPTIONS = (
+    "\timport themepack\n"
+    "\treturn [{'value': r['id'], 'label': r['label']}\n"
+    "\t        for r in themepack.status()\n"
+    "\t        if r.get('kind') == 'custom' and r.get('installed')]"
+)
+AGAINST_OPTIONS = (
+    "\timport themepack\n"
+    "\topts = [{'value': '', 'label': 'its own base theme'}]\n"
+    "\tfor r in themepack.status():\n"
+    "\t\tif r.get('kind') != 'custom' or r.get('installed'):\n"
+    "\t\t\topts.append({'value': r['id'], 'label': r['label']})\n"
+    "\treturn opts"
+)
+FIRST_INSTALLED = (
+    "\timport themepack\n"
+    "\tfor r in themepack.status():\n"
+    "\t\tif r.get('kind') == 'custom' and r.get('installed'):\n"
+    "\t\t\treturn r['id']\n"
+    "\treturn ''"
+)
+CONTRACT_TOKENS = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn []\n"
+    "\treturn themepack.contract(value)"
+)
+CONTRACT_CLASSES = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn []\n"
+    "\treturn themepack.contract_classes(value)"
+)
+
+
+def _theme_picker(name, label, custom_path, options_code):
+    return {
+        "type": "ia.container.flex", "meta": {"name": name},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "column", "style": {"gap": "3px"}},
+        "children": [
+            _label("cap", label, size="12px", colour="var(--label--disabled)"),
+            {"type": "ia.input.dropdown", "meta": {"name": "dd"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"allowClearing": False, "showSearch": False,
+                       "style": {"height": "34px", "minWidth": "220px"}},
+             "propConfig": {
+                 "props.options": {"binding": _expr("1", options_code)},
+                 # bidirectional goes INSIDE config or it is silently ignored
+                 # and the dropdown never writes the selection back.
+                 "props.value": {"binding": {
+                     "type": "property",
+                     "config": {"path": custom_path, "bidirectional": True}}},
+             }},
+        ],
+    }
+
+
+def build_changes_view_json(themes, version):
+    """Page: what this theme actually changes, measured against stock."""
+    return {
+        "custom": {"theme": "", "against": "", "key": "",
+                   "rows": [], "counts": {}, "layers": []},
+        "propConfig": {
+            "custom.theme": {"binding": _expr("1", FIRST_INSTALLED)},
+            # One key so the rows depend on BOTH dropdowns. See _expr's note.
+            "custom.key": {"binding": {"type": "expr", "config": {
+                "expression": "{view.custom.theme} + '|' + {view.custom.against}"}}},
+            "custom.rows": {"binding": _prop("view.custom.key", CHANGES_ROWS)},
+            "custom.counts": {"binding": _prop("view.custom.key", CHANGES_COUNTS)},
+            "custom.layers": {"binding": _prop("view.custom.theme", CHANGES_LAYERS)},
+        },
+        "params": {},
+        "root": {
+            "type": "ia.container.flex", "meta": {"name": "root"},
+            "props": {"direction": "column",
+                      "style": {"padding": "18px", "gap": "14px",
+                                "backgroundColor": "var(--containerRoot)"}},
+            "children": [
+                _nav("What this theme changes"),
+                _label("title", "What this theme changes", size="24px",
+                       weight=600),
+                _label("sub",
+                       "Every figure here is read from this gateway right now: "
+                       "the page fetches the resolved stylesheet the browser "
+                       "actually gets and compares it with the stock theme "
+                       "underneath. Nothing is written down at build time, so "
+                       "nothing here can quietly go out of date. v" + version,
+                       size="13px", colour="var(--label--disabled)"),
+                {"type": "ia.container.flex", "meta": {"name": "pickers"},
+                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                 "props": {"direction": "row", "style": {"gap": "14px"}},
+                 "children": [
+                     _theme_picker("pick_theme", "Theme", "view.custom.theme",
+                                   INSTALLED_OPTIONS),
+                     _theme_picker("pick_against", "Compared with",
+                                   "view.custom.against", AGAINST_OPTIONS),
+                 ]},
+                {"type": "ia.container.flex", "meta": {"name": "stats"},
+                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                 "props": {"direction": "row", "style": {"gap": "10px"}},
+                 "children": [
+                     _stat("inherited", "inherited untouched"),
+                     _stat("overridden", "overridden"),
+                     _stat("added", "added by us"),
+                     _stat("classes", "style classes published"),
+                 ]},
+                _label("anatomy_h", "How a theme is put together", size="15px",
+                       weight=600),
+                _label("anatomy_sub",
+                       "index.css is three lines. We do not replace Ignition's "
+                       "theme -- we import it and override on top, which is why "
+                       "anything we never name still behaves exactly as stock.",
+                       size="12px", colour="var(--label--disabled)"),
+                {"type": "ia.display.table", "meta": {"name": "layers"},
+                 # 132px fitted three rows and not the wrapped prose inside
+                 # them, which clipped layers 2 and 3 -- measured on the render,
+                 # not guessed from the row count.
+                 "position": {"grow": 0, "shrink": 0, "basis": "260px"},
+                 "props": {"pager": {"top": False, "bottom": False},
+                           "columns": [_col("layer", "Layer", 190, True),
+                                       _col("what", "What it does"),
+                                       _col("here", "On this theme", 300)]},
+                 "propConfig": {"props.data": {"binding": _prop("view.custom.layers")}}},
+                _label("table_h", "Every variable, and why", size="15px",
+                       weight=600),
+                _label("table_sub",
+                       "'Why' is the derivation build_theme.py recorded when it "
+                       "generated the value -- not a description written "
+                       "afterwards. Rows marked inherited are Ignition's own "
+                       "value, kept.",
+                       size="12px", colour="var(--label--disabled)"),
+                _table("changes", [
+                    _col("variable", "Variable", 230, True),
+                    _col("state", "State", 110, True),
+                    _col("compared", "Compared with", 190),
+                    _col("value", "This theme", 190),
+                    _col("why", "Why"),
+                ], "view.custom.rows"),
+            ],
+        },
+    }
+
+
+def build_contract_view_json(themes, version):
+    """Page: the tokens and classes a project can build on."""
+    return {
+        "custom": {"theme": "", "tokens": [], "classes": []},
+        "propConfig": {
+            "custom.theme": {"binding": _expr("1", FIRST_INSTALLED)},
+            "custom.tokens": {"binding": _prop("view.custom.theme", CONTRACT_TOKENS)},
+            "custom.classes": {"binding": _prop("view.custom.theme", CONTRACT_CLASSES)},
+        },
+        "params": {},
+        "root": {
+            "type": "ia.container.flex", "meta": {"name": "root"},
+            "props": {"direction": "column",
+                      "style": {"padding": "18px", "gap": "14px",
+                                "backgroundColor": "var(--containerRoot)"}},
+            "children": [
+                _nav("The contract"),
+                _label("title", "The contract", size="24px", weight=600),
+                _label("sub",
+                       "What a project can rely on without inheriting anything. "
+                       "Both lists are read out of the installed theme itself, "
+                       "so this page cannot advertise a token or a class the "
+                       "theme does not actually ship. v" + version,
+                       size="13px", colour="var(--label--disabled)"),
+                _theme_picker("pick_theme", "Theme", "view.custom.theme",
+                              INSTALLED_OPTIONS),
+                _label("tok_h", "Tokens", size="15px", weight=600),
+                _label("tok_sub",
+                       "Custom properties published at :root. Use them as "
+                       "var(--st-accent) in a style class or an inline style. "
+                       "'Where' is read from the theme's own rules, so a token "
+                       "shown with no consumers is one the theme publishes for "
+                       "your project to use rather than one it uses itself.",
+                       size="12px", colour="var(--label--disabled)"),
+                _table("tokens", [
+                    _col("token", "Token", 230, True),
+                    _col("value", "Value on this theme", 200),
+                    _col("uses", "Selectors", 90, True),
+                    _col("where", "Where"),
+                ], "view.custom.tokens"),
+                _label("cls_h", "Style classes", size="15px", weight=600),
+                _label("cls_sub",
+                       "Put the name in a component's style.classes and the "
+                       "theme styles it -- no style-class resource needed in "
+                       "your project. Each selector is doubled in the CSS so it "
+                       "outranks Ignition's own component rules without "
+                       "!important, which would also beat your inline styles.",
+                       size="12px", colour="var(--label--disabled)"),
+                _table("classes", [
+                    _col("klass", "Class", 300, True),
+                    _col("count", "Properties", 100, True),
+                    _col("sets", "What it sets"),
+                ], "view.custom.classes"),
+            ],
+        },
+    }
+
+
 def main():
     version = read_version()
     themes = read_themes()
 
     if os.path.isdir(INSTALLER_ROOT):
         shutil.rmtree(INSTALLER_ROOT)
+
+    if not os.path.isfile(INSIGHT_SRC):
+        print("build_installer.py: %s not found -- the insight functions are "
+              "hand-authored, not generated" % os.path.relpath(INSIGHT_SRC, HERE))
+        sys.exit(1)
 
     for src in (SELECTOR_POPUP_SRC, THEME_DROPDOWN_SRC):
         if not os.path.isfile(src):
@@ -907,11 +1256,13 @@ def main():
     page_config_dir = os.path.join(persp_dir, "page-config")
     stylesheet_dir = os.path.join(persp_dir, "stylesheet")
     view_dir = os.path.join(persp_dir, "views", "Installer")
+    changes_dir = os.path.join(persp_dir, "views", "Changes")
+    contract_dir = os.path.join(persp_dir, "views", "Contract")
     popup_dir = os.path.join(persp_dir, "views", "SelectorPopup")
     dropdown_dir = os.path.join(persp_dir, "views", "ThemeDropdown")
 
     for d in (script_dir, session_props_dir, page_config_dir, stylesheet_dir,
-              view_dir, popup_dir, dropdown_dir):
+              view_dir, popup_dir, dropdown_dir, changes_dir, contract_dir):
         os.makedirs(d)
 
     # project.json
@@ -937,6 +1288,8 @@ def main():
     write_json(os.path.join(page_config_dir, "config.json"), {
         "pages": {
             "/": {"title": "Theme Installer", "viewPath": "Installer"},
+            "/changes": {"title": "What this theme changes", "viewPath": "Changes"},
+            "/contract": {"title": "The contract", "viewPath": "Contract"},
         }
     })
     write_json(os.path.join(page_config_dir, "resource.json"), resource_json(["config.json"]))
@@ -967,6 +1320,16 @@ def main():
     # views/Installer
     write_json(os.path.join(view_dir, "view.json"), build_view_json(themes, version))
     write_json(os.path.join(view_dir, "resource.json"), resource_json(["view.json"]))
+
+    # views/Changes and views/Contract -- the insight pages. Generated, but
+    # they contain no data of their own: every number is bound to a themepack
+    # call that reads the live gateway.
+    write_json(os.path.join(changes_dir, "view.json"),
+               build_changes_view_json(themes, version))
+    write_json(os.path.join(changes_dir, "resource.json"), resource_json(["view.json"]))
+    write_json(os.path.join(contract_dir, "view.json"),
+               build_contract_view_json(themes, version))
+    write_json(os.path.join(contract_dir, "resource.json"), resource_json(["view.json"]))
 
     # views/SelectorPopup -- copied verbatim from the hand-adapted, commit-tracked
     # template (NOT generated from out/ -- see selector-popup/README.md). Only
