@@ -27,6 +27,124 @@ LAYERS = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Making the lists readable.
+#
+# The first version of these pages listed 110 variables alphabetically --
+# --arrow-color, --black, --border, --borderRadius -- with a "state" column
+# saying "overridden". Every fact on the page was true and none of it was
+# clear: an alphabetical list of Ignition's internal variable names tells a
+# first-time reader nothing about what the theme actually does to their
+# screens. Grouping by what a variable AFFECTS is the difference between a
+# reference and an explanation.
+# ---------------------------------------------------------------------------
+
+# Ordered: what somebody wants to know first comes first. A variable lands in
+# the first group whose pattern matches, so order is also precedence.
+GROUPS = [
+    ("Page and card surfaces",
+     r'^--(containerRoot|container|containerNested|contextBackground|'
+     r'tooltip-background-color|neutral-([1-8]0))$'),
+    ("Text and icons",
+     r'^--(label|icon|arrow-color|neutral-(90|100))'),
+    ("Accent and buttons",
+     r'^--(callToAction|indicator)'),
+    ("Borders and corners",
+     r'^--(border|containerBorder)'),
+    ("Inputs and controls",
+     r'^--(input|checkbox|radio|toggleSwitch|defaultSlider)'),
+    ("Status colours",
+     r'^--(error|warning|success|info)'),
+    ("Depth and shadows",
+     r'^--boxShadow'),
+    ("Progress bars",
+     r'^--progress'),
+    ("P&ID symbols and pipes",
+     r'^--(symbol|pipe)'),
+    ("Chart palettes",
+     r'^--(qual|seq|div)-'),
+]
+
+TOKEN_GROUPS = [
+    ("Page and surfaces", r'^--st-(page|card|topbar|sidebar)'),
+    ("Text", r'^--st-(fg|chrome-fg|on-accent)$'),
+    ("Accent", r'^--st-accent$'),
+    ("Buttons", r'^--st-btn-'),
+    ("Tables", r'^--st-(head|cell|row|table)'),
+    ("Inputs", r'^--st-input'),
+    ("Tabs and navigation", r'^--st-(tab|nav)'),
+    ("Borders", r'^--st-(chrome-border|.*-border)$'),
+    ("Type and spacing", r'^--st-(.*-font|.*-pad|row-min)$'),
+]
+
+# Expanded for readability. These are the abbreviations in our OWN token
+# names, so this is a lookup, not a guess about someone else's naming.
+WORDS = {
+    "st": "", "btn": "button", "dan": "danger", "gho": "ghost",
+    "pri": "primary", "bg": "background", "fg": "text", "head": "table header",
+    "chrome": "sidebar and header", "nav": "navigation", "pad": "padding",
+    "fx": "effect", "min": "minimum height", "solid": "(opaque)",
+    "tab": "tab", "row": "table row", "cell": "table cell",
+    "chip": "identity chip", "brand": "brand", "group": "group heading",
+    "rule": "divider", "card": "card", "page": "page", "topbar": "top bar",
+    "sidebar": "sidebar", "input": "input", "table": "table",
+    "accent": "accent", "border": "border", "active": "selected",
+    "inactive": "unselected", "on": "text on the", "font": "font size",
+}
+
+_COLOUR_RE = re.compile(r'^(#[0-9A-Fa-f]{3,8}|rgba?\(|hsla?\()')
+_NOISE_RE = re.compile(r'\s*\((?:token|ref):[^)]*\)\s*$')
+
+
+def group_of(name, groups):
+    for label, pattern in groups:
+        if re.search(pattern, name):
+            return label
+    return "Everything else"
+
+
+def is_colour(value):
+    """Whether a value can be painted as a swatch.
+
+    Deliberately strict: a var(--x) reference, a shadow, a length or the
+    keyword transparent all fail, and a swatch of a value that is not a colour
+    is worse than no swatch -- it renders as an empty box that reads as a bug.
+    """
+    return bool(value and _COLOUR_RE.match(value.strip()))
+
+
+def swatch(value):
+    if not is_colour(value):
+        return {"value": "", "style": {}}
+    return {"value": "", "style": {"backgroundColor": value.strip()}}
+
+
+LIMIT = 150
+
+
+def plain(name, comment=""):
+    """A human sentence for one variable.
+
+    Prefers the derivation build_theme.py recorded, minus its machine suffix:
+    `(token:surface.page)` and `(ref:--border)` are for us, not for a reader
+    meeting these themes for the first time. Falls back to expanding our own
+    abbreviations for the --st-* tokens, which carry no comment at all.
+    """
+    if comment:
+        text = _NOISE_RE.sub("", comment).strip()
+        if len(text) > LIMIT:
+            text = text[:LIMIT].rsplit(" ", 1)[0] + " ..."
+        return text
+    parts = [p for p in name.lstrip("-").split("-") if p and p != "st"]
+    if len(parts) == 3 and parts[0] == "btn":
+        # btn-dan-bg reads "Danger button background", not "Button danger
+        # background": the variant qualifies the noun, it does not follow it.
+        return ("%s button %s" % (WORDS.get(parts[1], parts[1]),
+                                  WORDS.get(parts[2], parts[2]))).capitalize()
+    words = [WORDS.get(part, part) for part in parts]
+    return " ".join(w for w in words if w).strip().capitalize()
+
+
 def _gateway_port():
     """This gateway's own HTTP port, read from data/gateway.xml.
 
@@ -124,20 +242,26 @@ def compare(theme_id, against=None):
     for name in sorted(set(ours) | set(theirs)):
         mine, other = ours.get(name), theirs.get(name)
         if mine is None:
-            state = "only in %s" % against
-        elif other is None:
-            state = "added"
+            continue          # only in the comparison: not a change WE made
+        if other is None:
+            state = "new"
         elif mine == other:
-            state = "inherited"
+            state = "kept as Ignition's"
         else:
-            state = "overridden"
+            state = "repainted"
         rows.append({
+            "group": group_of(name, GROUPS),
             "variable": name,
-            "value": mine or "",
-            "compared": other or "",
+            "what": plain(name, why.get(name, "")),
+            "swatch": swatch(mine),
+            "value": mine,
+            "compared": other or "-",
             "state": state,
-            "why": why.get(name, ""),
         })
+    # Grouped, in the order GROUPS declares. Alphabetical was the whole
+    # problem: it interleaves chart palettes with page surfaces.
+    order = dict((label, i) for i, (label, _) in enumerate(GROUPS))
+    rows.sort(key=lambda r: (order.get(r["group"], len(order)), r["variable"]))
     return rows
 
 
@@ -145,9 +269,12 @@ def summary(theme_id, against=None):
     """The headline counts, and the layer breakdown beside them."""
     rows = compare(theme_id, against)
     counts = {"inherited": 0, "overridden": 0, "added": 0}
+    tally = {"kept as Ignition's": "inherited", "repainted": "overridden",
+             "new": "added"}
     for row in rows:
-        if row["state"] in counts:
-            counts[row["state"]] += 1
+        key = tally.get(row["state"])
+        if key:
+            counts[key] += 1
     theme = THEMES.get(theme_id, {"files": {}})
     globals_css = theme["files"].get("globals.css", "")
     counts["base"] = against or base_of(theme_id)
@@ -184,15 +311,42 @@ def _token_users(css):
     return users
 
 
+# What a selector is TALKING ABOUT, in words. The raw text is unusable on a
+# page meant for a first-time reader: one --st-sidebar-solid consumer is
+# `ia_popup:has(> .body-wrapper > .popup-body > [class*="/containers/page"]) >
+# .popup-header`, which is correct, precise, and tells nobody anything. Order
+# matters -- the contract class is the most specific answer, so it wins.
+PLACES = [
+    (r'/containers/page', "page containers"),
+    (r'/containers/card', "cards"),
+    (r'/tables/', "tables"),
+    (r'/buttons/danger', "danger buttons"),
+    (r'/buttons/primary', "primary buttons"),
+    (r'/buttons/ghost', "ghost buttons"),
+    (r'/buttons/', "buttons"),
+    (r'/text/brand', "the brand mark"),
+    (r'/nav/', "navigation items"),
+    (r'/inputs/', "inputs"),
+    (r'psc-st-shell', "the app shell"),
+    (r'ia_popup|popup-', "popups"),
+    (r'ia_tabContainer|tab-menu', "tab strips"),
+    (r'ia_pager', "table pagers"),
+    (r'ia_table', "tables"),
+    (r'scrollbar', "scrollbars"),
+    (r'\bbutton\b', "buttons"),
+    (r'ia_label', "labels"),
+]
+
+
 def _readable(selector):
-    """A doubled contract selector reads as one name, not two."""
-    parts = selector.replace("\\", "").split(".")
-    seen, out = set(), []
-    for part in parts:
-        if part and part not in seen:
-            seen.add(part)
-            out.append(part)
-    return ".".join(out)
+    """One selector, as the thing it styles."""
+    for pattern, place in PLACES:
+        if re.search(pattern, selector):
+            return place
+    # Nothing recognised: fall back to the bare class name rather than the
+    # whole selector chain, which is what made this column unreadable.
+    bare = re.findall(r'[.#]([A-Za-z][A-Za-z0-9_-]+)', selector.replace("\\", ""))
+    return bare[-1] if bare else selector[:40]
 
 
 def contract(theme_id):
@@ -200,20 +354,30 @@ def contract(theme_id):
     css = theme_css(theme_id)
     ours = _vars_of(css)
     users = _token_users(css)
+    why = _reasons(theme_id)
     rows = []
     for name in sorted(ours):
         if not name.startswith("--st-"):
             continue
-        where = [_readable(sel) for sel in users.get(name, [])]
-        shown = ", ".join(where[:3])
-        if len(where) > 3:
-            shown += "   (+%d more)" % (len(where) - 3)
+        seen, where = set(), []
+        for sel in users.get(name, []):
+            place = _readable(sel)
+            if place not in seen:
+                seen.add(place)
+                where.append(place)
+        shown = ", ".join(where[:4])
+        if len(where) > 4:
+            shown += " (+%d more)" % (len(where) - 4)
         rows.append({
+            "group": group_of(name, TOKEN_GROUPS),
             "token": name,
+            "what": plain(name, why.get(name, "")),
+            "swatch": swatch(ours[name]),
             "value": ours[name],
-            "uses": len(where),
-            "where": shown,
+            "where": shown or "-",
         })
+    order = dict((label, i) for i, (label, _) in enumerate(TOKEN_GROUPS))
+    rows.sort(key=lambda r: (order.get(r["group"], len(order)), r["token"]))
     return rows
 
 
@@ -237,6 +401,7 @@ def contract_classes(theme_id):
             if ":" in decl:
                 sets.append(decl.split(":", 1)[0].strip())
         rows.append({
+            "family": name.split("/")[0],
             "klass": "st/" + name,
             "sets": ", ".join(sets),
             "count": len(sets),
@@ -259,3 +424,20 @@ def layers(theme_id):
     ]
     return [{"layer": LAYERS[i][0], "what": LAYERS[i][1], "here": detail[i]}
             for i in range(3)]
+
+
+def headline(theme_id, against=None):
+    """The plain-English answer, in one sentence, with the real numbers in it.
+
+    A first-time reader should not have to add up four tiles to work out what
+    the theme does. This is the sentence they would otherwise have to assemble
+    themselves.
+    """
+    counts = summary(theme_id, against)
+    label = THEMES.get(theme_id, {}).get("label", theme_id)
+    return ("%s is built on Ignition's %s theme and repaints it: %d of its "
+            "variables carry this pack's values, %d are left exactly as "
+            "Ignition set them, and %d are new. Nothing is replaced wholesale "
+            "-- anything the theme never names behaves as stock."
+            % (label, counts["base"], counts["overridden"],
+               counts["inherited"], counts["added"]))

@@ -344,16 +344,19 @@ The project carries two more pages, linked from the header of each. Neither
 is required to install anything — they are there so the themes are not a black
 box on someone else's gateway:
 
-* **What this theme changes** — the honest diff against the stock theme
-  underneath. On a typical theme that is 108 of Ignition's own variables
-  overridden, 12 inherited untouched and 42 added; each row shows the stock
-  value beside ours and the derivation `build_theme.py` recorded when it
-  generated the value. A second dropdown re-points the comparison at any other
-  installed theme, which answers "how do these two differ" with the same
-  machinery.
+* **What this theme changes** — opens with the answer in a sentence ("Glass
+  Violet is built on Ignition's dark theme and repaints it: 108 of its
+  variables carry this pack's values, 12 are left exactly as Ignition set them,
+  and 42 are new"), then the variables themselves — **grouped by what they
+  affect**, not alphabetically, because an A–Z list of Ignition's internal
+  names interleaves chart palettes with page surfaces and explains nothing.
+  Each row carries the derivation `build_theme.py` recorded, a swatch of the
+  colour, and Ignition's value beside ours. A second dropdown re-points the
+  comparison at any other installed theme.
 * **The contract** — the `--st-*` tokens and `st/...` classes a project can
-  use without inheriting anything, each listed with its live value and the
-  selectors in the theme that actually consume it.
+  use without inheriting anything, grouped the same way, each with a swatch,
+  its live value, and where the theme actually uses it in plain words ("danger
+  buttons", "page containers") rather than the raw selector chain.
 
 Both read the gateway at the moment you open them: they fetch the resolved
 stylesheet the browser is really being served (`/data/perspective/themes/<id>.css`,

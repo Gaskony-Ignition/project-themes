@@ -5,7 +5,8 @@
     "key": "",
     "rows": [],
     "counts": {},
-    "layers": []
+    "layers": [],
+    "headline": ""
   },
   "propConfig": {
     "custom.theme": {
@@ -68,6 +69,20 @@
           {
             "type": "script",
             "code": "\timport themepack\n\tif not value:\n\t\treturn []\n\treturn themepack.layers(value)"
+          }
+        ]
+      }
+    },
+    "custom.headline": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme, against = (value + '|').split('|')[:2]\n\tif not theme:\n\t\treturn ''\n\treturn themepack.headline(theme, against or None)"
           }
         ]
       }
@@ -206,6 +221,34 @@
       {
         "type": "ia.display.label",
         "meta": {
+          "name": "headline"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "style": {
+            "fontSize": "14px",
+            "color": "var(--label)",
+            "lineHeight": "1.5"
+          }
+        },
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.headline"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
           "name": "sub"
         },
         "position": {
@@ -214,9 +257,9 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Every figure here is read from this gateway right now: the page fetches the resolved stylesheet the browser actually gets and compares it with the stock theme underneath. Nothing is written down at build time, so nothing here can quietly go out of date. v1.7.0",
+          "text": "Measured on this gateway when you opened the page, not written down when the theme was built. v1.7.0",
           "style": {
-            "fontSize": "13px",
+            "fontSize": "12px",
             "color": "var(--label--disabled)"
           }
         }
@@ -422,74 +465,6 @@
           {
             "type": "ia.container.flex",
             "meta": {
-              "name": "stat_inherited"
-            },
-            "position": {
-              "grow": 1,
-              "shrink": 1,
-              "basis": "0px"
-            },
-            "props": {
-              "direction": "column",
-              "style": {
-                "padding": "10px 12px",
-                "borderRadius": "8px",
-                "backgroundColor": "var(--container)",
-                "border": "var(--containerBorder)"
-              }
-            },
-            "children": [
-              {
-                "type": "ia.display.label",
-                "meta": {
-                  "name": "n"
-                },
-                "position": {
-                  "grow": 0,
-                  "shrink": 0,
-                  "basis": "auto"
-                },
-                "props": {
-                  "style": {
-                    "fontSize": "24px",
-                    "fontWeight": 600,
-                    "color": "var(--label)"
-                  }
-                },
-                "propConfig": {
-                  "props.text": {
-                    "binding": {
-                      "type": "expr",
-                      "config": {
-                        "expression": "{view.custom.counts.inherited}"
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                "type": "ia.display.label",
-                "meta": {
-                  "name": "caption"
-                },
-                "position": {
-                  "grow": 0,
-                  "shrink": 0,
-                  "basis": "auto"
-                },
-                "props": {
-                  "text": "inherited untouched",
-                  "style": {
-                    "fontSize": "12px",
-                    "color": "var(--label--disabled)"
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "type": "ia.container.flex",
-            "meta": {
               "name": "stat_overridden"
             },
             "position": {
@@ -546,7 +521,75 @@
                   "basis": "auto"
                 },
                 "props": {
-                  "text": "overridden",
+                  "text": "of Ignition's variables repainted",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "stat_inherited"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "24px",
+                    "fontWeight": 600,
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.inherited}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "caption"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "left exactly as Ignition set them",
                   "style": {
                     "fontSize": "12px",
                     "color": "var(--label--disabled)"
@@ -614,75 +657,7 @@
                   "basis": "auto"
                 },
                 "props": {
-                  "text": "added by us",
-                  "style": {
-                    "fontSize": "12px",
-                    "color": "var(--label--disabled)"
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "type": "ia.container.flex",
-            "meta": {
-              "name": "stat_classes"
-            },
-            "position": {
-              "grow": 1,
-              "shrink": 1,
-              "basis": "0px"
-            },
-            "props": {
-              "direction": "column",
-              "style": {
-                "padding": "10px 12px",
-                "borderRadius": "8px",
-                "backgroundColor": "var(--container)",
-                "border": "var(--containerBorder)"
-              }
-            },
-            "children": [
-              {
-                "type": "ia.display.label",
-                "meta": {
-                  "name": "n"
-                },
-                "position": {
-                  "grow": 0,
-                  "shrink": 0,
-                  "basis": "auto"
-                },
-                "props": {
-                  "style": {
-                    "fontSize": "24px",
-                    "fontWeight": 600,
-                    "color": "var(--label)"
-                  }
-                },
-                "propConfig": {
-                  "props.text": {
-                    "binding": {
-                      "type": "expr",
-                      "config": {
-                        "expression": "{view.custom.counts.classes}"
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                "type": "ia.display.label",
-                "meta": {
-                  "name": "caption"
-                },
-                "position": {
-                  "grow": 0,
-                  "shrink": 0,
-                  "basis": "auto"
-                },
-                "props": {
-                  "text": "style classes published",
+                  "text": "new variables this theme adds",
                   "style": {
                     "fontSize": "12px",
                     "color": "var(--label--disabled)"
@@ -704,7 +679,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "How a theme is put together",
+          "text": "How it is built",
           "style": {
             "fontSize": "15px",
             "color": "var(--label)",
@@ -713,9 +688,9 @@
         }
       },
       {
-        "type": "ia.display.label",
+        "type": "ia.container.flex",
         "meta": {
-          "name": "anatomy_sub"
+          "name": "layers"
         },
         "position": {
           "grow": 0,
@@ -723,63 +698,328 @@
           "basis": "auto"
         },
         "props": {
-          "text": "index.css is three lines. We do not replace Ignition's theme -- we import it and override on top, which is why anything we never name still behaves exactly as stock.",
+          "direction": "row",
           "style": {
-            "fontSize": "12px",
-            "color": "var(--label--disabled)"
+            "gap": "10px"
           }
-        }
-      },
-      {
-        "type": "ia.display.table",
-        "meta": {
-          "name": "layers"
         },
-        "position": {
-          "grow": 0,
-          "shrink": 0,
-          "basis": "260px"
-        },
-        "props": {
-          "pager": {
-            "top": false,
-            "bottom": false
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "layer0"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "gap": "5px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "layer"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "13px",
+                    "color": "var(--label)",
+                    "fontWeight": 600
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[0].layer}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "what"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[0].what}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "here"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[0].here}"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           },
-          "columns": [
-            {
-              "field": "layer",
-              "header": {
-                "title": "Layer"
-              },
-              "width": 190,
-              "strictWidth": true
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "layer1"
             },
-            {
-              "field": "what",
-              "header": {
-                "title": "What it does"
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "gap": "5px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
               }
             },
-            {
-              "field": "here",
-              "header": {
-                "title": "On this theme"
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "layer"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "13px",
+                    "color": "var(--label)",
+                    "fontWeight": 600
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[1].layer}"
+                      }
+                    }
+                  }
+                }
               },
-              "width": 300,
-              "strictWidth": false
-            }
-          ]
-        },
-        "propConfig": {
-          "props.data": {
-            "binding": {
-              "type": "property",
-              "config": {
-                "path": "view.custom.layers"
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "what"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[1].what}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "here"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[1].here}"
+                      }
+                    }
+                  }
+                }
               }
-            }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "layer2"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "10px 12px",
+                "gap": "5px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "layer"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "13px",
+                    "color": "var(--label)",
+                    "fontWeight": 600
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[2].layer}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "what"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[2].what}"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "here"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.layers[2].here}"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           }
-        }
+        ]
       },
       {
         "type": "ia.display.label",
@@ -792,7 +1032,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Every variable, and why",
+          "text": "Every variable, grouped by what it affects",
           "style": {
             "fontSize": "15px",
             "color": "var(--label)",
@@ -811,7 +1051,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "'Why' is the derivation build_theme.py recorded when it generated the value -- not a description written afterwards. Rows marked inherited are Ignition's own value, kept.",
+          "text": "'What it is' is the derivation recorded when the value was generated, not a description written afterwards. Rows reading 'kept as Ignition's' are Ignition's own value, left alone.",
           "style": {
             "fontSize": "12px",
             "color": "var(--label--disabled)"
@@ -835,42 +1075,58 @@
           },
           "columns": [
             {
+              "field": "group",
+              "header": {
+                "title": "Affects"
+              },
+              "width": 180,
+              "strictWidth": true
+            },
+            {
               "field": "variable",
               "header": {
                 "title": "Variable"
               },
-              "width": 230,
+              "width": 195,
               "strictWidth": true
             },
             {
-              "field": "state",
+              "field": "what",
               "header": {
-                "title": "State"
-              },
-              "width": 110,
-              "strictWidth": true
+                "title": "What it is"
+              }
             },
             {
-              "field": "compared",
+              "field": "swatch",
               "header": {
-                "title": "Compared with"
+                "title": "Colour"
               },
-              "width": 190,
-              "strictWidth": false
+              "width": 70,
+              "strictWidth": true
             },
             {
               "field": "value",
               "header": {
                 "title": "This theme"
               },
-              "width": 190,
-              "strictWidth": false
+              "width": 165,
+              "strictWidth": true
             },
             {
-              "field": "why",
+              "field": "compared",
               "header": {
-                "title": "Why"
-              }
+                "title": "Ignition's"
+              },
+              "width": 150,
+              "strictWidth": true
+            },
+            {
+              "field": "state",
+              "header": {
+                "title": "Change"
+              },
+              "width": 130,
+              "strictWidth": true
             }
           ]
         },

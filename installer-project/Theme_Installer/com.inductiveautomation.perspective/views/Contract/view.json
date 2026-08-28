@@ -331,33 +331,49 @@
           },
           "columns": [
             {
+              "field": "group",
+              "header": {
+                "title": "Group"
+              },
+              "width": 170,
+              "strictWidth": true
+            },
+            {
               "field": "token",
               "header": {
                 "title": "Token"
               },
+              "width": 200,
+              "strictWidth": true
+            },
+            {
+              "field": "what",
+              "header": {
+                "title": "What it is"
+              },
               "width": 230,
+              "strictWidth": false
+            },
+            {
+              "field": "swatch",
+              "header": {
+                "title": "Colour"
+              },
+              "width": 70,
               "strictWidth": true
             },
             {
               "field": "value",
               "header": {
-                "title": "Value on this theme"
+                "title": "Value"
               },
-              "width": 200,
-              "strictWidth": false
-            },
-            {
-              "field": "uses",
-              "header": {
-                "title": "Selectors"
-              },
-              "width": 90,
+              "width": 175,
               "strictWidth": true
             },
             {
               "field": "where",
               "header": {
-                "title": "Where"
+                "title": "Where the theme uses it"
               }
             }
           ]
@@ -427,25 +443,33 @@
           },
           "columns": [
             {
+              "field": "family",
+              "header": {
+                "title": "Family"
+              },
+              "width": 130,
+              "strictWidth": true
+            },
+            {
               "field": "klass",
               "header": {
                 "title": "Class"
               },
-              "width": 300,
+              "width": 260,
               "strictWidth": true
             },
             {
               "field": "count",
               "header": {
-                "title": "Properties"
+                "title": "Sets"
               },
-              "width": 100,
+              "width": 70,
               "strictWidth": true
             },
             {
               "field": "sets",
               "header": {
-                "title": "What it sets"
+                "title": "Properties"
               }
             }
           ]

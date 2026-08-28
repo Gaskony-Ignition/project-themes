@@ -1023,6 +1023,13 @@ CHANGES_COUNTS = (
     "\t\treturn {}\n"
     "\treturn themepack.summary(theme, against or None)"
 )
+CHANGES_HEADLINE = (
+    "\timport themepack\n"
+    "\ttheme, against = (value + '|').split('|')[:2]\n"
+    "\tif not theme:\n"
+    "\t\treturn ''\n"
+    "\treturn themepack.headline(theme, against or None)"
+)
 CHANGES_LAYERS = (
     "\timport themepack\n"
     "\tif not value:\n"
@@ -1087,11 +1094,44 @@ def _theme_picker(name, label, custom_path, options_code):
     }
 
 
+
+def _layer_card(i):
+    """One of the three build layers, as a card rather than a table row.
+
+    This was a three-row table and it clipped twice: a table sizes to rows,
+    and these are paragraphs. Cards wrap instead of truncating.
+    """
+    def bound(field, size, colour, weight=None):
+        style = {"fontSize": size, "color": colour}
+        if weight:
+            style["fontWeight"] = weight
+        return {"type": "ia.display.label", "meta": {"name": field},
+                "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                "props": {"style": style},
+                "propConfig": {"props.text": {"binding": {
+                    "type": "expr",
+                    "config": {"expression": "{view.custom.layers[%d].%s}" % (i, field)}}}}}
+    return {
+        "type": "ia.container.flex", "meta": {"name": "layer%d" % i},
+        "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+        "props": {"direction": "column",
+                  "style": {"padding": "10px 12px", "gap": "5px",
+                            "borderRadius": "8px",
+                            "backgroundColor": "var(--container)",
+                            "border": "var(--containerBorder)"}},
+        "children": [
+            bound("layer", "13px", "var(--label)", 600),
+            bound("what", "12px", "var(--label--disabled)"),
+            bound("here", "12px", "var(--label)"),
+        ],
+    }
+
+
 def build_changes_view_json(themes, version):
     """Page: what this theme actually changes, measured against stock."""
     return {
         "custom": {"theme": "", "against": "", "key": "",
-                   "rows": [], "counts": {}, "layers": []},
+                   "rows": [], "counts": {}, "layers": [], "headline": ""},
         "propConfig": {
             "custom.theme": {"binding": _expr("1", FIRST_INSTALLED)},
             # One key so the rows depend on BOTH dropdowns. See _expr's note.
@@ -1100,6 +1140,7 @@ def build_changes_view_json(themes, version):
             "custom.rows": {"binding": _prop("view.custom.key", CHANGES_ROWS)},
             "custom.counts": {"binding": _prop("view.custom.key", CHANGES_COUNTS)},
             "custom.layers": {"binding": _prop("view.custom.theme", CHANGES_LAYERS)},
+            "custom.headline": {"binding": _prop("view.custom.key", CHANGES_HEADLINE)},
         },
         "params": {},
         "root": {
@@ -1111,13 +1152,16 @@ def build_changes_view_json(themes, version):
                 _nav("What this theme changes"),
                 _label("title", "What this theme changes", size="24px",
                        weight=600),
+                {"type": "ia.display.label", "meta": {"name": "headline"},
+                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                 "props": {"style": {"fontSize": "14px", "color": "var(--label)",
+                                     "lineHeight": "1.5"}},
+                 "propConfig": {"props.text": {
+                     "binding": _prop("view.custom.headline")}}},
                 _label("sub",
-                       "Every figure here is read from this gateway right now: "
-                       "the page fetches the resolved stylesheet the browser "
-                       "actually gets and compares it with the stock theme "
-                       "underneath. Nothing is written down at build time, so "
-                       "nothing here can quietly go out of date. v" + version,
-                       size="13px", colour="var(--label--disabled)"),
+                       "Measured on this gateway when you opened the page, not "
+                       "written down when the theme was built. v" + version,
+                       size="12px", colour="var(--label--disabled)"),
                 {"type": "ia.container.flex", "meta": {"name": "pickers"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"direction": "row", "style": {"gap": "14px"}},
@@ -1131,42 +1175,32 @@ def build_changes_view_json(themes, version):
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"direction": "row", "style": {"gap": "10px"}},
                  "children": [
-                     _stat("inherited", "inherited untouched"),
-                     _stat("overridden", "overridden"),
-                     _stat("added", "added by us"),
-                     _stat("classes", "style classes published"),
+                     _stat("overridden", "of Ignition's variables repainted"),
+                     _stat("inherited", "left exactly as Ignition set them"),
+                     _stat("added", "new variables this theme adds"),
                  ]},
-                _label("anatomy_h", "How a theme is put together", size="15px",
+                _label("anatomy_h", "How it is built", size="15px",
                        weight=600),
-                _label("anatomy_sub",
-                       "index.css is three lines. We do not replace Ignition's "
-                       "theme -- we import it and override on top, which is why "
-                       "anything we never name still behaves exactly as stock.",
-                       size="12px", colour="var(--label--disabled)"),
-                {"type": "ia.display.table", "meta": {"name": "layers"},
-                 # 132px fitted three rows and not the wrapped prose inside
-                 # them, which clipped layers 2 and 3 -- measured on the render,
-                 # not guessed from the row count.
-                 "position": {"grow": 0, "shrink": 0, "basis": "260px"},
-                 "props": {"pager": {"top": False, "bottom": False},
-                           "columns": [_col("layer", "Layer", 190, True),
-                                       _col("what", "What it does"),
-                                       _col("here", "On this theme", 300)]},
-                 "propConfig": {"props.data": {"binding": _prop("view.custom.layers")}}},
-                _label("table_h", "Every variable, and why", size="15px",
-                       weight=600),
+                {"type": "ia.container.flex", "meta": {"name": "layers"},
+                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                 "props": {"direction": "row", "style": {"gap": "10px"}},
+                 "children": [_layer_card(i) for i in range(3)]},
+                _label("table_h", "Every variable, grouped by what it affects",
+                       size="15px", weight=600),
                 _label("table_sub",
-                       "'Why' is the derivation build_theme.py recorded when it "
-                       "generated the value -- not a description written "
-                       "afterwards. Rows marked inherited are Ignition's own "
-                       "value, kept.",
+                       "'What it is' is the derivation recorded when the value "
+                       "was generated, not a description written afterwards. "
+                       "Rows reading 'kept as Ignition's' are Ignition's own "
+                       "value, left alone.",
                        size="12px", colour="var(--label--disabled)"),
                 _table("changes", [
-                    _col("variable", "Variable", 230, True),
-                    _col("state", "State", 110, True),
-                    _col("compared", "Compared with", 190),
-                    _col("value", "This theme", 190),
-                    _col("why", "Why"),
+                    _col("group", "Affects", 180, True),
+                    _col("variable", "Variable", 195, True),
+                    _col("what", "What it is"),
+                    _col("swatch", "Colour", 70, True),
+                    _col("value", "This theme", 165, True),
+                    _col("compared", "Ignition's", 150, True),
+                    _col("state", "Change", 130, True),
                 ], "view.custom.rows"),
             ],
         },
@@ -1208,10 +1242,12 @@ def build_contract_view_json(themes, version):
                        "your project to use rather than one it uses itself.",
                        size="12px", colour="var(--label--disabled)"),
                 _table("tokens", [
-                    _col("token", "Token", 230, True),
-                    _col("value", "Value on this theme", 200),
-                    _col("uses", "Selectors", 90, True),
-                    _col("where", "Where"),
+                    _col("group", "Group", 170, True),
+                    _col("token", "Token", 200, True),
+                    _col("what", "What it is", 230),
+                    _col("swatch", "Colour", 70, True),
+                    _col("value", "Value", 175, True),
+                    _col("where", "Where the theme uses it"),
                 ], "view.custom.tokens"),
                 _label("cls_h", "Style classes", size="15px", weight=600),
                 _label("cls_sub",
@@ -1222,9 +1258,10 @@ def build_contract_view_json(themes, version):
                        "!important, which would also beat your inline styles.",
                        size="12px", colour="var(--label--disabled)"),
                 _table("classes", [
-                    _col("klass", "Class", 300, True),
-                    _col("count", "Properties", 100, True),
-                    _col("sets", "What it sets"),
+                    _col("family", "Family", 130, True),
+                    _col("klass", "Class", 260, True),
+                    _col("count", "Sets", 70, True),
+                    _col("sets", "Properties"),
                 ], "view.custom.classes"),
             ],
         },
