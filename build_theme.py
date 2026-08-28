@@ -47,7 +47,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mapping import (MAPPING, EXTENDED_MAPPING, TWEAKS,  # noqa: E402
                      SHORTHAND_VARS)
-from build_contract import build_contract  # noqa: E402
+from build_contract import build_contract, build_palette  # noqa: E402
 
 # Standalone repo: the 10 source packs are VENDORED under packs/ (copied from
 # ignition-styles-template-v2, the design source of truth for colours --
@@ -813,6 +813,21 @@ def main():
     with open(themes_json_path, "w") as fh:
         json.dump(labels, fh, indent=2)
         fh.write("\n")
+
+    # out/palettes.json -- theme id -> the seven chart roles. Charts are the one
+    # thing a theme cannot carry as CSS, because Chart.js takes literal colours
+    # in its options and cannot read a custom property. A consumer's script
+    # library reads this instead of the parent's styles.chart_palette(), which
+    # walked the style-class files on the project tree and so needed a parent.
+    palettes = {}
+    for theme in THEMES:
+        palette = build_palette(theme["pack"])
+        if palette:
+            palettes[theme["id"]] = palette
+    with open(os.path.join(OUT_DIR, "palettes.json"), "w") as fh:
+        json.dump(palettes, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+    print("wrote palettes.json (%d themes)" % len(palettes))
 
     print("\n%d warning(s) total" % len(WARNINGS))
     print("wrote %d theme(s) + themes.json under %s" % (len(written), OUT_DIR))

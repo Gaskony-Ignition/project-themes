@@ -90,6 +90,58 @@ def has_contract(pack_id):
     return os.path.isfile(os.path.join(CONTRACT, "classes", "%s.json" % pack_id))
 
 
+# The seven roles a chart config paints with, and where each is read from in
+# the contract. Lifted verbatim from Styles_Template2's own
+# `styles._PALETTE_SOURCES` so a migrated chart gets the identical colours --
+# "a chart needs an ink, a paper, a grid line and a series colour, and anything
+# more invites charts that are decorated rather than legible".
+#
+# This is the one deliverable a theme CANNOT carry as CSS: Chart.js takes
+# literal colours in its options, not `var()`, so a chart cannot read the
+# theme's own custom properties. Hence a data file, emitted alongside the
+# themes, that a consumer's script library reads.
+PALETTE_SOURCES = [
+    ("kpi/value", "color", "ink"),
+    ("text/muted", "color", "muted"),
+    ("charts/frame", "backgroundColor", "paper"),
+    ("charts/frame", "borderColor", "grid"),
+    ("buttons/primary", "backgroundColor", "series"),
+    ("kpi/delta-up", "color", "good"),
+    ("kpi/delta-down", "color", "bad"),
+]
+
+
+# Styles_Template2's own _PALETTE_FALLBACK, carried over with the sources above.
+# It is the half that is easy to drop and the half that makes the contract seven
+# roles rather than "however many this pack happens to define": `charts/frame`
+# carries no borderColor in eight of the ten packs, so `grid` resolves from the
+# source data for only two of them. v2 started from these defaults and overlaid
+# whatever it could read, so a chart always had all seven; emitting only what
+# resolves would hand a consumer six keys and a chart with no grid line -- or a
+# KeyError, depending on how it reads them.
+PALETTE_FALLBACK = {"ink": "#E8EFF5", "muted": "#7E93A3", "paper": "#0F161E",
+                    "grid": "#26333F", "series": "#2BB3D6",
+                    "good": "#4CC38A", "bad": "#E5484D"}
+
+
+def build_palette(pack_id):
+    """The seven chart roles for one pack, or None if it is not vendored.
+
+    Starts from PALETTE_FALLBACK and overlays what the pack defines, which is
+    what Styles_Template2 did -- see the note above for why that matters.
+    """
+    if not has_contract(pack_id):
+        return None
+    classes = json.load(open(os.path.join(CONTRACT, "classes", "%s.json" % pack_id)))
+    palette = dict(PALETTE_FALLBACK)
+    for class_path, style_key, role in PALETTE_SOURCES:
+        style = ((classes.get(class_path) or {}).get("base") or {}).get("style") or {}
+        value = style.get(style_key)
+        if value:
+            palette[role] = value
+    return palette
+
+
 def build_contract(pack_id):
     """The full payload for one pack, or "" if it has not been vendored."""
     if not has_contract(pack_id):
