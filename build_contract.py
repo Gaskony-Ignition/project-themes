@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""The Styles_Template2 compatibility payload, appended to each theme's globals.css.
+
+WHAT THIS IS FOR
+----------------
+`docs/THEMES-EVALUATION.md` concluded that a theme replaces exactly one of the
+styles parent's five deliverables -- the token CSS -- because "a theme is CSS
+only; it cannot ship Perspective style classes". The first half is true and the
+conclusion drawn from it is not, and the difference is what lets a project drop
+its parent entirely.
+
+**Perspective emits whatever string sits in `style.classes` into the DOM as a
+`psc-<string>` class, resource or no resource.** The proof was already in
+production before this file existed: `psc-tbx-nav-text` renders on every Toolbox
+page and exists as no style-class resource anywhere -- suite-ui's build_shell.py
+appends it as a bare string. So a theme's globals.css, which is just CSS served
+gateway-wide, can define `.psc-st\\/containers\\/card` and carry the whole
+contract. What is lost is only the Designer's style-class picker dropdown, which
+costs nothing for a UI that is generated rather than hand-assembled.
+
+The payload has three parts, in cascade order:
+
+  1. the pack's 40 `--st-*` tokens, hoisted to `:root`. One theme is one pack,
+     so section 1's per-pack selector block collapses to :root -- and its popup
+     `:has()` special-case, which existed only to reach a popup whose page class
+     named a different pack, disappears with it.
+  2. `contract/chrome.css` VERBATIM -- sections 2-4 of the shared stylesheet
+     (component chrome, shell, card grid). Pack-independent already, and written
+     against `[class*="/family/name"]`, so it ports with no rewriting at all.
+     That is the whole reason the class names below keep their slashes.
+  3. the 69-class contract, from each class's own definition.
+
+TWO THINGS MEASURED THE HARD WAY (module-testing, 8.3.8, 28/08/2026)
+--------------------------------------------------------------------
+**Keep the slashes.** `st/containers/card`, not `st-containers-card`. Part 2 is
+keyed on `[class*="/tables/frame"]`-style attribute selectors; slash names let
+585 lines of chrome port byte-for-byte instead of being rewritten and
+re-verified.
+
+**Double the selector; never use `!important`.** A theme is loaded BEFORE IA's
+own PerspectiveComponents.css, whereas the project style-classes bundle it
+replaces was loaded AFTER it. Moving the contract into a theme therefore flips
+it from winning ties to losing them -- measured: `buttons/chip` silently dropped
+its `padding: 0 12px` to IA's `0`. `!important` fixes that but also beats
+*inline* styles, which inverts Perspective's own precedence and breaks every
+per-component override (measured: it forced topbar and sidebar padding over the
+components' own props). Doubling the class -- `.psc-st\\/x\\/y.psc-st\\/x\\/y`,
+specificity 0-2-0 -- beats IA's 0-1-0 component rules and still loses to inline,
+which is exactly how a real style class behaves.
+
+Parity against styles v2 on an identical probe view: 37 of 39 element surfaces
+byte-identical, every chrome surface included. The two that differ do so by
+design -- `containers/page` is transparent because the theme paints the same
+colour on `#app-container` (the occlusion-fix rule in build_theme.build_globals),
+and `tables/cell` gains a themed `--containerBorder` where v2 left IA-stock grey.
+
+Inputs are vendored under `contract/` by tools/sync-contract.sh; nothing here
+reads a sibling checkout.
+"""
+import json
+import os
+import re
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+CONTRACT = os.path.join(HERE, "contract")
+
+
+def _kebab(prop):
+    """backgroundColor -> background-color; borderLeftWidth -> border-left-width."""
+    return re.sub(r"([A-Z])", lambda m: "-" + m.group(1).lower(), prop)
+
+
+def _selector(path):
+    """`containers/card` -> `.psc-st\\/containers\\/card.psc-st\\/containers\\/card`.
+
+    Slashes are CSS-escaped; the class is doubled for specificity. See the
+    module docstring for why both of those are load-bearing.
+    """
+    one = ".psc-st" + "".join("\\/" + seg for seg in path.split("/"))
+    return one + one
+
+
+def _block(selector, style):
+    return "%s {\n%s}\n" % (selector, "".join(
+        "  %s: %s;\n" % (_kebab(k), v) for k, v in style.items()))
+
+
+def has_contract(pack_id):
+    """Whether this pack has been vendored. Themes build fine without it."""
+    return os.path.isfile(os.path.join(CONTRACT, "classes", "%s.json" % pack_id))
+
+
+def build_contract(pack_id):
+    """The full payload for one pack, or "" if it has not been vendored."""
+    if not has_contract(pack_id):
+        return ""
+
+    tokens = json.load(open(os.path.join(CONTRACT, "tokens", "%s.json" % pack_id)))
+    classes = json.load(open(os.path.join(CONTRACT, "classes", "%s.json" % pack_id)))
+    chrome = open(os.path.join(CONTRACT, "chrome.css")).read()
+
+    out = [
+        "\n/* ======================================================================",
+        " * Styles_Template2 compatibility payload -- GENERATED by build_contract.py.",
+        " * Source pack: %s. Lets a project drop the styles parent entirely:" % pack_id,
+        " * tokens, component chrome and the 69-class contract all travel in the",
+        " * theme. Class names keep their slashes and the selectors are doubled",
+        " * rather than !important -- see build_contract.py's docstring.",
+        " * ==================================================================== */",
+        "",
+        "/* ---- 1. the pack's own tokens (section 1, collapsed to :root) ---- */",
+        ":root {",
+    ]
+    out += ["  %s: %s;" % (k, v) for k, v in sorted(tokens.items())]
+    out += ["}", "",
+            "/* ---- 2. component chrome, shell and card grid (verbatim) ---- */",
+            chrome,
+            "/* ---- 3. the 69-class contract ---- */"]
+
+    for path in sorted(classes):
+        definition = classes[path]
+        sel = _selector(path)
+        base = (definition.get("base") or {}).get("style") or {}
+        if base:
+            out.append(_block(sel, base))
+        for variant in definition.get("variants") or []:
+            pseudo, style = variant.get("pseudo"), variant.get("style")
+            if pseudo and style:
+                out.append(_block("%s:%s" % (sel, pseudo), style))
+
+    return "\n".join(out)
+
+
+if __name__ == "__main__":
+    import sys
+    pack = sys.argv[1] if len(sys.argv) > 1 else "aurora-violet"
+    css = build_contract(pack)
+    if not css:
+        sys.exit("pack %r has no vendored contract -- run tools/sync-contract.sh" % pack)
+    sys.stderr.write("%s: %d bytes\n" % (pack, len(css)))
+    print(css)

@@ -47,6 +47,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mapping import (MAPPING, EXTENDED_MAPPING, TWEAKS,  # noqa: E402
                      SHORTHAND_VARS)
+from build_contract import build_contract  # noqa: E402
 
 # Standalone repo: the 10 source packs are VENDORED under packs/ (copied from
 # ignition-styles-template-v2, the design source of truth for colours --
@@ -757,6 +758,13 @@ def build_theme(theme):
     globals_css = build_globals(pack, computed["--containerRoot"], globals_tweak,
                             computed["--containerBorder"], computed["--callToAction"],
                             computed["--callToAction"])
+    # The Styles_Template2 compatibility payload, when this pack has been
+    # vendored under contract/. It is what lets a consumer drop the styles
+    # parent rather than only inherit its colours -- see build_contract.py.
+    # Appended rather than woven in: everything above is this repo's own
+    # generated theme, everything below is the contract it now also carries,
+    # and a reader (or a diff) can tell them apart at a glance.
+    globals_css += build_contract(pack["id"])
     with open(os.path.join(theme_dir, "globals.css"), "w") as fh:
         fh.write(globals_css)
 
