@@ -191,11 +191,52 @@ install_docker() {
         # parent so the result is target_root/<name>/... not target_root/<name>/<name>/...
         docker cp "$SCRIPT_DIR/$name/." "$CONTAINER:$dest"
         if [ -n "$owner" ]; then
-            docker exec "$CONTAINER" chown -R "$owner" "$dest" 2>/dev/null || \
-                echo "install.sh: WARNING: chown $owner $dest failed in container -- ownership left as copied" >&2
+            # -u 0 first, and it is not belt-and-braces. `docker exec` without it
+            # runs as the image's default user (ignition), which cannot chown
+            # files docker cp has just written as root/uid-1000 -- it fails with
+            # "Operation not permitted". The plain form is kept as a fallback for
+            # a container that is already running as root.
+            docker exec -u 0 "$CONTAINER" chown -R "$owner" "$dest" 2>/dev/null || \
+            docker exec "$CONTAINER" chown -R "$owner" "$dest" 2>/dev/null || true
         fi
         echo "install.sh: installed $name -> $CONTAINER:$dest"
     done
+
+    verify_ownership_docker "$target_root" "$owner"
+}
+
+# Wrong ownership is not a cosmetic problem here and it does not announce itself.
+# A theme directory the gateway cannot read as its own is not skipped and does not
+# error: the next config scan RENAMES it to <theme-id>.deleted-<n> and drops the
+# resource, so the scan reports success and the themes 404 afterwards. Two separate
+# sessions lost theme resources to this before it was understood, so the install
+# refuses to report success it cannot stand behind.
+verify_ownership_docker() {
+    _root="$1"; _want="$2"
+    [ -n "$_want" ] || return 0
+    _bad=$(docker exec "$CONTAINER" sh -c \
+        "find '$_root' -mindepth 1 -maxdepth 1 -type d ! -name '*.deleted-*' \
+         -exec stat -c '%u:%g %n' {} \; 2>/dev/null | grep -v '^$_want ' | head -5")
+    if [ -n "$_bad" ]; then
+        echo "" >&2
+        echo "install.sh: FAILED -- these are not owned by $_want:" >&2
+        echo "$_bad" | sed 's/^/  /' >&2
+        echo "" >&2
+        echo "  A gateway config scan will RENAME each of these to <id>.deleted-<n>" >&2
+        echo "  and drop the resource, reporting success as it does so. Fix the" >&2
+        echo "  ownership before scanning:" >&2
+        echo "" >&2
+        echo "    docker exec -u 0 $CONTAINER chown -R $_want $_root" >&2
+        echo "" >&2
+        return 1
+    fi
+    _dropped=$(docker exec "$CONTAINER" sh -c "ls '$_root' 2>/dev/null | grep '\.deleted-' | head -5")
+    if [ -n "$_dropped" ]; then
+        echo "install.sh: NOTE: a previous scan already dropped these; they are dead" >&2
+        echo "$_dropped" | sed 's/^/  /' >&2
+        echo "  Remove them, re-run this installer, then scan." >&2
+    fi
+    echo "install.sh: ownership verified ($_want) -- safe to run a config scan"
 }
 
 # ---------------------------------------------------------------------------
