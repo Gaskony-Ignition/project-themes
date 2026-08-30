@@ -943,31 +943,47 @@ def _label(name, text, size="13px", colour="var(--label)", weight=None, grow=0):
 
 
 def _nav(active):
-    """Three page links. The active one is a plain label, so the current page
-    never offers to navigate to itself."""
+    """A tab strip across the top. These are separate PAGES, so this cannot be
+    an ia.container.tab -- that switches views inside one view. It is a row of
+    tabs drawn to look like one: the active tab carries the accent underline
+    and does not offer to navigate to the page you are already on."""
     pages = [("Installer", "/"), ("The themes", "/themes"),
              ("How it works", "/how"), ("Under the hood", "/changes"),
              ("For builders", "/contract")]
-    children = []
+    tabs = []
     for title, path in pages:
-        if title == active:
-            children.append(_label("nav_" + path.strip("/") or "nav_home", title,
-                                   size="13px", colour="var(--label)", weight=600))
-            continue
-        children.append({
-            "type": "ia.input.button",
-            "meta": {"name": "nav" + (path.strip("/") or "home")},
+        current = title == active
+        style = {"fontSize": "13px", "padding": "9px 16px 8px",
+                 "cursor": "default" if current else "pointer",
+                 "whiteSpace": "nowrap",
+                 "borderBottomStyle": "solid", "borderBottomWidth": "2px",
+                 "borderBottomColor": ("var(--callToAction)" if current
+                                       else "transparent"),
+                 "color": ("var(--label)" if current
+                           else "var(--label--disabled)"),
+                 "fontWeight": 600 if current else 400}
+        tab = {"type": "ia.display.label",
+               "meta": {"name": "tab_" + (path.strip("/") or "home")},
+               "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+               "props": {"text": title, "style": style}}
+        if not current:
+            # DOM event, not component: onClick under events.component is
+            # accepted, saved and never fires -- the tabs looked right and did
+            # nothing. events.component is for a component's OWN events
+            # (a button's onActionPerformed); onClick is the browser's.
+            tab["events"] = {"dom": {"onClick": {
+                "config": {"script":
+                           "\tsystem.perspective.navigate(page='%s')" % path},
+                "scope": "G", "type": "script"}}}
+        tabs.append(tab)
+    return {"type": "ia.container.flex", "meta": {"name": "tabs"},
             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-            "props": {"text": title, "style": {"fontSize": "13px"}},
-            "events": {"component": {"onActionPerformed": {
-                "config": {"script": "\tsystem.perspective.navigate(page='%s')" % path},
-                "scope": "G", "type": "script"}}},
-        })
-    return {"type": "ia.container.flex", "meta": {"name": "nav"},
-            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-            "props": {"direction": "row", "alignItems": "center",
-                      "style": {"gap": "10px", "paddingBottom": "4px"}},
-            "children": children}
+            "props": {"direction": "row", "alignItems": "flex-end",
+                      "style": {"gap": "2px", "marginBottom": "6px",
+                                "borderBottomStyle": "solid",
+                                "borderBottomWidth": "1px",
+                                "borderBottomColor": "var(--border)"}},
+            "children": tabs}
 
 
 def _stat(key, caption):
@@ -1233,7 +1249,7 @@ def preview_node(name, pal, label, caption):
                 rail,
                 _flex("main", grow=1, basis="0px", style={
                     "padding": "7px"}, children=[card, table])])])
-    return _flex(name, basis="230px", style={"gap": "0px"}, children=[
+    return _flex(name, basis="205px", style={"gap": "0px"}, children=[
         _flex("frame", basis="150px", children=[screen]),
         _txt("name", label, "12px", "var(--label)", 600),
         _txt("cap", caption, "10px", "var(--label--disabled)")])
@@ -1292,22 +1308,23 @@ def _gallery(name, cards):
     return {"type": "ia.container.flex", "meta": {"name": name},
             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
             "props": {"direction": "row", "wrap": "wrap",
-                      "style": {"gap": "18px", "rowGap": "18px"}},
+                      "style": {"gap": "16px", "rowGap": "18px"}},
             "children": cards}
 
 
 def _stock_palettes():
+    """(order, labels, palettes) for Ignition's own themes, as captured."""
     data = json.load(open(STOCK_PALETTES))
-    return data["light"], data["dark"]
+    return data["order"], data["labels"], data["palettes"]
 
 
 def build_themes_view_json(themes, version):
     """The gallery: what a gateway starts with, then what this installs."""
-    light, dark = _stock_palettes()
-    stock = [preview_node("stocklight", light, "Ignition light",
-                          "what every gateway starts with"),
-             preview_node("stockdark", dark, "Ignition dark",
-                          "what every gateway starts with")]
+    order, labels, palettes = _stock_palettes()
+    stock = [preview_node("stock%d" % i, palettes[theme_id],
+                          labels.get(theme_id, theme_id),
+                          "dark" if "dark" in theme_id else "light")
+             for i, theme_id in enumerate(order)]
     ours = []
     for i, theme in enumerate(sorted(themes, key=lambda t: t["label"])):
         ours.append(preview_node(
@@ -1329,6 +1346,11 @@ def build_themes_view_json(themes, version):
                    "colours."),
             _label("stock_h", "What every gateway starts with", size="15px",
                    weight=600),
+            _prose("stock_sub",
+                   "Ignition's own six. They are never modified by this "
+                   "project, and they stay available alongside the ones it "
+                   "installs.",
+                   size="12px", colour="var(--label--disabled)"),
             _gallery("stock", stock),
             _label("ours_h", "The %d themes this project installs" % len(themes),
                    size="15px", weight=600),
@@ -1344,7 +1366,8 @@ def build_themes_view_json(themes, version):
 
 def build_how_view_json(themes, version):
     """The story: three sentences, one before/after, three steps."""
-    light, dark = _stock_palettes()
+    order, labels, palettes = _stock_palettes()
+    dark = palettes["dark"]
     example = sorted(themes, key=lambda t: t["label"])[0]
     def step(i, title, text):
         return {"type": "ia.container.flex", "meta": {"name": "step%d" % i},

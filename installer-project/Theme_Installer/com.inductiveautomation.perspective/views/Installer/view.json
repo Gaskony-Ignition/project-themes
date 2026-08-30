@@ -50,7 +50,7 @@
       {
         "type": "ia.container.flex",
         "meta": {
-          "name": "nav"
+          "name": "tabs"
         },
         "position": {
           "grow": 0,
@@ -59,17 +59,20 @@
         },
         "props": {
           "direction": "row",
-          "alignItems": "center",
+          "alignItems": "flex-end",
           "style": {
-            "gap": "10px",
-            "paddingBottom": "4px"
+            "gap": "2px",
+            "marginBottom": "6px",
+            "borderBottomStyle": "solid",
+            "borderBottomWidth": "1px",
+            "borderBottomColor": "var(--border)"
           }
         },
         "children": [
           {
             "type": "ia.display.label",
             "meta": {
-              "name": "nav_"
+              "name": "tab_home"
             },
             "position": {
               "grow": 0,
@@ -80,15 +83,21 @@
               "text": "Installer",
               "style": {
                 "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "default",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "var(--callToAction)",
                 "color": "var(--label)",
                 "fontWeight": 600
               }
             }
           },
           {
-            "type": "ia.input.button",
+            "type": "ia.display.label",
             "meta": {
-              "name": "navthemes"
+              "name": "tab_themes"
             },
             "position": {
               "grow": 0,
@@ -98,12 +107,20 @@
             "props": {
               "text": "The themes",
               "style": {
-                "fontSize": "13px"
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
               }
             },
             "events": {
-              "component": {
-                "onActionPerformed": {
+              "dom": {
+                "onClick": {
                   "config": {
                     "script": "\tsystem.perspective.navigate(page='/themes')"
                   },
@@ -114,9 +131,9 @@
             }
           },
           {
-            "type": "ia.input.button",
+            "type": "ia.display.label",
             "meta": {
-              "name": "navhow"
+              "name": "tab_how"
             },
             "position": {
               "grow": 0,
@@ -126,12 +143,20 @@
             "props": {
               "text": "How it works",
               "style": {
-                "fontSize": "13px"
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
               }
             },
             "events": {
-              "component": {
-                "onActionPerformed": {
+              "dom": {
+                "onClick": {
                   "config": {
                     "script": "\tsystem.perspective.navigate(page='/how')"
                   },
@@ -142,9 +167,9 @@
             }
           },
           {
-            "type": "ia.input.button",
+            "type": "ia.display.label",
             "meta": {
-              "name": "navchanges"
+              "name": "tab_changes"
             },
             "position": {
               "grow": 0,
@@ -154,12 +179,20 @@
             "props": {
               "text": "Under the hood",
               "style": {
-                "fontSize": "13px"
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
               }
             },
             "events": {
-              "component": {
-                "onActionPerformed": {
+              "dom": {
+                "onClick": {
                   "config": {
                     "script": "\tsystem.perspective.navigate(page='/changes')"
                   },
@@ -170,9 +203,9 @@
             }
           },
           {
-            "type": "ia.input.button",
+            "type": "ia.display.label",
             "meta": {
-              "name": "navcontract"
+              "name": "tab_contract"
             },
             "position": {
               "grow": 0,
@@ -182,12 +215,20 @@
             "props": {
               "text": "For builders",
               "style": {
-                "fontSize": "13px"
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
               }
             },
             "events": {
-              "component": {
-                "onActionPerformed": {
+              "dom": {
+                "onClick": {
                   "config": {
                     "script": "\tsystem.perspective.navigate(page='/contract')"
                   },
