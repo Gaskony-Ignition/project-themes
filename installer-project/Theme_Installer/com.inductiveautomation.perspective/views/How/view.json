@@ -1,0 +1,1612 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {
+      "direction": "column",
+      "style": {
+        "padding": "18px",
+        "gap": "14px",
+        "backgroundColor": "var(--containerRoot)"
+      }
+    },
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "nav"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "style": {
+            "gap": "10px",
+            "paddingBottom": "4px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navhome"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Installer",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navthemes"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "The themes",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/themes')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "nav_how"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "How it works",
+              "style": {
+                "fontSize": "13px",
+                "color": "var(--label)",
+                "fontWeight": 600
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navchanges"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Under the hood",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/changes')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navcontract"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "For builders",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/contract')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "title"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "How it works",
+          "style": {
+            "fontSize": "24px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "intro"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Ignition does not colour each screen by hand. It draws everything from a palette of named colours - the page colour, the text colour, the button colour - and every component looks them up as it draws. A theme is a small file that points those names at different colours. Pick one and every screen repaints itself at once. Your views, your data and your logic are never touched: a theme carries colours, not screens.",
+          "style": {
+            "fontSize": "13px",
+            "color": "var(--label)",
+            "lineHeight": "1.55",
+            "maxWidth": "880px"
+          }
+        }
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "pair"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {
+            "gap": "26px",
+            "alignItems": "flex-start"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "before"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "230px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "0px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "frame"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "150px"
+                },
+                "props": {
+                  "direction": "column",
+                  "style": {}
+                },
+                "children": [
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "screen"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 0,
+                      "basis": "0px"
+                    },
+                    "props": {
+                      "direction": "column",
+                      "style": {
+                        "backgroundColor": "#161616",
+                        "border": "1px solid #767676",
+                        "borderRadius": "6px",
+                        "overflow": "hidden"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "topbar"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "24px"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "style": {
+                            "backgroundColor": "#515151",
+                            "alignItems": "center",
+                            "gap": "6px",
+                            "padding": "0 8px"
+                          }
+                        },
+                        "children": [
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "dot"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "10px"
+                            },
+                            "props": {
+                              "direction": "column",
+                              "style": {
+                                "backgroundColor": "#229AD6",
+                                "height": "10px",
+                                "borderRadius": "5px"
+                              }
+                            }
+                          },
+                          {
+                            "type": "ia.display.label",
+                            "meta": {
+                              "name": "apptitle"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 1,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "My Plant",
+                              "style": {
+                                "fontSize": "9px",
+                                "color": "#F4F4F4",
+                                "lineHeight": "1.25",
+                                "whiteSpace": "nowrap",
+                                "overflow": "hidden",
+                                "fontWeight": 600
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "body"
+                        },
+                        "position": {
+                          "grow": 1,
+                          "shrink": 0,
+                          "basis": "0px"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "style": {}
+                        },
+                        "children": [
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "rail"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "38px"
+                            },
+                            "props": {
+                              "direction": "column",
+                              "style": {
+                                "backgroundColor": "#515151",
+                                "gap": "5px",
+                                "padding": "8px 6px"
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "nav0"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "4px"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#F4F4F4",
+                                    "height": "4px",
+                                    "borderRadius": "2px",
+                                    "opacity": "0.9"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "nav1"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "4px"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#F4F4F4",
+                                    "height": "4px",
+                                    "borderRadius": "2px",
+                                    "opacity": "0.45"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "nav2"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "4px"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#F4F4F4",
+                                    "height": "4px",
+                                    "borderRadius": "2px",
+                                    "opacity": "0.45"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "main"
+                            },
+                            "position": {
+                              "grow": 1,
+                              "shrink": 0,
+                              "basis": "0px"
+                            },
+                            "props": {
+                              "direction": "column",
+                              "style": {
+                                "padding": "7px"
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "card"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#323232",
+                                    "border": "1px solid #767676",
+                                    "borderRadius": "5px",
+                                    "padding": "6px 8px",
+                                    "gap": "3px"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "type": "ia.display.label",
+                                    "meta": {
+                                      "name": "t"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 1,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "Pump 4 - running",
+                                      "style": {
+                                        "fontSize": "9px",
+                                        "color": "#F4F4F4",
+                                        "lineHeight": "1.25",
+                                        "whiteSpace": "nowrap",
+                                        "overflow": "hidden",
+                                        "fontWeight": 600
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.display.label",
+                                    "meta": {
+                                      "name": "s"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 1,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "Flow steady at 42 L/s",
+                                      "style": {
+                                        "fontSize": "8px",
+                                        "color": "#A1A1A1",
+                                        "lineHeight": "1.25",
+                                        "whiteSpace": "nowrap",
+                                        "overflow": "hidden"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "btn"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "backgroundColor": "#229AD6",
+                                        "borderRadius": "4px",
+                                        "padding": "3px 8px",
+                                        "alignSelf": "flex-start",
+                                        "marginTop": "3px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "b"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "Acknowledge",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#ffffff",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden",
+                                            "fontWeight": 600
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "table"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "marginTop": "6px",
+                                    "borderRadius": "4px",
+                                    "overflow": "hidden",
+                                    "border": "1px solid #767676"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "th"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "15px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "backgroundColor": "#515151",
+                                        "alignItems": "center",
+                                        "padding": "0 6px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "h"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "Tag            Value",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#F4F4F4",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden",
+                                            "fontWeight": 600
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "r0"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "14px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "backgroundColor": "#161616",
+                                        "alignItems": "center",
+                                        "padding": "0 6px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "v"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "FT-101       42.0",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#F4F4F4",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "r1"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "14px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "alignItems": "center",
+                                        "padding": "0 6px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "v"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "PT-102        3.1",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#F4F4F4",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "name"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 1,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Ignition dark",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label)",
+                    "lineHeight": "1.25",
+                    "whiteSpace": "nowrap",
+                    "overflow": "hidden",
+                    "fontWeight": 600
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 1,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "the palette every gateway ships with",
+                  "style": {
+                    "fontSize": "10px",
+                    "color": "var(--label--disabled)",
+                    "lineHeight": "1.25",
+                    "whiteSpace": "nowrap",
+                    "overflow": "hidden"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "arrow"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "\u2192",
+              "style": {
+                "fontSize": "26px",
+                "color": "var(--label--disabled)"
+              }
+            }
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "after"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "230px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "0px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "frame"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "150px"
+                },
+                "props": {
+                  "direction": "column",
+                  "style": {}
+                },
+                "children": [
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "screen"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 0,
+                      "basis": "0px"
+                    },
+                    "props": {
+                      "direction": "column",
+                      "style": {
+                        "backgroundColor": "#eef1f0",
+                        "border": "1px solid #d3dbd8",
+                        "borderRadius": "6px",
+                        "overflow": "hidden"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "topbar"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "24px"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "style": {
+                            "backgroundColor": "#0b3d5c",
+                            "alignItems": "center",
+                            "gap": "6px",
+                            "padding": "0 8px"
+                          }
+                        },
+                        "children": [
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "dot"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "10px"
+                            },
+                            "props": {
+                              "direction": "column",
+                              "style": {
+                                "backgroundColor": "#0b3d5c",
+                                "height": "10px",
+                                "borderRadius": "5px"
+                              }
+                            }
+                          },
+                          {
+                            "type": "ia.display.label",
+                            "meta": {
+                              "name": "apptitle"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 1,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "My Plant",
+                              "style": {
+                                "fontSize": "9px",
+                                "color": "#ffffff",
+                                "lineHeight": "1.25",
+                                "whiteSpace": "nowrap",
+                                "overflow": "hidden",
+                                "fontWeight": 600
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "body"
+                        },
+                        "position": {
+                          "grow": 1,
+                          "shrink": 0,
+                          "basis": "0px"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "style": {}
+                        },
+                        "children": [
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "rail"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "38px"
+                            },
+                            "props": {
+                              "direction": "column",
+                              "style": {
+                                "backgroundColor": "#0b3d5c",
+                                "gap": "5px",
+                                "padding": "8px 6px"
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "nav0"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "4px"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#ffffff",
+                                    "height": "4px",
+                                    "borderRadius": "2px",
+                                    "opacity": "0.9"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "nav1"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "4px"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#ffffff",
+                                    "height": "4px",
+                                    "borderRadius": "2px",
+                                    "opacity": "0.45"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "nav2"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "4px"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#ffffff",
+                                    "height": "4px",
+                                    "borderRadius": "2px",
+                                    "opacity": "0.45"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "main"
+                            },
+                            "position": {
+                              "grow": 1,
+                              "shrink": 0,
+                              "basis": "0px"
+                            },
+                            "props": {
+                              "direction": "column",
+                              "style": {
+                                "padding": "7px"
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "card"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "backgroundColor": "#ffffff",
+                                    "border": "1px solid #d3dbd8",
+                                    "borderRadius": "5px",
+                                    "padding": "6px 8px",
+                                    "gap": "3px"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "type": "ia.display.label",
+                                    "meta": {
+                                      "name": "t"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 1,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "Pump 4 - running",
+                                      "style": {
+                                        "fontSize": "9px",
+                                        "color": "#16232e",
+                                        "lineHeight": "1.25",
+                                        "whiteSpace": "nowrap",
+                                        "overflow": "hidden",
+                                        "fontWeight": 600
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.display.label",
+                                    "meta": {
+                                      "name": "s"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 1,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "Flow steady at 42 L/s",
+                                      "style": {
+                                        "fontSize": "8px",
+                                        "color": "#5b6b74",
+                                        "lineHeight": "1.25",
+                                        "whiteSpace": "nowrap",
+                                        "overflow": "hidden"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "btn"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "backgroundColor": "#0b3d5c",
+                                        "borderRadius": "4px",
+                                        "padding": "3px 8px",
+                                        "alignSelf": "flex-start",
+                                        "marginTop": "3px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "b"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "Acknowledge",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#ffffff",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden",
+                                            "fontWeight": 600
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "table"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "direction": "column",
+                                  "style": {
+                                    "marginTop": "6px",
+                                    "borderRadius": "4px",
+                                    "overflow": "hidden",
+                                    "border": "1px solid #d3dbd8"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "th"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "15px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "backgroundColor": "#eaf0ee",
+                                        "alignItems": "center",
+                                        "padding": "0 6px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "h"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "Tag            Value",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#16232e",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden",
+                                            "fontWeight": 600
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "r0"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "14px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "backgroundColor": "#ffffff",
+                                        "alignItems": "center",
+                                        "padding": "0 6px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "v"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "FT-101       42.0",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#16232e",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "r1"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "14px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {
+                                        "alignItems": "center",
+                                        "padding": "0 6px"
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "v"
+                                        },
+                                        "position": {
+                                          "grow": 0,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "PT-102        3.1",
+                                          "style": {
+                                            "fontSize": "8px",
+                                            "color": "#16232e",
+                                            "lineHeight": "1.25",
+                                            "whiteSpace": "nowrap",
+                                            "overflow": "hidden"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "name"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 1,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Finance Ledger",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label)",
+                    "lineHeight": "1.25",
+                    "whiteSpace": "nowrap",
+                    "overflow": "hidden",
+                    "fontWeight": 600
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 1,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "the same screen, same components, repainted",
+                  "style": {
+                    "fontSize": "10px",
+                    "color": "var(--label--disabled)",
+                    "lineHeight": "1.25",
+                    "whiteSpace": "nowrap",
+                    "overflow": "hidden"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "steps"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {
+            "gap": "12px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "step1"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "12px 14px",
+                "gap": "6px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "1",
+                  "style": {
+                    "fontSize": "20px",
+                    "color": "var(--callToAction)",
+                    "fontWeight": 700
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "t"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Install",
+                  "style": {
+                    "fontSize": "14px",
+                    "color": "var(--label)",
+                    "fontWeight": 600
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "x"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "The Installer page copies the theme files onto this gateway and registers them. Nothing changes on screen yet - installing just puts the paint on the shelf.",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)",
+                    "lineHeight": "1.55",
+                    "maxWidth": "880px"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "step2"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "12px 14px",
+                "gap": "6px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "2",
+                  "style": {
+                    "fontSize": "20px",
+                    "color": "var(--callToAction)",
+                    "fontWeight": 700
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "t"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Pick one",
+                  "style": {
+                    "fontSize": "14px",
+                    "color": "var(--label)",
+                    "fontWeight": 600
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "x"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Every project gets a Theme button. Choosing a theme repaints that session straight away, and a project can set one as the default everybody sees.",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)",
+                    "lineHeight": "1.55",
+                    "maxWidth": "880px"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "step3"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "padding": "12px 14px",
+                "gap": "6px",
+                "borderRadius": "8px",
+                "backgroundColor": "var(--container)",
+                "border": "var(--containerBorder)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "n"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "3",
+                  "style": {
+                    "fontSize": "20px",
+                    "color": "var(--callToAction)",
+                    "fontWeight": 700
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "t"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Change your mind",
+                  "style": {
+                    "fontSize": "14px",
+                    "color": "var(--label)",
+                    "fontWeight": 600
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "x"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Nothing here is permanent. Pick a different theme and it all repaints again; remove the themes and the gateway is back to stock. Ignition's own light and dark are never modified.",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)",
+                    "lineHeight": "1.55",
+                    "maxWidth": "880px"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "deeper"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "For the detail: 'Under the hood' measures, live against this gateway, every colour a theme changes. 'For builders' lists the tokens and style classes a project can use.",
+          "style": {
+            "fontSize": "12px",
+            "color": "var(--label--disabled)",
+            "lineHeight": "1.55",
+            "maxWidth": "880px"
+          }
+        }
+      }
+    ]
+  }
+}

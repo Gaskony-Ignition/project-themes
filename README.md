@@ -340,30 +340,33 @@ shipping the payload:
    already wrote, because those are gateway config resources, not project
    resources.
 
-The project carries two more pages, linked from the header of each. Neither
-is required to install anything — they are there so the themes are not a black
-box on someone else's gateway:
+The project carries four more pages, linked from the header of each. None is
+required to install anything; they exist so the themes are not a black box on
+someone else's gateway. The first two are for anyone, the last two for people
+building on them:
 
-* **What this theme changes** — opens with the answer in a sentence ("Glass
-  Violet is built on Ignition's dark theme and repaints it: 108 of its
-  variables carry this pack's values, 12 are left exactly as Ignition set them,
-  and 42 are new"), then the variables themselves — **grouped by what they
-  affect**, not alphabetically, because an A–Z list of Ignition's internal
-  names interleaves chart palettes with page surfaces and explains nothing.
-  Each row carries the derivation `build_theme.py` recorded, a swatch of the
-  colour, and Ignition's value beside ours. A second dropdown re-points the
-  comparison at any other installed theme.
-* **The contract** — the `--st-*` tokens and `st/...` classes a project can
-  use without inheriting anything, grouped the same way, each with a swatch,
-  its live value, and where the theme actually uses it in plain words ("danger
-  buttons", "page containers") rather than the raw selector chain.
+* **The themes** — twelve miniature plant screens, each drawn in one theme's
+  own colours: Ignition's light and dark at the top, then the ten this project
+  installs. It answers "what is this?" without a sentence being read.
+* **How it works** — Ignition draws every screen from a palette of named
+  colours; a theme re-points those names. One before/after pair and three
+  steps (install, pick, change your mind).
+* **Under the hood** — the measured diff against the stock theme underneath:
+  108 of Ignition's variables repainted on a typical theme, 12 left untouched,
+  42 added, each grouped by what it affects and shown with a swatch.
+* **For builders** — the `--st-*` tokens and `st/...` classes a project can
+  use without inheriting anything.
 
-Both read the gateway at the moment you open them: they fetch the resolved
-stylesheet the browser is really being served (`/data/perspective/themes/<id>.css`,
-which is also how the stock base is read, since light and dark live inside the
-Perspective module rather than on disk) and measure it. No figure on either
-page is written down at build time, so neither can drift from what is
-installed — and a theme that has been edited on the gateway shows its edits.
+The two previews pages are drawn from the theme files the installer already
+embeds, so they show exactly what pressing Install produces, with no gateway
+round-trip. The two measurement pages read the gateway live.
+
+"Under the hood" and "For builders" fetch the resolved stylesheet the browser
+is really being served (`/data/perspective/themes/<id>.css`, which is also how
+the stock base is read, since light and dark live inside the Perspective module
+rather than on disk) and measure it. No figure on either is written down at
+build time, so neither can drift from what is installed — and a theme edited on
+the gateway shows its edits.
 
 Re-running **Install custom themes** overwrites whatever is on the gateway
 with the embedded copies — so importing a newer release of the installer and

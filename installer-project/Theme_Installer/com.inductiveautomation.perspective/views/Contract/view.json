@@ -113,6 +113,62 @@
           {
             "type": "ia.input.button",
             "meta": {
+              "name": "navthemes"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "The themes",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/themes')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "navhow"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "How it works",
+              "style": {
+                "fontSize": "13px"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/how')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
               "name": "navchanges"
             },
             "position": {
@@ -121,7 +177,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "What this theme changes",
+              "text": "Under the hood",
               "style": {
                 "fontSize": "13px"
               }
@@ -149,7 +205,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "The contract",
+              "text": "For builders",
               "style": {
                 "fontSize": "13px",
                 "color": "var(--label)",
@@ -170,7 +226,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "The contract",
+          "text": "For builders",
           "style": {
             "fontSize": "24px",
             "color": "var(--label)",

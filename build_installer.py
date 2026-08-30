@@ -22,6 +22,7 @@ dist/Theme_Installer-<VERSION>.zip).
 """
 
 import datetime
+import re
 import json
 import os
 import shutil
@@ -944,8 +945,9 @@ def _label(name, text, size="13px", colour="var(--label)", weight=None, grow=0):
 def _nav(active):
     """Three page links. The active one is a plain label, so the current page
     never offers to navigate to itself."""
-    pages = [("Installer", "/"), ("What this theme changes", "/changes"),
-             ("The contract", "/contract")]
+    pages = [("Installer", "/"), ("The themes", "/themes"),
+             ("How it works", "/how"), ("Under the hood", "/changes"),
+             ("For builders", "/contract")]
     children = []
     for title, path in pages:
         if title == active:
@@ -1095,6 +1097,148 @@ def _theme_picker(name, label, custom_path, options_code):
 
 
 
+
+
+# ---------------------------------------------------------------------------
+# The miniature screen, drawn with LITERAL colours at build time.
+#
+# This began as one parameterised view fed by a flex-repeater, and it did not
+# work: view.params never resolved inside it, through a repeater OR a direct
+# ia.display.view embed, with no error in the console, no gateway log line and
+# every literal string still rendering -- so the gallery laid out perfectly in
+# plain white twelve times. Property bindings, expression bindings and binding
+# props.style as a whole object all failed identically.
+#
+# Baking the colours in is not a workaround, it is the more honest artefact:
+# the installer already EMBEDS each theme's files, so a preview drawn from the
+# same embedded copy shows exactly what pressing Install will produce -- and
+# it renders with no bindings, no params and nothing that can silently fail.
+# The measurement pages stay live; the picture is a picture.
+# ---------------------------------------------------------------------------
+
+STOCK_PALETTES = os.path.join(HERE, "insight", "stock-palettes.json")
+
+# Ignition's light/dark define nearly everything as var(--neutral-NN); a
+# preview holding a var() reference renders in the VIEWING page's colours,
+# quietly showing the wrong thing rather than nothing.
+_VARDEF = re.compile(r'^[ \t]*(--[A-Za-z0-9_-]+)[ \t]*:[ \t]*([^;]+);', re.M)
+
+
+def theme_palette(theme):
+    """The dozen colours one preview is painted with, from out/ at build time."""
+    values = {}
+    for filename in ("variables.css", "globals.css"):
+        for match in _VARDEF.finditer(theme["files"].get(filename, "")):
+            values[match.group(1)] = match.group(2).strip()
+
+    def resolve(value, hops=0):
+        while value.startswith("var(") and hops < 6:
+            name = re.match(r'var\(\s*(--[A-Za-z0-9_-]+)', value)
+            if not name:
+                return ""
+            value = values.get(name.group(1), "").strip()
+            hops += 1
+        return "" if value.startswith("var(") else value
+
+    def pick(*names):
+        for name in names:
+            value = resolve(values.get(name, "").strip())
+            if value and value != "transparent":
+                return value
+        return ""
+
+    page = pick("--st-page-solid", "--containerRoot")
+    return {
+        "page": page,
+        "sidebar": pick("--st-sidebar-solid", "--containerNested", "--container"),
+        "card": pick("--st-card", "--container"),
+        "text": pick("--st-fg", "--label"),
+        "muted": pick("--label--disabled", "--label"),
+        "chromeFg": pick("--st-chrome-fg", "--label"),
+        "accent": pick("--st-accent", "--callToAction"),
+        "onAccent": pick("--st-on-accent") or "#ffffff",
+        "border": pick("--st-chrome-border", "--border"),
+        "headBg": pick("--st-head-solid", "--containerNested", "--container"),
+        "headFg": pick("--st-head-fg", "--label"),
+        "rowBg": pick("--st-row-bg") or page,
+        "cellFg": pick("--st-cell-fg", "--label"),
+    }
+
+
+def _flex(name, children=None, direction="column", grow=0, basis="auto", style=None):
+    node = {"type": "ia.container.flex", "meta": {"name": name},
+            "position": {"grow": grow, "shrink": 0, "basis": basis},
+            "props": {"direction": direction, "style": style or {}}}
+    if children:
+        node["children"] = children
+    return node
+
+
+def _txt(name, text, size, colour, weight=None):
+    style = {"fontSize": size, "color": colour, "lineHeight": "1.25",
+             "whiteSpace": "nowrap", "overflow": "hidden"}
+    if weight:
+        style["fontWeight"] = weight
+    return {"type": "ia.display.label", "meta": {"name": name},
+            "position": {"grow": 0, "shrink": 1, "basis": "auto"},
+            "props": {"text": text, "style": style}}
+
+
+def preview_node(name, pal, label, caption):
+    """A whole screen in 230px: top bar, rail, a card with a button, a table."""
+    c = lambda k, fallback="#888888": pal.get(k) or fallback
+    topbar = _flex("topbar", direction="row", basis="24px", style={
+        "backgroundColor": c("sidebar"), "alignItems": "center",
+        "gap": "6px", "padding": "0 8px"}, children=[
+            _flex("dot", basis="10px", style={
+                "backgroundColor": c("accent"), "height": "10px",
+                "borderRadius": "5px"}),
+            _txt("apptitle", "My Plant", "9px", c("chromeFg"), 600)])
+    rail = _flex("rail", basis="38px", style={
+        "backgroundColor": c("sidebar"), "gap": "5px",
+        "padding": "8px 6px"}, children=[
+            _flex("nav%d" % i, basis="4px", style={
+                "backgroundColor": c("chromeFg"), "height": "4px",
+                "borderRadius": "2px",
+                "opacity": "0.9" if i == 0 else "0.45"}) for i in range(3)])
+    card = _flex("card", style={
+        "backgroundColor": c("card"), "border": "1px solid " + c("border"),
+        "borderRadius": "5px", "padding": "6px 8px", "gap": "3px"}, children=[
+            _txt("t", "Pump 4 - running", "9px", c("text"), 600),
+            _txt("s", "Flow steady at 42 L/s", "8px", c("muted")),
+            _flex("btn", direction="row", style={
+                "backgroundColor": c("accent"), "borderRadius": "4px",
+                "padding": "3px 8px", "alignSelf": "flex-start",
+                "marginTop": "3px"}, children=[
+                    _txt("b", "Acknowledge", "8px", c("onAccent"), 600)])])
+    table = _flex("table", style={
+        "marginTop": "6px", "borderRadius": "4px", "overflow": "hidden",
+        "border": "1px solid " + c("border")}, children=[
+            _flex("th", direction="row", basis="15px", style={
+                "backgroundColor": c("headBg"), "alignItems": "center",
+                "padding": "0 6px"}, children=[
+                    _txt("h", "Tag            Value", "8px", c("headFg"), 600)]),
+            _flex("r0", direction="row", basis="14px", style={
+                "backgroundColor": c("rowBg"), "alignItems": "center",
+                "padding": "0 6px"}, children=[
+                    _txt("v", "FT-101       42.0", "8px", c("cellFg"))]),
+            _flex("r1", direction="row", basis="14px", style={
+                "alignItems": "center", "padding": "0 6px"}, children=[
+                    _txt("v", "PT-102        3.1", "8px", c("cellFg"))])])
+    screen = _flex("screen", grow=1, basis="0px", style={
+        "backgroundColor": c("page"), "border": "1px solid " + c("border"),
+        "borderRadius": "6px", "overflow": "hidden"}, children=[
+            topbar,
+            _flex("body", direction="row", grow=1, basis="0px", children=[
+                rail,
+                _flex("main", grow=1, basis="0px", style={
+                    "padding": "7px"}, children=[card, table])])])
+    return _flex(name, basis="230px", style={"gap": "0px"}, children=[
+        _flex("frame", basis="150px", children=[screen]),
+        _txt("name", label, "12px", "var(--label)", 600),
+        _txt("cap", caption, "10px", "var(--label--disabled)")])
+
+
 def _layer_card(i):
     """One of the three build layers, as a card rather than a table row.
 
@@ -1127,6 +1271,152 @@ def _layer_card(i):
     }
 
 
+
+# ---------------------------------------------------------------------------
+# The two lay pages. "The themes" answers "what do they look like" with a
+# gallery of painted screens; "How it works" answers "what is going on" with
+# the same screen painted twice and three sentences. The measurement pages
+# stay, demoted to "under the hood".
+# ---------------------------------------------------------------------------
+
+
+def _prose(name, text, size="13px", colour="var(--label)"):
+    return {"type": "ia.display.label", "meta": {"name": name},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"text": text,
+                      "style": {"fontSize": size, "color": colour,
+                                "lineHeight": "1.55", "maxWidth": "880px"}}}
+
+
+def _gallery(name, cards):
+    return {"type": "ia.container.flex", "meta": {"name": name},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"direction": "row", "wrap": "wrap",
+                      "style": {"gap": "18px", "rowGap": "18px"}},
+            "children": cards}
+
+
+def _stock_palettes():
+    data = json.load(open(STOCK_PALETTES))
+    return data["light"], data["dark"]
+
+
+def build_themes_view_json(themes, version):
+    """The gallery: what a gateway starts with, then what this installs."""
+    light, dark = _stock_palettes()
+    stock = [preview_node("stocklight", light, "Ignition light",
+                          "what every gateway starts with"),
+             preview_node("stockdark", dark, "Ignition dark",
+                          "what every gateway starts with")]
+    ours = []
+    for i, theme in enumerate(sorted(themes, key=lambda t: t["label"])):
+        ours.append(preview_node(
+            "t%d" % i, theme_palette(theme), theme["label"],
+            "dark" if theme["dark"] else "light"))
+    return {
+        "custom": {}, "params": {}, "props": {},
+        "root": {"type": "ia.container.flex", "meta": {"name": "root"},
+                 "props": {"direction": "column",
+                           "style": {"padding": "18px", "gap": "12px",
+                                     "backgroundColor": "var(--containerRoot)"}},
+                 "children": [
+            _nav("The themes"),
+            _label("title", "The themes", size="24px", weight=600),
+            _prose("intro",
+                   "A theme is a coat of paint for every screen on this "
+                   "gateway. Each little screen below is one of them - the "
+                   "same imaginary plant page, drawn with that theme's own "
+                   "colours."),
+            _label("stock_h", "What every gateway starts with", size="15px",
+                   weight=600),
+            _gallery("stock", stock),
+            _label("ours_h", "The %d themes this project installs" % len(themes),
+                   size="15px", weight=600),
+            _prose("ours_sub",
+                   "Install them from the Installer page, then pick one from "
+                   "any project's Theme button. Same screens, same data, "
+                   "different paint.",
+                   size="12px", colour="var(--label--disabled)"),
+            _gallery("ours", ours),
+        ]},
+    }
+
+
+def build_how_view_json(themes, version):
+    """The story: three sentences, one before/after, three steps."""
+    light, dark = _stock_palettes()
+    example = sorted(themes, key=lambda t: t["label"])[0]
+    def step(i, title, text):
+        return {"type": "ia.container.flex", "meta": {"name": "step%d" % i},
+                "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+                "props": {"direction": "column",
+                          "style": {"padding": "12px 14px", "gap": "6px",
+                                    "borderRadius": "8px",
+                                    "backgroundColor": "var(--container)",
+                                    "border": "var(--containerBorder)"}},
+                "children": [
+                    _label("n", str(i), size="20px",
+                           colour="var(--callToAction)", weight=700),
+                    _label("t", title, size="14px", weight=600),
+                    _prose("x", text, size="12px",
+                           colour="var(--label--disabled)")]}
+    return {
+        "custom": {}, "params": {}, "props": {},
+        "root": {"type": "ia.container.flex", "meta": {"name": "root"},
+                 "props": {"direction": "column",
+                           "style": {"padding": "18px", "gap": "14px",
+                                     "backgroundColor": "var(--containerRoot)"}},
+                 "children": [
+            _nav("How it works"),
+            _label("title", "How it works", size="24px", weight=600),
+            _prose("intro",
+                   "Ignition does not colour each screen by hand. It draws "
+                   "everything from a palette of named colours - the page "
+                   "colour, the text colour, the button colour - and every "
+                   "component looks them up as it draws. A theme is a small "
+                   "file that points those names at different colours. Pick "
+                   "one and every screen repaints itself at once. Your views, "
+                   "your data and your logic are never touched: a theme "
+                   "carries colours, not screens."),
+            {"type": "ia.container.flex", "meta": {"name": "pair"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"direction": "row",
+                       "style": {"gap": "26px", "alignItems": "flex-start"}},
+             "children": [
+                 preview_node("before", dark, "Ignition dark",
+                              "the palette every gateway ships with"),
+                 _label("arrow", "\u2192", size="26px",
+                        colour="var(--label--disabled)"),
+                 preview_node("after", theme_palette(example), example["label"],
+                              "the same screen, same components, repainted"),
+             ]},
+            {"type": "ia.container.flex", "meta": {"name": "steps"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"direction": "row", "style": {"gap": "12px"}},
+             "children": [
+                 step(1, "Install",
+                      "The Installer page copies the theme files onto this "
+                      "gateway and registers them. Nothing changes on screen "
+                      "yet - installing just puts the paint on the shelf."),
+                 step(2, "Pick one",
+                      "Every project gets a Theme button. Choosing a theme "
+                      "repaints that session straight away, and a project can "
+                      "set one as the default everybody sees."),
+                 step(3, "Change your mind",
+                      "Nothing here is permanent. Pick a different theme and "
+                      "it all repaints again; remove the themes and the "
+                      "gateway is back to stock. Ignition's own light and "
+                      "dark are never modified."),
+             ]},
+            _prose("deeper",
+                   "For the detail: 'Under the hood' measures, live against "
+                   "this gateway, every colour a theme changes. 'For builders' "
+                   "lists the tokens and style classes a project can use.",
+                   size="12px", colour="var(--label--disabled)"),
+        ]},
+    }
+
+
 def build_changes_view_json(themes, version):
     """Page: what this theme actually changes, measured against stock."""
     return {
@@ -1149,9 +1439,8 @@ def build_changes_view_json(themes, version):
                       "style": {"padding": "18px", "gap": "14px",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
-                _nav("What this theme changes"),
-                _label("title", "What this theme changes", size="24px",
-                       weight=600),
+                _nav("Under the hood"),
+                _label("title", "Under the hood", size="24px", weight=600),
                 {"type": "ia.display.label", "meta": {"name": "headline"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"style": {"fontSize": "14px", "color": "var(--label)",
@@ -1223,8 +1512,8 @@ def build_contract_view_json(themes, version):
                       "style": {"padding": "18px", "gap": "14px",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
-                _nav("The contract"),
-                _label("title", "The contract", size="24px", weight=600),
+                _nav("For builders"),
+                _label("title", "For builders", size="24px", weight=600),
                 _label("sub",
                        "What a project can rely on without inheriting anything. "
                        "Both lists are read out of the installed theme itself, "
@@ -1294,12 +1583,15 @@ def main():
     stylesheet_dir = os.path.join(persp_dir, "stylesheet")
     view_dir = os.path.join(persp_dir, "views", "Installer")
     changes_dir = os.path.join(persp_dir, "views", "Changes")
+    themes_dir = os.path.join(persp_dir, "views", "Themes")
+    how_dir = os.path.join(persp_dir, "views", "How")
     contract_dir = os.path.join(persp_dir, "views", "Contract")
     popup_dir = os.path.join(persp_dir, "views", "SelectorPopup")
     dropdown_dir = os.path.join(persp_dir, "views", "ThemeDropdown")
 
     for d in (script_dir, session_props_dir, page_config_dir, stylesheet_dir,
-              view_dir, popup_dir, dropdown_dir, changes_dir, contract_dir):
+              view_dir, popup_dir, dropdown_dir, changes_dir, contract_dir,
+              themes_dir, how_dir):
         os.makedirs(d)
 
     # project.json
@@ -1325,7 +1617,9 @@ def main():
     write_json(os.path.join(page_config_dir, "config.json"), {
         "pages": {
             "/": {"title": "Theme Installer", "viewPath": "Installer"},
-            "/changes": {"title": "What this theme changes", "viewPath": "Changes"},
+            "/themes": {"title": "The themes", "viewPath": "Themes"},
+            "/how": {"title": "How it works", "viewPath": "How"},
+            "/changes": {"title": "Under the hood", "viewPath": "Changes"},
             "/contract": {"title": "The contract", "viewPath": "Contract"},
         }
     })
@@ -1357,6 +1651,16 @@ def main():
     # views/Installer
     write_json(os.path.join(view_dir, "view.json"), build_view_json(themes, version))
     write_json(os.path.join(view_dir, "resource.json"), resource_json(["view.json"]))
+
+    # views/Preview, Themes, How -- the lay-reader surface: a miniature
+    # screen painted from params, the gallery of all themes drawn with their
+    # real colours, and the three-sentence story with a before/after pair.
+    write_json(os.path.join(themes_dir, "view.json"),
+               build_themes_view_json(themes, version))
+    write_json(os.path.join(themes_dir, "resource.json"), resource_json(["view.json"]))
+    write_json(os.path.join(how_dir, "view.json"),
+               build_how_view_json(themes, version))
+    write_json(os.path.join(how_dir, "resource.json"), resource_json(["view.json"]))
 
     # views/Changes and views/Contract -- the insight pages. Generated, but
     # they contain no data of their own: every number is bound to a themepack

@@ -441,3 +441,119 @@ def headline(theme_id, against=None):
             "-- anything the theme never names behaves as stock."
             % (label, counts["base"], counts["overridden"],
                counts["inherited"], counts["added"]))
+
+# ---------------------------------------------------------------------------
+# Previews: the lay answer.
+#
+# Everything above measures; none of it SHOWS. A first-time reader -- told
+# "108 variables repainted" -- still has no idea what any theme looks like.
+# So the pages now paint each theme as a miniature screen (top bar, sidebar,
+# card, button, table) whose colours are the theme's real values, read from
+# the same data everything else here uses. Ten of those side by side answer
+# "what is this project?" faster than any table on this gateway.
+# ---------------------------------------------------------------------------
+
+def _theme_vars(theme_id):
+    """Every variable a theme defines, from the embedded copy when we have one.
+
+    The embedded copy means a theme's preview renders even when the theme is
+    not installed yet -- which is exactly when someone is deciding whether to
+    press Install. Stock light/dark have no embedded copy (they live inside
+    the Perspective module), so those two go over HTTP like the diffs do.
+    """
+    theme = THEMES.get(theme_id)
+    if theme:
+        merged = {}
+        for filename in ("variables.css", "globals.css"):
+            for match in _VAR_RE.finditer(theme["files"].get(filename, "")):
+                merged[match.group(1)] = match.group(2).strip()
+        return merged
+    return _vars_of(theme_css(theme_id))
+
+
+def palette(theme_id):
+    """The dozen colours the miniature screen is painted with.
+
+    Prefers the theme's own --st-* tokens and falls back to the stock variable
+    for the same surface, so one function serves both our themes and
+    Ignition's light/dark.
+    """
+    v = _theme_vars(theme_id)
+
+    def resolve(value, depth=0):
+        """Follow var(--x) to a literal.
+
+        Ignition's own light and dark define almost everything as
+        var(--neutral-NN), so without this the two 'what you start with'
+        previews come back holding CSS references rather than colours -- and a
+        var() that means nothing in the previewing page renders as the SESSION
+        theme's colour, quietly showing the wrong thing rather than nothing.
+        """
+        seen = 0
+        while value and value.startswith("var(") and seen < 6:
+            name = re.match(r'var\(\s*(--[A-Za-z0-9_-]+)', value)
+            if not name:
+                return ""
+            value = v.get(name.group(1), "")
+            seen += 1
+        return value if value and not value.startswith("var(") else ""
+
+    def pick(*names):
+        for name in names:
+            value = resolve(v.get(name, "").strip())
+            if value and value != "transparent":
+                return value
+        return ""
+    page = pick("--st-page-solid", "--containerRoot")
+    return {
+        "page":     page,
+        "sidebar":  pick("--st-sidebar-solid", "--containerNested", "--container"),
+        "card":     pick("--st-card", "--container"),
+        "text":     pick("--st-fg", "--label"),
+        "muted":    pick("--label--disabled", "--st-fg", "--label"),
+        "chromeFg": pick("--st-chrome-fg", "--label"),
+        "accent":   pick("--st-accent", "--callToAction"),
+        "onAccent": pick("--st-on-accent") or "#ffffff",
+        "border":   pick("--st-chrome-border", "--border"),
+        "headBg":   pick("--st-head-solid", "--containerNested", "--container"),
+        "headFg":   pick("--st-head-fg", "--label"),
+        "rowBg":    pick("--st-row-bg") or page,
+        "cellFg":   pick("--st-cell-fg", "--label"),
+    }
+
+
+def preview_instances(kind="custom"):
+    """Instances for the gallery's flex-repeater: one painted screen per theme.
+
+    kind="stock" returns just Ignition's own light and dark, so the gallery
+    can show what a gateway starts with directly above what this project
+    turns it into -- which IS the explanation, with no sentence attached.
+    """
+    out = []
+    if kind == "stock":
+        for theme_id, label in (("light", "Ignition light"),
+                                ("dark", "Ignition dark")):
+            try:
+                entry = palette(theme_id)
+            except (Exception, Throwable), e:
+                continue      # gateway fetch failed: show fewer, never break
+            entry["label"] = label
+            entry["caption"] = "what every gateway starts with"
+            out.append(entry)
+        return out
+    installed = set()
+    try:
+        for row in status():
+            if row.get("kind") == "custom" and row.get("installed"):
+                installed.add(row["id"])
+    except (Exception, Throwable), e:
+        pass
+    for theme_id in THEME_ORDER:
+        entry = palette(theme_id)
+        theme = THEMES[theme_id]
+        entry["label"] = theme["label"]
+        entry["caption"] = ("%s · %s" % (
+            "dark" if theme["dark"] else "light",
+            "installed" if theme_id in installed else "not installed yet"))
+        out.append(entry)
+    return out

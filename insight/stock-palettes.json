@@ -1,0 +1,44 @@
+{
+  "_comment": [
+    "Ignition's OWN light and dark palettes, captured from a real 8.3.8",
+    "gateway (module-testing) on 2026-08-31 by resolving each theme's",
+    "var(--neutral-NN) chains against its served stylesheet.",
+    "",
+    "Vendored because these two sheets live INSIDE the Perspective module,",
+    "not on disk, so a build machine with no gateway cannot read them -- the",
+    "same reason tools/sync-packs.sh vendors the source packs. They are used",
+    "only to draw the 'what every gateway starts with' preview; nothing is",
+    "installed from them and no theme depends on them.",
+    "Re-capture with insight/README.md's one-liner if IA changes its neutrals."
+  ],
+  "light": {
+    "border": "#A1A1A1",
+    "rowBg": "#FAFAFA",
+    "accent": "#0C7BB3",
+    "chromeFg": "#323232",
+    "headBg": "#D8D8D8",
+    "cellFg": "#323232",
+    "onAccent": "#ffffff",
+    "headFg": "#323232",
+    "sidebar": "#D8D8D8",
+    "page": "#FAFAFA",
+    "text": "#323232",
+    "muted": "#767676",
+    "card": "#F4F4F4"
+  },
+  "dark": {
+    "border": "#767676",
+    "rowBg": "#161616",
+    "accent": "#229AD6",
+    "chromeFg": "#F4F4F4",
+    "headBg": "#515151",
+    "cellFg": "#F4F4F4",
+    "onAccent": "#ffffff",
+    "headFg": "#F4F4F4",
+    "sidebar": "#515151",
+    "page": "#161616",
+    "text": "#F4F4F4",
+    "muted": "#A1A1A1",
+    "card": "#323232"
+  }
+}

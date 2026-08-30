@@ -4,8 +4,16 @@
       "title": "Theme Installer",
       "viewPath": "Installer"
     },
+    "/themes": {
+      "title": "The themes",
+      "viewPath": "Themes"
+    },
+    "/how": {
+      "title": "How it works",
+      "viewPath": "How"
+    },
     "/changes": {
-      "title": "What this theme changes",
+      "title": "Under the hood",
       "viewPath": "Changes"
     },
     "/contract": {
