@@ -32,11 +32,7 @@
       },
       {
         "meta": {
-          "name": "Theme",
-          "tooltip": {
-            "enabled": true,
-            "text": "Theme for this session"
-          }
+          "name": "Theme"
         },
         "position": {
           "basis": "0px",
