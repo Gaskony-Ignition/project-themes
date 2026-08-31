@@ -237,6 +237,36 @@
                 }
               }
             }
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "spacer"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {}
+          },
+          {
+            "type": "ia.display.view",
+            "meta": {
+              "name": "theme_switcher"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "230px"
+            },
+            "props": {
+              "path": "ThemeDropdown",
+              "style": {
+                "minHeight": "34px",
+                "marginBottom": "4px"
+              }
+            }
           }
         ]
       },
@@ -464,35 +494,6 @@
                   "scope": "G",
                   "type": "script"
                 }
-              }
-            }
-          },
-          {
-            "type": "ia.container.flex",
-            "meta": {
-              "name": "actions_spacer"
-            },
-            "position": {
-              "grow": 1,
-              "shrink": 1,
-              "basis": "0px"
-            },
-            "props": {}
-          },
-          {
-            "type": "ia.display.view",
-            "meta": {
-              "name": "theme_dropdown"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "260px"
-            },
-            "props": {
-              "path": "ThemeDropdown",
-              "style": {
-                "minHeight": "34px"
               }
             }
           }
