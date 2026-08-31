@@ -20,7 +20,7 @@ real theme names one per curated pack, picked up simple final names and a fix
 for one theme that was reading wrong (Nigel's 24/08/2026 review), and then —
 25/08/2026, ahead of cutting a distributable release — was audited against a
 live gateway's actual flattened theme CSS for complete coverage. It now ships
-as `gaskony-themes-<VERSION>.zip` (`package.sh`, `install.sh`,
+as `ignition-themes-<VERSION>.zip` (`package.sh`, `install.sh`,
 `RELEASE-README.md`, `VERSION` — see "Releasing" below).
 
 **This is still NOT part of the packs/families source-of-truth pipeline.** It
@@ -322,7 +322,7 @@ this changes.)*
 If you can import a Perspective project but would rather not touch the
 gateway's filesystem or open a terminal at all, skip everything below and use
 `Theme_Installer-<VERSION>.zip` instead — built alongside
-`gaskony-themes-<VERSION>.zip` by the same `package.sh`, from the project
+`ignition-themes-<VERSION>.zip` by the same `package.sh`, from the project
 `build_installer.py` generates. It embeds all 10 themes'
 files as data inside a gateway-scope script, so importing the project *is*
 shipping the payload:
@@ -381,7 +381,7 @@ no scrollbar styling and no `color-scheme` declaration, so a dark stock
 session shows the OS's light scrollbar and Chrome's auto dark mode can
 repaint SVG fills. **Update stock themes** adds exactly those two things to
 the four on-disk stock variants (`light-cool`, `light-warm`, `dark-cool`,
-`dark-warm`) as one `gaskony-additions.css` plus one `@import` line appended
+`dark-warm`) as one `theme-additions.css` plus one `@import` line appended
 to each variant's `index.css` — their look does not change (verified: the
 served css diff is purely the appended block), and the additions read the
 variant's own `var(--border)` so the scrollbar matches each variant. **Restore
@@ -507,7 +507,7 @@ clean up — the config resource IS the directory.
 ```bash
 python3 build_theme.py       # regenerate out/ (always wipes + rebuilds)
 python3 build_installer.py   # regenerate installer-project/ from out/
-./package.sh                 # -> dist/gaskony-themes-<VERSION>.zip
+./package.sh                 # -> dist/ignition-themes-<VERSION>.zip
                                                  # -> dist/Theme_Installer-<VERSION>.zip
 ```
 

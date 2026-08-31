@@ -1,5 +1,5 @@
 #!/bin/sh
-# install.sh -- deploy the Gaskony theme pack onto an Ignition 8.3 gateway's
+# install.sh -- deploy the Ignition Themes pack onto an Ignition 8.3 gateway's
 # config resources.
 #
 # POSIX sh (no bashisms) so it runs the same from a plain shell, inside an

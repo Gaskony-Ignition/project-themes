@@ -384,7 +384,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Measured on this gateway when you opened the page, not written down when the theme was built. v1.7.0",
+          "text": "Measured on this gateway when you opened the page, not written down when the theme was built. v1.7.1",
           "style": {
             "fontSize": "12px",
             "color": "var(--label--disabled)"

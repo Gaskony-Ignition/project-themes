@@ -1,4 +1,4 @@
-# Gaskony Themes
+# Ignition Themes
 
 Nine curated Perspective gateway themes, generated from the `ignition-styles-template-v2` pack library. A **theme** here is a native Ignition 8.3 gateway config resource — it restyles every stock IA component without needing a parent project, a project stylesheet, or any style classes. See `docs/THEMES-EVALUATION.md` in the source repo for the full evaluation this pack grew out of (what a theme can and can't reach, and what a template parent still buys you on top of one).
 

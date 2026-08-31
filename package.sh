@@ -1,5 +1,5 @@
 #!/bin/sh
-# package.sh -- build dist/gaskony-themes-<VERSION>.zip
+# package.sh -- build dist/ignition-themes-<VERSION>.zip
 # AND dist/Theme_Installer-<VERSION>.zip.
 #
 # POSIX sh. Does NOT regenerate anything -- run
@@ -9,8 +9,8 @@
 # the current state of both, not a stale one. Refuses to run if either input
 # is missing, rather than silently packaging an empty/partial release.
 #
-# Contents of gaskony-themes-<VERSION>.zip (all inside one top-level
-# gaskony-themes-<VERSION>/ folder, so extracting it never sprays files into
+# Contents of ignition-themes-<VERSION>.zip (all inside one top-level
+# ignition-themes-<VERSION>/ folder, so extracting it never sprays files into
 # the current directory):
 #   - the 9 theme directories, copied verbatim from out/
 #   - out/themes.json
@@ -52,7 +52,7 @@ VERSION=$(head -n1 VERSION | tr -d '[:space:]')
 [ -f RELEASE-README.md ] || { echo "package.sh: RELEASE-README.md not found" >&2; exit 1; }
 [ -f installer-project/Theme_Installer/project.json ] || { echo "package.sh: installer-project/Theme_Installer/project.json not found -- run build_installer.py first" >&2; exit 1; }
 
-RELEASE_NAME="gaskony-themes-$VERSION"
+RELEASE_NAME="ignition-themes-$VERSION"
 DIST_DIR="dist"
 STAGE_DIR="$DIST_DIR/$RELEASE_NAME"
 ZIP_PATH="$DIST_DIR/$RELEASE_NAME.zip"

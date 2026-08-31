@@ -1,4 +1,4 @@
-"""themepack -- embeds Gaskony's 10 curated Perspective
+"""themepack -- embeds 10 curated Perspective
 gateway themes as data and installs/uninstalls them as
 gateway config resources.
 
@@ -7,7 +7,7 @@ build_installer.py from out/ -- DO NOT EDIT
 BY HAND. Regenerate with:
     python3 build_installer.py
 
-Version 1.7.0. Gateway scope only -- install()/install_all() write
+Version 1.7.1. Gateway scope only -- install()/install_all() write
 files under <dataDir>/config/resources/core/
 com.inductiveautomation.perspective/themes/<id>/ and request a
 config scan; uninstall()/uninstall_all() go through
@@ -280,11 +280,18 @@ STOCK_ORDER = ["light", "light-cool", "light-warm",
                "dark", "dark-cool", "dark-warm"]
 STOCK_DARK = {"light": False, "light-cool": False, "light-warm": False,
               "dark": True, "dark-cool": True, "dark-warm": True}
-ADDITIONS_FILE = "gaskony-additions.css"
-ADDITIONS_IMPORT = '@import "./gaskony-additions.css";'
+ADDITIONS_FILE = "theme-additions.css"
+ADDITIONS_IMPORT = '@import "./theme-additions.css";'
+# Written under a different name before v1.7.1. A gateway that ran
+# "Update stock themes" on an older build still carries it, so both the
+# file and its @import line are recognised and removed -- otherwise the
+# rename strands a file that Restore can no longer see and stock_state
+# reports "stock" for a theme that is still carrying additions.
+LEGACY_ADDITIONS = ["gaskony-additions.css"]
+LEGACY_IMPORTS = ['@import "./%s";' % n for n in LEGACY_ADDITIONS]
 ADDITIONS_CSS = {
-    False: "/* gaskony-additions.css -- written by the Theme Installer\n * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n *   - color-scheme declaration (without it Chrome's auto dark mode\n *     repaints SVG fills client-side)\n *   - scrollbars follow the theme (stock themes leave them at the\n *     browser default)\n * Restore = delete this file and the import line at the end of\n * index.css -- the Restore button does exactly that. */\n:root { color-scheme: light; }\n* {\n  scrollbar-color: var(--border) transparent;\n  scrollbar-width: thin;\n}\n::-webkit-scrollbar { width: 10px; height: 10px; }\n::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 6px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n",
-    True: "/* gaskony-additions.css -- written by the Theme Installer\n * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n *   - color-scheme declaration (without it Chrome's auto dark mode\n *     repaints SVG fills client-side)\n *   - scrollbars follow the theme (stock themes leave them at the\n *     browser default)\n * Restore = delete this file and the import line at the end of\n * index.css -- the Restore button does exactly that. */\n:root { color-scheme: dark; }\n* {\n  scrollbar-color: var(--border) transparent;\n  scrollbar-width: thin;\n}\n::-webkit-scrollbar { width: 10px; height: 10px; }\n::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 6px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n",
+    False: "/* theme-additions.css -- written by the Theme Installer\n * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n *   - color-scheme declaration (without it Chrome's auto dark mode\n *     repaints SVG fills client-side)\n *   - scrollbars follow the theme (stock themes leave them at the\n *     browser default)\n * Restore = delete this file and the import line at the end of\n * index.css -- the Restore button does exactly that. */\n:root { color-scheme: light; }\n* {\n  scrollbar-color: var(--border) transparent;\n  scrollbar-width: thin;\n}\n::-webkit-scrollbar { width: 10px; height: 10px; }\n::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 6px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n",
+    True: "/* theme-additions.css -- written by the Theme Installer\n * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n *   - color-scheme declaration (without it Chrome's auto dark mode\n *     repaints SVG fills client-side)\n *   - scrollbars follow the theme (stock themes leave them at the\n *     browser default)\n * Restore = delete this file and the import line at the end of\n * index.css -- the Restore button does exactly that. */\n:root { color-scheme: dark; }\n* {\n  scrollbar-color: var(--border) transparent;\n  scrollbar-width: thin;\n}\n::-webkit-scrollbar { width: 10px; height: 10px; }\n::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 6px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n",
 }
 
 
@@ -332,12 +339,34 @@ def stock_state(name):
     if not os.path.isfile(idx):
         return "missing"
     try:
-        has_import = ADDITIONS_IMPORT in _read(idx)
+        text = _read(idx)
     except (Exception, Throwable), e:
         return "missing"
-    if has_import and os.path.isfile(os.path.join(d, ADDITIONS_FILE)):
-        return "updated"
+    for filename, marker in ([(ADDITIONS_FILE, ADDITIONS_IMPORT)] +
+                            zip(LEGACY_ADDITIONS, LEGACY_IMPORTS)):
+        if marker in text and os.path.isfile(os.path.join(d, filename)):
+            return "updated"
     return "stock"
+
+
+def _stock_drop_legacy(d):
+    """Remove a pre-1.7.1 additions file and its @import. Returns whether
+    anything was there."""
+    changed = False
+    idx_path = os.path.join(d, "index.css")
+    for filename in LEGACY_ADDITIONS:
+        path = os.path.join(d, filename)
+        if os.path.isfile(path):
+            os.remove(path)
+            changed = True
+    if os.path.isfile(idx_path):
+        idx = _read(idx_path)
+        kept = [l for l in idx.splitlines()
+                if l.strip() not in LEGACY_IMPORTS]
+        if len(kept) != len(idx.splitlines()):
+            _write(idx_path, "\n".join(kept) + "\n")
+            changed = True
+    return changed
 
 
 def _stock_update_files(name):
@@ -346,6 +375,7 @@ def _stock_update_files(name):
     d = os.path.join(_themes_root(), name)
     if not os.path.isfile(os.path.join(d, "index.css")):
         return False    # variant absent on this gateway -- skip, not an error
+    _stock_drop_legacy(d)
     _write(os.path.join(d, ADDITIONS_FILE), ADDITIONS_CSS[STOCK_DARK[name]])
     idx_path = os.path.join(d, "index.css")
     idx = _read(idx_path)
@@ -368,6 +398,8 @@ def _stock_restore_files(name):
     add_path = os.path.join(d, ADDITIONS_FILE)
     if os.path.isfile(add_path):
         os.remove(add_path)
+        changed = True
+    if _stock_drop_legacy(d):
         changed = True
     if os.path.isfile(idx_path):
         idx = _read(idx_path)

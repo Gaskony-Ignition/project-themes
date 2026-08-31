@@ -143,7 +143,7 @@ def build_project_json(version, themes):
     return {
         "title": "Theme Installer %s" % version,
         "description": (
-            "Install or remove Gaskony's %d curated Perspective gateway "
+            "Install or remove %d curated Perspective gateway "
             "themes (%s) with one click -- no "
             "shell, no docker exec. Writes gateway config resources under "
             "com.inductiveautomation.perspective/themes/ and triggers a "
@@ -167,7 +167,7 @@ def additions_css(dark):
     thumb reads the theme's own var(--border) so one file fits any variant."""
     scheme = "dark" if dark else "light"
     return (
-        "/* gaskony-additions.css -- written by the Theme Installer\n"
+        "/* theme-additions.css -- written by the Theme Installer\n"
         " * (ignition-themes). ADDITIONS ONLY, the stock look is untouched:\n"
         " *   - color-scheme declaration (without it Chrome's auto dark mode\n"
         " *     repaints SVG fills client-side)\n"
@@ -200,7 +200,7 @@ def build_themepack_code(themes, version):
     Throwables that a plain `except Exception` does not see.
     """
     lines = []
-    lines.append('"""themepack -- embeds Gaskony\'s %d curated Perspective' % len(themes))
+    lines.append('"""themepack -- embeds %d curated Perspective' % len(themes))
     lines.append('gateway themes as data and installs/uninstalls them as')
     lines.append('gateway config resources.')
     lines.append('')
@@ -364,8 +364,15 @@ def build_themepack_code(themes, version):
     lines.append('               "dark", "dark-cool", "dark-warm"]')
     lines.append('STOCK_DARK = {"light": False, "light-cool": False, "light-warm": False,')
     lines.append('              "dark": True, "dark-cool": True, "dark-warm": True}')
-    lines.append('ADDITIONS_FILE = "gaskony-additions.css"')
-    lines.append("ADDITIONS_IMPORT = '@import \"./gaskony-additions.css\";'")
+    lines.append('ADDITIONS_FILE = "theme-additions.css"')
+    lines.append("ADDITIONS_IMPORT = '@import \"./theme-additions.css\";'")
+    lines.append('# Written under a different name before v1.7.1. A gateway that ran')
+    lines.append('# "Update stock themes" on an older build still carries it, so both the')
+    lines.append('# file and its @import line are recognised and removed -- otherwise the')
+    lines.append('# rename strands a file that Restore can no longer see and stock_state')
+    lines.append('# reports "stock" for a theme that is still carrying additions.')
+    lines.append('LEGACY_ADDITIONS = ["gaskony-additions.css"]')
+    lines.append("LEGACY_IMPORTS = ['@import \"./%s\";' % n for n in LEGACY_ADDITIONS]")
     lines.append('ADDITIONS_CSS = {')
     lines.append('    False: %s,' % py_repr(additions_css(False)))
     lines.append('    True: %s,' % py_repr(additions_css(True)))
@@ -416,12 +423,34 @@ def build_themepack_code(themes, version):
     lines.append('    if not os.path.isfile(idx):')
     lines.append('        return "missing"')
     lines.append('    try:')
-    lines.append('        has_import = ADDITIONS_IMPORT in _read(idx)')
+    lines.append('        text = _read(idx)')
     lines.append('    except (Exception, Throwable), e:')
     lines.append('        return "missing"')
-    lines.append('    if has_import and os.path.isfile(os.path.join(d, ADDITIONS_FILE)):')
-    lines.append('        return "updated"')
+    lines.append('    for filename, marker in ([(ADDITIONS_FILE, ADDITIONS_IMPORT)] +')
+    lines.append('                            zip(LEGACY_ADDITIONS, LEGACY_IMPORTS)):')
+    lines.append('        if marker in text and os.path.isfile(os.path.join(d, filename)):')
+    lines.append('            return "updated"')
     lines.append('    return "stock"')
+    lines.append('')
+    lines.append('')
+    lines.append('def _stock_drop_legacy(d):')
+    lines.append('    """Remove a pre-1.7.1 additions file and its @import. Returns whether')
+    lines.append('    anything was there."""')
+    lines.append('    changed = False')
+    lines.append('    idx_path = os.path.join(d, "index.css")')
+    lines.append('    for filename in LEGACY_ADDITIONS:')
+    lines.append('        path = os.path.join(d, filename)')
+    lines.append('        if os.path.isfile(path):')
+    lines.append('            os.remove(path)')
+    lines.append('            changed = True')
+    lines.append('    if os.path.isfile(idx_path):')
+    lines.append('        idx = _read(idx_path)')
+    lines.append('        kept = [l for l in idx.splitlines()')
+    lines.append('                if l.strip() not in LEGACY_IMPORTS]')
+    lines.append('        if len(kept) != len(idx.splitlines()):')
+    lines.append('            _write(idx_path, "\\n".join(kept) + "\\n")')
+    lines.append('            changed = True')
+    lines.append('    return changed')
     lines.append('')
     lines.append('')
     lines.append('def _stock_update_files(name):')
@@ -430,6 +459,7 @@ def build_themepack_code(themes, version):
     lines.append('    d = os.path.join(_themes_root(), name)')
     lines.append('    if not os.path.isfile(os.path.join(d, "index.css")):')
     lines.append('        return False    # variant absent on this gateway -- skip, not an error')
+    lines.append('    _stock_drop_legacy(d)')
     lines.append('    _write(os.path.join(d, ADDITIONS_FILE), ADDITIONS_CSS[STOCK_DARK[name]])')
     lines.append('    idx_path = os.path.join(d, "index.css")')
     lines.append('    idx = _read(idx_path)')
@@ -452,6 +482,8 @@ def build_themepack_code(themes, version):
     lines.append('    add_path = os.path.join(d, ADDITIONS_FILE)')
     lines.append('    if os.path.isfile(add_path):')
     lines.append('        os.remove(add_path)')
+    lines.append('        changed = True')
+    lines.append('    if _stock_drop_legacy(d):')
     lines.append('        changed = True')
     lines.append('    if os.path.isfile(idx_path):')
     lines.append('        idx = _read(idx_path)')
@@ -693,7 +725,7 @@ def build_view_json(themes, version):
                             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                             "props": {
                                 "text": (
-                                    "Installs Gaskony's %d curated Perspective gateway "
+                                    "Installs %d curated Perspective gateway "
                                     "themes as config resources - the stock themes are "
                                     "never touched by this. Safe to re-run: installing "
                                     "overwrites the gateway's copies, which repairs the "
