@@ -926,11 +926,7 @@
           },
           {
             "meta": {
-              "name": "Theme",
-              "tooltip": {
-                "enabled": true,
-                "text": "Every theme this gateway has, whoever shipped it"
-              }
+              "name": "Theme"
             },
             "position": {
               "basis": "auto",
