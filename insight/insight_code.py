@@ -216,7 +216,14 @@ def _reasons(theme_id):
 
 
 def base_of(theme_id):
-    """Which stock theme this one is built on -- read from its own index.css."""
+    """Which stock theme this one is built on, or "" if it IS one.
+
+    light and dark are the bases. Returning themselves made "its own base
+    theme" a comparison of a theme against itself, which reported 0 repainted
+    and 120 identical under a headline saying light is built on light.
+    """
+    if theme_id in STOCK_BUILTIN:
+        return ""
     theme = THEMES.get(theme_id)
     if theme:
         if re.search(r'@import\s+"\.\./dark/', theme["files"].get("index.css", "")):
@@ -234,6 +241,8 @@ def compare(theme_id, against=None):
     """
     if against is None:
         against = base_of(theme_id)
+    if not against:
+        return []          # a base theme with nothing behind it -- see headline()
     ours = _vars_of(theme_css(theme_id))
     theirs = _vars_of(theme_css(against))
     why = _reasons(theme_id)
@@ -485,6 +494,14 @@ def headline(theme_id, against=None):
                 "and %d exist only in %s."
                 % (label, other, counts["overridden"], counts["inherited"],
                    counts["added"], label))
+    if theme_id in STOCK_BUILTIN and not against:
+        return ("%s is one of Ignition's two base themes. It is served from "
+                "inside the Perspective module rather than from a file on the "
+                "gateway, so nothing -- this project included -- can modify it, "
+                "and it has no base of its own to be compared against. Pick a "
+                "theme on the right to compare it with. (The four stock "
+                "variants ARE files, and CAN carry the optional additions -- "
+                "try Ignition light cool.)" % label_of(theme_id))
     if against == theme_id:
         return ("%s compared with itself -- every one of its %d variables is "
                 "identical, which is the only honest answer to that question."
@@ -559,6 +576,8 @@ def rule_rows(theme_id, against=None):
     """
     if against is None:
         against = base_of(theme_id)
+    if not against:
+        return []
     ours = _rules_of(theme_css(theme_id))
     theirs = _rules_of(theme_css(against))
 

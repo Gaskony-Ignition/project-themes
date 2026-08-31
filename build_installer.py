@@ -1505,6 +1505,21 @@ def build_how_view_json(themes, version):
     }
 
 
+
+# Everything below the headline is about a COMPARISON. When there is none to
+# make -- a base theme, which has nothing behind it -- three tiles reading 0,
+# a card saying "0 of 0 variables" and a table of nothing but headers read as a
+# broken page. The headline is the whole answer in that case, so the rest goes.
+WHEN_COMPARING = {"binding": {
+    "type": "expr",
+    "config": {"expression": "{view.custom.counts.total} > 0"}}}
+
+
+def _only_when_comparing(node):
+    node.setdefault("propConfig", {})["meta.visible"] = WHEN_COMPARING
+    return node
+
+
 def build_changes_view_json(themes, version):
     """Page: what this theme actually changes, measured against stock."""
     return {
@@ -1549,6 +1564,7 @@ def build_changes_view_json(themes, version):
                                    "Compared with (Ignition's own are listed first)",
                                    "view.custom.against", AGAINST_OPTIONS),
                  ]},
+                _only_when_comparing(
                 {"type": "ia.container.flex", "meta": {"name": "stats"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"direction": "row", "style": {"gap": "10px"}},
@@ -1556,22 +1572,26 @@ def build_changes_view_json(themes, version):
                      _stat("overridden", "of Ignition's variables repainted"),
                      _stat("inherited", "left exactly as Ignition set them"),
                      _stat("added", "new variables this theme adds"),
-                 ]},
-                _label("anatomy_h", "How it is built", size="15px",
-                       weight=600),
+                 ]}),
+                _only_when_comparing(
+                    _label("anatomy_h", "How it is built", size="15px",
+                           weight=600)),
+                _only_when_comparing(
                 {"type": "ia.container.flex", "meta": {"name": "layers"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"direction": "row", "style": {"gap": "10px"}},
-                 "children": [_layer_card(i) for i in range(3)]},
-                _label("table_h", "Every difference, grouped by what it affects",
-                       size="15px", weight=600),
-                _label("table_sub",
+                 "children": [_layer_card(i) for i in range(3)]}),
+                _only_when_comparing(
+                    _label("table_h",
+                           "Every difference, grouped by what it affects",
+                           size="15px", weight=600)),
+                _only_when_comparing(_label("table_sub",
                        "Rules first, then the variables. Scrollbars, "
                        "colour-scheme and component chrome set no custom "
                        "properties at all, so a variables-only list shows "
                        "nothing when they are the only thing that changed.",
-                       size="12px", colour="var(--label--disabled)"),
-                _table("changes", [
+                       size="12px", colour="var(--label--disabled)")),
+                _only_when_comparing(_table("changes", [
                     _col("group", "Affects", 180, True),
                     _col("variable", "Variable", 195, True),
                     _col("what", "What it is"),
@@ -1579,7 +1599,7 @@ def build_changes_view_json(themes, version):
                     _col("value", "This theme", 165, True),
                     _col("compared", "Compared with", 150, True),
                     _col("state", "Change", 130, True),
-                ], "view.custom.rows"),
+                ], "view.custom.rows")),
             ],
         },
     }
