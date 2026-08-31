@@ -316,7 +316,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "What a project can rely on without inheriting anything. Both lists are read out of the installed theme itself, so this page cannot advertise a token or a class the theme does not actually ship. v1.7.2",
+          "text": "What a project can rely on without inheriting anything. Both lists are read out of the installed theme itself, so this page cannot advertise a token or a class the theme does not actually ship. v1.7.3",
           "style": {
             "fontSize": "13px",
             "color": "var(--label--disabled)"
@@ -386,7 +386,7 @@
                   "transforms": [
                     {
                       "type": "script",
-                      "code": "\timport themepack\n\treturn [{'value': r['id'], 'label': r['label']}\n\t        for r in themepack.status()\n\t        if r.get('kind') == 'custom' and r.get('installed')]"
+                      "code": "\timport themepack\n\tstock, custom = [], []\n\tfor r in themepack.status():\n\t\tif r.get('kind') != 'custom':\n\t\t\tif r.get('stock') == 'missing':\n\t\t\t\tcontinue\n\t\t\tstock.append({'value': r['id'],\n\t\t\t              'label': themepack.label_of(r['id'])})\n\t\telif r.get('installed'):\n\t\t\tcustom.append({'value': r['id'], 'label': r['label']})\n\treturn stock + custom"
                     }
                   ]
                 }

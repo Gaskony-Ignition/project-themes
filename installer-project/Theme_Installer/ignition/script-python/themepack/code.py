@@ -7,7 +7,7 @@ build_installer.py from out/ -- DO NOT EDIT
 BY HAND. Regenerate with:
     python3 build_installer.py
 
-Version 1.7.2. Gateway scope only -- install()/install_all() write
+Version 1.7.3. Gateway scope only -- install()/install_all() write
 files under <dataDir>/config/resources/core/
 com.inductiveautomation.perspective/themes/<id>/ and request a
 config scan; uninstall()/uninstall_all() go through
@@ -713,6 +713,7 @@ def compare(theme_id, against=None):
         else:
             state = "repainted"
         rows.append({
+            "kind": "variable",
             "group": group_of(name, GROUPS),
             "variable": name,
             "what": plain(name, why.get(name, "")),
@@ -723,14 +724,18 @@ def compare(theme_id, against=None):
         })
     # Grouped, in the order GROUPS declares. Alphabetical was the whole
     # problem: it interleaves chart palettes with page surfaces.
+    # Rules FIRST. They are few, they are the part no variables list can show,
+    # and in the case that prompted them -- an updated stock theme against the
+    # original -- they are the entire answer: sorted last, the only difference
+    # between the two sat below 120 identical rows and looked like nothing.
     order = dict((label, i) for i, (label, _) in enumerate(GROUPS))
     rows.sort(key=lambda r: (order.get(r["group"], len(order)), r["variable"]))
-    return rows
+    return rule_rows(theme_id, against) + rows
 
 
 def summary(theme_id, against=None):
     """The headline counts, and the layer breakdown beside them."""
-    rows = compare(theme_id, against)
+    rows = [r for r in compare(theme_id, against) if r.get("kind") != "rule"]
     counts = {"inherited": 0, "overridden": 0, "added": 0}
     tally = {"kept as Ignition's": "inherited", "repainted": "overridden",
              "new": "added"}
@@ -821,7 +826,13 @@ def _readable(selector):
     # Nothing recognised: fall back to the bare class name rather than the
     # whole selector chain, which is what made this column unreadable.
     bare = re.findall(r'[.#]([A-Za-z][A-Za-z0-9_-]+)', selector.replace("\\", ""))
-    return bare[-1] if bare else selector[:40]
+    if not bare:
+        return selector[:40]
+    # `ia_dropdown__option--selected` is a class name, not a description.
+    name = re.sub(r'^ia_', '', bare[-1])
+    name = re.sub(r'--.*$', '', name)
+    name = re.sub(r'__', ' ', name)
+    return re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', name).lower()
 
 
 def contract(theme_id):
@@ -914,7 +925,10 @@ def label_of(theme_id):
     if theme:
         return theme.get("label", theme_id)
     pretty = theme_id.replace("-", " ")
-    return "Ignition " + pretty
+    if theme_id in STOCK_ORDER:
+        return "Ignition " + pretty
+    # Not ours and not Ignition's: name it, claim nothing about it.
+    return pretty
 
 
 def headline(theme_id, against=None):
@@ -927,16 +941,122 @@ def headline(theme_id, against=None):
     picking Ignition light cool made Glass Violet claim to be built on it.
     """
     counts = summary(theme_id, against)
-    label = THEMES.get(theme_id, {}).get("label", theme_id)
-    if against:
+    label = label_of(theme_id)
+    if against and against != theme_id:
         other = label_of(against)
         return ("%s against %s: %d variables differ, %d are identical in both, "
                 "and %d exist only in %s."
                 % (label, other, counts["overridden"], counts["inherited"],
                    counts["added"], label))
+    if against == theme_id:
+        return ("%s compared with itself -- every one of its %d variables is "
+                "identical, which is the only honest answer to that question."
+                % (label, counts["total"]))
     return ("%s is built on Ignition's %s theme and repaints it: %d of its "
             "variables carry this pack's values, %d are left exactly as "
             "Ignition set them, and %d are new. Nothing is replaced wholesale "
             "-- anything the theme never names behaves as stock."
             % (label, base_of(theme_id), counts["overridden"],
                counts["inherited"], counts["added"]))
+
+
+def _rules_of(css):
+    """selector -> the declarations it sets, for every rule in the sheet.
+
+    Variables were only ever half the story. `theme-additions.css` adds a
+    color-scheme declaration and scrollbar rules and NOT ONE custom property,
+    so a variables-only diff of an updated stock theme against the original is
+    empty -- which reads as "nothing changed" when the truth is "the thing that
+    changed is not a variable".
+    """
+    rules = {}
+    for match in _RULE_RE.finditer(css):
+        group = " ".join(match.group(1).split())
+        if group.startswith("@"):
+            continue
+        props = []
+        for decl in match.group(2).split(";"):
+            if ":" in decl:
+                props.append(decl.split(":", 1)[0].strip())
+        if not props:
+            continue
+        for selector in [x.strip() for x in group.split(",") if x.strip()]:
+            rules.setdefault(selector, set()).update(props)
+    return rules
+
+
+# Selector families the variables table has no way to describe. Checked before
+# PLACES so scrollbars and the colour-scheme declaration -- the whole content
+# of the stock additions -- are named as themselves.
+RULE_PLACES = [
+    (r'scrollbar', "Scrollbars"),
+    (r'^:root$', "Colour scheme and root tokens"),
+    # The contract classes escape their slashes, so the bare-class fallback
+    # reduced all 72 of them to the meaningless stem "Psc-st".
+    (r'psc-st\\?/', "Style contract classes"),
+]
+
+
+def _rule_place(selector, props=()):
+    """Where a rule belongs, by selector -- or by what it SETS when the
+    selector is too generic to say. `* { scrollbar-color; scrollbar-width }`
+    is a scrollbar rule; filed under its selector it reads "Rules -- *".
+    """
+    for pattern, place in RULE_PLACES:
+        if re.search(pattern, selector):
+            return place
+    if props and all(p.startswith("scrollbar") for p in props):
+        return "Scrollbars"
+    if selector in ("*", "*, *::before, *::after"):
+        return "Everything on the page"
+    return _readable(selector).capitalize()
+
+
+def rule_rows(theme_id, against=None):
+    """One row per area whose RULES differ, not one per rule.
+
+    A custom theme differs from stock by well over a thousand rules; listing
+    them would bury the table it is meant to complete. Aggregating by what the
+    rules target keeps it to a handful of rows and still answers the question
+    the variables table cannot: what changed that is not a colour.
+    """
+    if against is None:
+        against = base_of(theme_id)
+    ours = _rules_of(theme_css(theme_id))
+    theirs = _rules_of(theme_css(against))
+
+    areas = {}
+    for selector, props in ours.items():
+        was = theirs.get(selector)
+        if was == props:
+            continue
+        place = _rule_place(selector, props)
+        entry = areas.setdefault(place, {"added": 0, "changed": 0, "props": set()})
+        entry["added" if was is None else "changed"] += 1
+        entry["props"].update(props if was is None else (props ^ was))
+    for selector in theirs:
+        if selector not in ours:
+            place = _rule_place(selector, theirs[selector])
+            entry = areas.setdefault(place, {"added": 0, "changed": 0,
+                                             "props": set()})
+            entry["removed"] = entry.get("removed", 0) + 1
+
+    rows = []
+    for place in sorted(areas):
+        entry = areas[place]
+        bits = []
+        for kind in ("added", "changed", "removed"):
+            if entry.get(kind):
+                bits.append("%d %s" % (entry[kind], kind))
+        props = sorted(p for p in entry["props"] if not p.startswith("--"))
+        rows.append({
+            "kind": "rule",
+            "group": "Rules -- " + place,
+            "variable": "%s rule(s)" % ", ".join(bits),
+            "what": ", ".join(props[:8]) + (" ..." if len(props) > 8 else ""),
+            "swatch": {"value": "", "style": {}},
+            "value": "",
+            "compared": "",
+            "state": "added" if not entry.get("changed") else "repainted",
+        })
+    return rows

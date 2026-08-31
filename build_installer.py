@@ -1097,11 +1097,22 @@ CHANGES_LAYERS = (
     "\t\treturn []\n"
     "\treturn themepack.layers(value)"
 )
+# EVERY theme present on this gateway, not just the ten this project installs.
+# Nigel wanted to examine a stock theme that had been given the optional
+# additions -- a question the page could not be asked, because the left-hand
+# list offered custom themes only.
 INSTALLED_OPTIONS = (
     "\timport themepack\n"
-    "\treturn [{'value': r['id'], 'label': r['label']}\n"
-    "\t        for r in themepack.status()\n"
-    "\t        if r.get('kind') == 'custom' and r.get('installed')]"
+    "\tstock, custom = [], []\n"
+    "\tfor r in themepack.status():\n"
+    "\t\tif r.get('kind') != 'custom':\n"
+    "\t\t\tif r.get('stock') == 'missing':\n"
+    "\t\t\t\tcontinue\n"
+    "\t\t\tstock.append({'value': r['id'],\n"
+    "\t\t\t              'label': themepack.label_of(r['id'])})\n"
+    "\t\telif r.get('installed'):\n"
+    "\t\t\tcustom.append({'value': r['id'], 'label': r['label']})\n"
+    "\treturn stock + custom"
 )
 # Ignition's own themes come FIRST and say so. They were last, unlabelled, at
 # the bottom of a flat 17-item list -- so the comparison a reader most wants
@@ -1552,13 +1563,13 @@ def build_changes_view_json(themes, version):
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"direction": "row", "style": {"gap": "10px"}},
                  "children": [_layer_card(i) for i in range(3)]},
-                _label("table_h", "Every variable, grouped by what it affects",
+                _label("table_h", "Every difference, grouped by what it affects",
                        size="15px", weight=600),
                 _label("table_sub",
-                       "'What it is' is the derivation recorded when the value "
-                       "was generated, not a description written afterwards. "
-                       "Rows reading 'kept as Ignition's' are Ignition's own "
-                       "value, left alone.",
+                       "Rules first, then the variables. Scrollbars, "
+                       "colour-scheme and component chrome set no custom "
+                       "properties at all, so a variables-only list shows "
+                       "nothing when they are the only thing that changed.",
                        size="12px", colour="var(--label--disabled)"),
                 _table("changes", [
                     _col("group", "Affects", 180, True),
