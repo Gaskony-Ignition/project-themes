@@ -1018,7 +1018,12 @@ def _nav(active):
 
 
 def _stat(key, caption):
-    """One headline number, bound to a field of view.custom.counts."""
+    """One headline number AND its caption, both from view.custom.counts.
+
+    The caption is bound, not literal: it has to say "differ from Nord Dark"
+    when a comparison is chosen and "of Ignition's variables repainted" when
+    one is not. A literal string was wrong in the first case.
+    """
     return {
         "type": "ia.container.flex", "meta": {"name": "stat_" + key},
         "position": {"grow": 1, "shrink": 1, "basis": "0px"},
@@ -1034,7 +1039,14 @@ def _stat(key, caption):
              "propConfig": {"props.text": {"binding": {
                  "type": "expr",
                  "config": {"expression": "{view.custom.counts.%s}" % key}}}}},
-            _label("caption", caption, size="12px", colour="var(--label--disabled)"),
+            {"type": "ia.display.label", "meta": {"name": "caption"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": caption,
+                       "style": {"fontSize": "12px",
+                                 "color": "var(--label--disabled)"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "expr",
+                 "config": {"expression": "{view.custom.counts.cap_%s}" % key}}}}},
         ],
     }
 
@@ -1091,13 +1103,24 @@ INSTALLED_OPTIONS = (
     "\t        for r in themepack.status()\n"
     "\t        if r.get('kind') == 'custom' and r.get('installed')]"
 )
+# Ignition's own themes come FIRST and say so. They were last, unlabelled, at
+# the bottom of a flat 17-item list -- so the comparison a reader most wants
+# ("what did you change from stock?") was the one they had to scroll past ten
+# custom themes to find, with nothing telling them which six were Ignition's.
+# Nigel went looking for them and concluded they were not offered at all.
 AGAINST_OPTIONS = (
     "\timport themepack\n"
     "\topts = [{'value': '', 'label': 'its own base theme'}]\n"
+    "\tstock, custom = [], []\n"
     "\tfor r in themepack.status():\n"
-    "\t\tif r.get('kind') != 'custom' or r.get('installed'):\n"
-    "\t\t\topts.append({'value': r['id'], 'label': r['label']})\n"
-    "\treturn opts"
+    "\t\tif r.get('kind') != 'custom':\n"
+    "\t\t\tlabel = r['label']\n"
+    "\t\t\tif not label.startswith('Ignition'):\n"
+    "\t\t\t\tlabel = 'Ignition ' + label[0].lower() + label[1:]\n"
+    "\t\t\tstock.append({'value': r['id'], 'label': label})\n"
+    "\t\telif r.get('installed'):\n"
+    "\t\t\tcustom.append({'value': r['id'], 'label': r['label']})\n"
+    "\treturn opts + stock + custom"
 )
 FIRST_INSTALLED = (
     "\timport themepack\n"
@@ -1511,7 +1534,8 @@ def build_changes_view_json(themes, version):
                  "children": [
                      _theme_picker("pick_theme", "Theme", "view.custom.theme",
                                    INSTALLED_OPTIONS),
-                     _theme_picker("pick_against", "Compared with",
+                     _theme_picker("pick_against",
+                                   "Compared with (Ignition's own are listed first)",
                                    "view.custom.against", AGAINST_OPTIONS),
                  ]},
                 {"type": "ia.container.flex", "meta": {"name": "stats"},
@@ -1542,7 +1566,7 @@ def build_changes_view_json(themes, version):
                     _col("what", "What it is"),
                     _col("swatch", "Colour", 70, True),
                     _col("value", "This theme", 165, True),
-                    _col("compared", "Ignition's", 150, True),
+                    _col("compared", "Compared with", 150, True),
                     _col("state", "Change", 130, True),
                 ], "view.custom.rows"),
             ],

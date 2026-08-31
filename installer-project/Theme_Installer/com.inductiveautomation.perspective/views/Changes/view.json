@@ -384,7 +384,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Measured on this gateway when you opened the page, not written down when the theme was built. v1.7.1",
+          "text": "Measured on this gateway when you opened the page, not written down when the theme was built. v1.7.2",
           "style": {
             "fontSize": "12px",
             "color": "var(--label--disabled)"
@@ -517,7 +517,7 @@
                   "basis": "auto"
                 },
                 "props": {
-                  "text": "Compared with",
+                  "text": "Compared with (Ignition's own are listed first)",
                   "style": {
                     "fontSize": "12px",
                     "color": "var(--label--disabled)"
@@ -552,7 +552,7 @@
                       "transforms": [
                         {
                           "type": "script",
-                          "code": "\timport themepack\n\topts = [{'value': '', 'label': 'its own base theme'}]\n\tfor r in themepack.status():\n\t\tif r.get('kind') != 'custom' or r.get('installed'):\n\t\t\topts.append({'value': r['id'], 'label': r['label']})\n\treturn opts"
+                          "code": "\timport themepack\n\topts = [{'value': '', 'label': 'its own base theme'}]\n\tstock, custom = [], []\n\tfor r in themepack.status():\n\t\tif r.get('kind') != 'custom':\n\t\t\tlabel = r['label']\n\t\t\tif not label.startswith('Ignition'):\n\t\t\t\tlabel = 'Ignition ' + label[0].lower() + label[1:]\n\t\t\tstock.append({'value': r['id'], 'label': label})\n\t\telif r.get('installed'):\n\t\t\tcustom.append({'value': r['id'], 'label': r['label']})\n\treturn opts + stock + custom"
                         }
                       ]
                     }
@@ -653,6 +653,16 @@
                     "fontSize": "12px",
                     "color": "var(--label--disabled)"
                   }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.cap_overridden}"
+                      }
+                    }
+                  }
                 }
               }
             ]
@@ -721,6 +731,16 @@
                     "fontSize": "12px",
                     "color": "var(--label--disabled)"
                   }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.cap_inherited}"
+                      }
+                    }
+                  }
                 }
               }
             ]
@@ -788,6 +808,16 @@
                   "style": {
                     "fontSize": "12px",
                     "color": "var(--label--disabled)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.counts.cap_added}"
+                      }
+                    }
                   }
                 }
               }
@@ -1242,7 +1272,7 @@
             {
               "field": "compared",
               "header": {
-                "title": "Ignition's"
+                "title": "Compared with"
               },
               "width": 150,
               "strictWidth": true
