@@ -8,7 +8,7 @@ inside the Perspective module, and the four variants are gateway config
 resources -- so a build machine with no gateway cannot read them. Same reason
 tools/sync-packs.sh vendors the source packs.
 
-    python3 insight/capture_stock.py http://192.168.153.128:8088
+    python3 insight/capture_stock.py http://gateway.example.com:8088
 
 Nothing is installed from the result and no theme depends on it; it only paints
 the previews. Re-run when Ignition changes its neutrals.

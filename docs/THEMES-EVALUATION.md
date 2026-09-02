@@ -1,7 +1,16 @@
-# Perspective gateway themes — evaluation against Styles_Template2
+# Perspective gateway themes — evaluation against a stylesheet parent
 
-**Date:** 24/08/2026. **Rig:** `ignition-module-testing`, Ignition 8.3.8 (docker).
-**Experiment:** `` — the `aurora-violet` and `leather-night-tan` packs
+**Date:** 24/08/2026. **Rig:** Ignition 8.3.8 (docker).
+
+> Historical note, kept because it is the evidence these themes were built on.
+> `Styles_Template2` below is the in-house look-and-feel **parent project** the
+> themes replaced — one shared Perspective project that child projects
+> inherited for their stylesheet, style classes and token CSS. It has since
+> been retired: every project that used it now takes its look from a gateway
+> theme instead, which is the conclusion this document reaches. Read
+> "Styles_Template2" as "a look-and-feel parent project" throughout.
+
+**Experiment:** the `aurora-violet` and `leather-night-tan` packs
 regenerated as gateway themes (`test-aurora-violet`, `test-leather-night-tan`) and applied
 to `Themes_Test`, a throwaway project with **no parent, no stylesheet, no style classes**.
 This document is the deliverable; the experiment itself is disposable.
@@ -23,7 +32,7 @@ properties (`--neutral-10..100`, `--callToAction*`, `--container*`, `--border*`,
 `--input*`, `--label*`, `--icon*`, status colours, `--qual/div/seq-*`, `--borderRadius`,
 `--boxShadow1..5`, …). Our generator (`build_theme.py`) maps ~35 pack
 tokens onto that set; translucent pack surfaces are flattened to opaque colours the same
-way `tools/build_css.py` does.
+way the parent's own stylesheet builder does.
 
 ## The headline finding: no restart
 
@@ -77,7 +86,7 @@ inline). Nothing paints "before the page loads" in either mechanism; the documen
 in this area is the *theme-switching* flash, which IA mitigate via `stylesheet.css`.
 
 The kernel of truth is **payload**: the shared Styles_Template2 sheet ships all 81
-packs to every session — `Styles_Example2`'s style-classes bundle is **1,130,232 B**
+packs to every session — the parent's style-classes bundle is **1,130,232 B**
 vs **84,763 B** for a single-pack theme (`Themes_Test`'s style-classes bundle: 26 B).
 Total cold load: 914 ms vs 1,205 ms. That ~1.1 MB is a Styles_Template2 packaging
 choice, not a Perspective mechanism advantage — it could equally be fixed inside the
@@ -133,7 +142,7 @@ class-swap mechanism does not.
 ## Field notes from the themes work (pending the shared toolkit KB)
 
 Verified on 8.3.8 during this work; parked here so they outlive the sessions
-that found them (some found by the Work-Dockers consumer session, 25/08/2026):
+that found them (some found by a consuming project, 25/08/2026):
 
 - **Containers have no component events; DOM events fire.** Every container type
   ships `events: null` in its descriptor, so an onActionPerformed-style handler on

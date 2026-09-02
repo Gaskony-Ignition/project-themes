@@ -6,7 +6,7 @@
     "with no gateway cannot read them. Used ONLY to draw the 'what every",
     "gateway starts with' previews -- nothing is installed from this file",
     "and no theme depends on it. Re-run the script to refresh.",
-    "Captured from http://192.168.153.128:8088"
+    "Captured from http://gateway.example.com:8088"
   ],
   "order": [
     "light",

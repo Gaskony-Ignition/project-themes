@@ -1,349 +1,86 @@
-# Theme generator — 10 curated packs as Perspective gateway themes
+# Ignition Themes — ten Perspective gateway themes, installed by one button
 
 | Glass Violet | Newsprint Dark | Finance Ledger |
 |---|---|---|
 | ![Glass Violet](images/glass-violet.png) | ![Newsprint Dark](images/newsprint-dark.png) | ![Finance Ledger](images/finance-ledger.png) |
 
-Two copy-me theme switchers come with it — a swatch popup and a dropdown —
+Stock Ignition gives a Perspective session six themes, all of them variations
+on the same two. This project adds ten more, as native gateway **config
+resources** — so they restyle every stock Ignition component in every project
+on the gateway, with no parent project, no project stylesheet and no style
+classes required of the projects that use them.
+
+They install by importing one Perspective project and pressing a button. No
+filesystem access, no terminal, no gateway restart, no credential.
+
+Two copy-me theme switchers come with them — a swatch popup and a dropdown —
 and both list what the **gateway** has rather than what this repo ships, so
-they work unchanged on a gateway these packs were never installed on:
+they work unchanged on a gateway these themes were never installed on:
 
 ![Switcher popup](images/switcher-popup.png)
 
-Delivers 10 existing packs as Perspective gateway **themes** (a config resource,
-distinct from this repo's usual project-stylesheet-plus-style-class delivery).
-Started as a 2-pack throwaway experiment (`test-aurora-violet` /
-`test-leather-night-tan`, evaluated in `docs/THEMES-EVALUATION.md` — read that
-first for the verdicts on "themes free the stylesheet", "no parent needed",
-"themes paint earlier", and what a template parent still buys), graduated to 9
-real theme names one per curated pack, picked up simple final names and a fix
-for one theme that was reading wrong (Nigel's 24/08/2026 review), and then —
-25/08/2026, ahead of cutting a distributable release — was audited against a
-live gateway's actual flattened theme CSS for complete coverage. It now ships
-as `ignition-themes-<VERSION>.zip` (`package.sh`, `install.sh`,
-`RELEASE-README.md`, `VERSION` — see "Releasing" below).
+## The ten themes
 
-**This is still NOT part of the packs/families source-of-truth pipeline.** It
-is never read or written by `tools/build_all.py`, and nothing under
-`Styles_Template2/`, `Styles_Example2/`, `tools/`, `packs/` or `families/` is
-touched by anything in this directory. `mapping.py` and `build_theme.py` only
-*read* files under `packs/`.
+| Theme id | Label | Look | Mode |
+| --- | --- | --- | --- |
+| `glass-violet` | Glass Violet | translucent glass panels over a violet/blue/green/pink gradient field | dark |
+| `glass-green` | Glass Green | translucent glass over a near-black green/teal field, bright mint accent | dark |
+| `leather-dark` | Leather Dark | warm tan leather and dark paper — a book after dark | dark |
+| `leather-light` | Leather Light | warm tan leather and parchment — a book in daylight | light |
+| `finance-ledger` | Finance Ledger | clean, restrained ledger/spreadsheet look | light |
+| `newsprint-dark` | Newsprint Dark | newsprint greys and ink on a dark page | dark |
+| `nord-dark` | Nord Dark | the Nord palette, dark mode | dark |
+| `nord-light` | Nord Light | the Nord palette, light mode | light |
+| `industrial-dark` | Industrial Dark | industrial control-room cyan, dark mode | dark |
+| `industrial-light` | Industrial Light | industrial control-room cyan, day mode | light |
 
-## The 10 themes
+Every theme covers the whole meaningfully-themeable variable surface — 110 of
+the gateway's 120 built-in custom properties, audited against a live 8.3.8
+gateway rather than guessed — not just the handful of headline colours. Every
+theme declares `color-scheme` for its own mode, so Chrome's auto dark mode
+does not repaint chart SVGs white on a dark theme.
 
-Theme **id** is now Nigel's exact name, independent of the source pack's own
-id/label — kept traceable via the table below and via `out/themes.json` (a
-LABELS index: id, label, dark flag, source pack) and via the source-pack
-comment at the top of each generated `variables.css`:
-
-| Theme id | Label | Source pack | dark/light | base import |
-| --- | --- | --- | --- | --- |
-| `glass-violet` | Glass Violet | `aurora-violet` | dark | `../dark/index.css` |
-| `glass-green` | Glass Green | `aurora-teal` (TWEAKED — see below) | dark | `../dark/index.css` |
-| `leather-dark` | Leather Dark | `leather-night-tan` | dark | `../dark/index.css` |
-| `leather-light` | Leather Light | `leather-parchment-tan` | light | `../light/index.css` |
-| `finance-ledger` | Finance Ledger | `finance-ledger` | light | `../light/index.css` |
-| `nord-dark` | Nord Dark | `nord-dark-frost` | dark | `../dark/index.css` |
-| `nord-light` | Nord Light | `nord-light-frost` | light | `../light/index.css` |
-| `industrial-dark` | Industrial Dark | `industrial-control-cyan` | dark | `../dark/index.css` |
-| `industrial-light` | Industrial Light | `industrial-day-cyan` | light | `../light/index.css` |
-
-Only `finance-ledger` has id == pack id. Each pack's own `"dark"` flag decides
-the base import and the `color-scheme` declared in `variables.css` — read per
-pack, never assumed from the name (`finance-ledger` reads `false` despite
-sounding neutral).
-
-`out/` is wiped and rebuilt from scratch on every run, so a rename can never
-leave a stale directory under an old theme id sitting next to the new one.
-
-## Contents
-
-- `mapping.py` — the curated token → built-in-Perspective-theme-variable
-  table, in three parts (read its module docstring for the full grammar):
-  - `MAPPING` — the core ~35 IA variables (surfaces, borders, ink, accent,
-    status, radius, elevation), resolved straight from a pack.
-  - `EXTENDED_MAPPING` — a second pass, resolved after `MAPPING` (and any
-    `TWEAKS`) so it can `ref:` the final values: the neutral midtones,
-    controls, status-secondary washes, symbols, pipes, a few misc vars. See
-    "Full variable coverage" below.
-  - `TWEAKS` — per-theme-id literal overrides (data, not code) applied
-    between the two passes. Only `glass-green` has an entry today. See
-    "The glass-green tweak" below.
-- `build_theme.py` — the generator. For each entry in `THEMES` (id, label,
-  source pack): resolves `MAPPING` against the pack → applies
-  `TWEAKS[id]` if present → resolves `EXTENDED_MAPPING` → generates the three
-  chart scales algorithmically (`colorsys`, see below) → writes `out/<id>/`.
-  Its `flatten()`/`parse_colour()` are copied verbatim from
-  `tools/build_css.py` (with a comment saying so) rather than imported, per
-  this experiment's standing constraint of not depending on `tools/`.
-  `globals.css` is GENERATED generically (page background from the pack's own
-  `overrides["containers/page"]`, or from `TWEAKS[id]["globals"]` when
-  present, plus the occlusion-fix rule, theme-following scrollbars, and the
-  hard-coded-colour compensating rules — see below for each).
-- `out/<theme-id>/` — the 10 generated theme directories, each with
-  `config.json`, `index.css`, `variables.css`, `globals.css`,
-  `resource.json`. This is exactly what gets deployed to
-  `data/config/resources/core/com.inductiveautomation.perspective/themes/<id>/`
-  on a gateway.
-- `out/themes.json` — `[{id, label, dark, source_pack}, …]` for whatever
-  selector UI needs the list (e.g. a theme picker view).
-- `VERSION`, `package.sh`, `install.sh`, `RELEASE-README.md` — the release
-  pack. See "Releasing" below.
-- `build_installer.py` / `installer-project/Theme_Installer/` — a second,
-  self-contained install path: a parent-free Perspective project that embeds
-  every theme's file contents (read from `out/`, whatever count that is at
-  build time) as data in a gateway-scope script
-  (`ignition/script-python/themepack/code.py`), plus a one-page UI
-  (`views/Installer`) with Install/Remove buttons, a live status table, a
-  "Theme switcher" button that opens `views/SelectorPopup`, and an embedded
-  `views/ThemeDropdown` beside it. Those two views are the hand-authored,
-  commit-tracked copy-me switchers (`selector-popup/*.view.json`, NOT
-  generated from `out/`) — the popup's swatch grid does not auto-track a
-  theme count change, but which of its swatches are *offered* does, because
-  both views list the gateway's own theme resources at open time. See
-  "Adding a theme switcher" below. `package.sh` zips it into
-  `dist/Theme_Installer-<VERSION>.zip`, a normal
-  Ignition project-import zip — see "Theme Installer project (easiest)" under
-  "Installing on a gateway" below. Regenerate it after any `out/` change with
-  `python3 build_installer.py` (wipes and rewrites
-  `installer-project/` from scratch, same pattern as `build_theme.py`'s own
-  `out/`). Data-dir resolution is
-  `IgnitionGateway.get().getSystemManager().getDataDir()` (verified live on
-  8.3.8 — see `tools/build_project.py`'s `verify_pack_coverage()` for the same
-  call used elsewhere in this repo); install writes files then requests ONE
-  config scan, uninstall goes through `system.config.delete()` instead
-  (removes the resource and its files in one call, no scan needed). Every
-  write is whitelisted against whatever `out/` held at build time — there is
-  no code path that can reach `light`/`dark`/`light-cool`/`light-warm`/
-  `dark-cool`/`dark-warm`.
-
-## Regenerating
-
-```bash
-python3 build_theme.py
-```
-
-No third-party dependencies (the chart-scale generator uses only the
-standard-library `colorsys`). It wipes and rewrites everything under `out/`.
-It prints:
-- a `WARNING` line for every mapping entry (core or extended) that needed a
-  fallback source, bottomed out at a `literal:` default, or produced a chart
-  colour with poor contrast against the page or too close to its neighbour;
-- a `TWEAK` line per theme listing which vars a `TWEAKS` entry overrode;
-- a `SWATCH` line per theme with the 10 `--qual-*` hex values, for eyeballing
-  hue spread.
-
-It exits non-zero only on a hard error — a `mapping.py` entry whose whole
-fallback chain resolved to nothing, which is an authoring bug in this
-generator, not a finding about a pack.
-
-## The glass-green tweak
-
-`glass-green` (source pack `aurora-teal`) was reviewed 24/08/2026 and read as
-*violet with a teal accent* rather than a genuine green-glass theme. Root
-cause: `aurora-teal`'s `surface.page`/`surface.card`/`surface.sidebar`/…
-tokens were never diverged from `aurora-violet` when the pack was cloned —
-both packs' `tokens["surface.page"]` are the literal string `"#1a1233"`
-(violet). Only the accent-adjacent tokens (`accent.primary`,
-`accent.progress`, `surface.nav-active`, the `containers/page` override)
-actually changed. `tools/build_css.py`'s own stylesheet output never showed
-this because it reads `containers/page`'s *effective* `backgroundColor`
-override (already a correct dark teal) rather than the raw `surface.page`
-token — this generator's `MAPPING` reads the raw token, which is what let the
-violet leak through into a *theme* specifically.
-
-Fixed entirely in `mapping.TWEAKS["glass-green"]` — `packs/aurora-teal.json`
-is untouched. The tweak recomputes the whole surface stack from a new dark
-near-black green-tinted base (`#0d1412`) using the pack's own existing
-translucent white-glass alpha values (`rgba(255,255,255,0.06/0.08/0.10/0.14/
-0.22)`, unchanged — the *glass effect* is untouched, only what it sits on),
-and moves the accent from the pack's own muted teal (`#0f766e`) to a brighter
-mint (`#2dd4bf` / hover `#5eead4` / active `#26b4a2`), with a fresh green
-`--success` (`#4ade80`). The page background gradient is re-picked from
-Nigel's named hues (`#065f46`, `#0e7490` — the one cool blue-green allowed,
-`#134e4a`, `#0f766e`), same stop layout as the original aurora pattern. Every
-downstream var that `ref:`s `--callToAction`/`--container`/`--border`/etc in
-`EXTENDED_MAPPING`, plus the chart scales and the compensating rules below
-(all anchored on the *tweaked* accent hue), inherit the fix automatically —
-nothing violet survives anywhere. Full reasoning and every literal value live
-as comments in `mapping.py` right above the `TWEAKS` dict.
-
-`glass-violet` (source pack `aurora-violet`) has no tweak and is unmodified.
-
-## Full variable coverage
-
-**Audited 25/08/2026 directly against a live 8.3.8 gateway**
-(`curl http://<gw>/data/perspective/themes/{dark,light}.css`, every
-`--name: value;` enumerated): the flattened theme CSS defines exactly **120**
-unique custom properties each (this supersedes an earlier exploration pass's
-estimate of ~136). Every theme in this pack now covers **110** of them.
-
-Beyond the core ~35, `EXTENDED_MAPPING` derives (all from vars `MAPPING`
-already computed, so a `TWEAKS` override propagates automatically):
-
-- **Neutral midtones**: `--neutral-40/50/60/70/80` — INTERPOLATED (RGB lerp,
-  evenly spaced) between the pack's own `--neutral-30` and `--neutral-90`, no
-  pack token supplies these directly. Added because the audit found ~98
-  component rules across dark.css/light.css reference these DIRECTLY (icon
-  fills/strokes, secondary text, hairline borders, SVG symbol strokes), not
-  merely as indirection behind vars this generator already covered — leaving
-  them unthemed meant a large swath of secondary chrome stayed IA-stock-grey
-  regardless of pack.
-- **Controls**: `--checkbox--checked/unchecked/indeterminate/disabled`,
-  `--radio--selected/unselected/disabled`,
-  `--toggleSwitch--selected/unselected`,
-  `--progressLinearBar--determinate/indeterminate`,
-  `--progressLinearTrack--determinate/indeterminate` — from `--callToAction`,
-  `--border`, `--border--disabled`, and the pack's own
-  `surface.progress-track`. All names CONFIRMED against the live CSS
-  25/08/2026 (an earlier pass guessed `--radio--checked/unchecked/
-  indeterminate` and `--toggleSwitch--on/off/disabled` by symmetry with
-  `--checkbox--*` — the real names differ, and there is no
-  `--radio--indeterminate` or `--toggleSwitch--disabled` at all; both were
-  corrected, not merely renamed).
-- **Status secondaries**: `--warningSecondary`, `--infoSecondary` — `--warning`
-  / `--info` re-emitted as a 16%-alpha wash.
-- **Symbols**: `--symbolFill--default/running/faulted/stopped` (container /
-  success / error / muted-ink) and matching `--symbolStroke--*` (the fill,
-  darkened 20%, for a visible outline against its own fill; `default` reuses
-  `--containerBorder`). `--symbolFillAnimation--default/running` (a
-  flow/pulse overlay) reuse the new `--neutral-80` — IA's own values for both
-  are identical to its own neutral-80 too.
-- **Pipes**: `--pipeStroke` (border), `--pipePrimaryFill` (muted ink),
-  `--pipeSecondaryFill` (`--containerNested`), `--pipeSelectStroke` (accent).
-- **Misc**: `--tooltip-background-color` and `--arrow-color` (`--containerNested`
-  / `--icon`) — CONFIRMED real and, interestingly, IA's own theme CSS never
-  gives either a value anywhere (`.ia_form__tooltip-*` rules reference them
-  via `var()` with no fallback and no `:root` definition) — a stock IA
-  tooltip's background and arrow are effectively unset, and this pack's
-  themes are the only thing giving them one. `--boxShadow--inset`
-  (`--boxShadow1` prefixed `inset `, or `none` unchanged). `--indicator`
-  (`--success` — drives the LED component's "on" diode and the
-  quality-overlay "pending" state) and `--indicatorOff` (`--indicator`
-  darkened 85%, matching IA's own on/off ratio). `--contextBackground`
-  (`--containerNested` — see below for why this is NOT a literal reuse of
-  IA's own `--black`). `--defaultSliderFocusColor` (`--callToAction` at IA's
-  own 0.5 alpha). `--callToAction--activeAlt` / `--activeAltInvis`
-  (`--callToActionHighlight` / `--callToAction--hover` — IA's own values for
-  these sit close enough to those two that one derivation covers both
-  meaningfully; see `mapping.py`'s comments for the reasoning).
-- **Chart scales** — generated ALGORITHMICALLY by `build_theme.py`
-  (`colorsys`, not read from any pack — no pack defines a 10/16/6-step
-  scale), anchored on the theme's own final `--callToAction`/`--error`/
-  `--neutral-10`, deterministic (same inputs → same output, every run):
-  - `--qual-1..10`: 10 hues rotated evenly around the wheel, `--qual-1` is
-    the accent hue itself; lightness ~65% / saturation 60% on dark themes,
-    ~46% / 60% on light themes.
-  - `--seq-1..6`: a monotonic ramp of the *accent hue*, weak → strong
-    (weak = low-contrast against the theme's own page; strong = vivid).
-  - `--div-1..16`: a diverging ramp from the accent hue (strong at `div-1`)
-    through a neutral midpoint matched to the page (same lightness as
-    `--neutral-10`, zero saturation) to the error hue (strong at `div-16`).
-  - Every `--qual-*` is checked (warn-only) for contrast ≥1.5 against
-    `--neutral-10` and for RGB distance ≥40 from its neighbour (wraparound
-    included) — see the `SWATCH`/`WARNING` lines from a regen. All 10 themes
-    currently pass with zero chart-scale warnings.
-
-**Deliberately still NOT overridden** — the remaining 10 of the 120: pure IA
-brand/geometry constants, not colours a pack should own: `--white`, `--black`,
-`--font-NotoSans`, `--opacity-25/50/85`, `--red-10/20/30/50/60`,
-`--defaultSliderFocusBoxShadow` (pure blur/spread geometry with no colour
-component — its colour half, `--defaultSliderFocusColor`, IS themed above).
-
-## Compensating rules for hard-coded IA colours
-
-The 25/08/2026 audit also scanned the live flattened CSS for colour literals
-applied directly to a component selector (not through a `--var`) — a handful
-of IA's own rules bypass the variable system entirely, so no theme (IA's own
-built-in ones or ours) can reach them by overriding `variables.css` alone.
-`build_globals()` adds THREE targeted compensating rules, judged common,
-visible, and low-risk enough to be clearly worth it — the same selectors IA
-itself defines, same alpha steps, just the theme's own accent instead:
-
-- **`::selection`** — IA's dark.css hardcodes a fixed dark blue and light.css
-  defines none at all (browser default). Tinted with the theme's own accent
-  at 0.35 alpha.
-- **`.ia_slider__handle:focus`** — hardcodes its own blue `color` directly
-  rather than reading `--defaultSliderFocusColor` the way IA's *other* slider
-  implementation does (`.ia_form__control .ia-slider .slider-handle:focus`,
-  which our var override reaches fine). Swapped to read the var properly.
-- **Table row hover/selection** (`.ia_tableComponent__body__row--hovered`,
-  `.ia_tableComponent__selection`, `.ia_alarmJournalTableComponent__selection`,
-  `.ia_alarmStatusTableComponent__selection`) — the highest-traffic hardcode
-  found (every table hits it). `!important` because IA's own declarations
-  here carry the same specificity and would otherwise still win on source
-  order alone from within the SAME imported base stylesheet.
-
-Everything else hard-coded was judged lower-traffic and/or too risky to patch
-with a small generic rule, and is left as an IA constant — full list,
-including an entire component (Equipment Schedule / Gantt) that hard-codes
-its colours regardless of theme, is in `RELEASE-README.md`'s "What's
-covered" section (the release doc carries this list since it's what an
-installer actually needs to know; this repo doc points there rather than
-duplicating it a third time).
-
-Separately (not from the hard-coded-colour audit, but the same `globals.css`
-mechanism): **scrollbars follow the theme** — `scrollbar-color` / the
-`::-webkit-scrollbar-*` rules use the theme's own `--containerBorder` for the
-thumb and `--callToAction` on hover, since stock IA themes leave scrollbars
-at browser default regardless of theme.
-
-## The occlusion-fix rule
-
-Every `globals.css` always emits, in addition to the page background:
-
-```css
-#app-container .center.view-parent > .view.ia_container--root {
-  background-color: transparent !important;
-}
-```
-
-Found live against `test-aurora-violet` and `test-leather-night-tan` on the
-module-testing gateway (24/08/2026, see `docs/THEMES-EVALUATION.md`):
-Perspective's own top-level view root (the element carrying both `.view` and
-`.ia_container--root`) paints itself opaque with the theme's own
-`--containerRoot`, one level inside `#app-container` — stock IA behaviour for
-any `ia_container--primary` root container, not a bug in any project's view
-JSON — which hides the page background on every ordinary page in every theme
-unless punched through. The selector is a structural Perspective shell
-pattern, not specific to any one pack or project, so the fix generalises
-unchanged to all 10 themes without a separate live check per theme.
+`out/themes.json` carries the same list as data (`id`, `label`, `dark`,
+`source_pack`) for anything that wants to build a picker from it.
 
 ## Installing on a gateway
 
-*(Same content as `RELEASE-README.md`'s install section — written once and
-mirrored deliberately, so this guidance is readable straight from the repo
-without unzipping a release, and a release carries it without needing the
-repo. `package.sh`'s header comment notes the mirror; touch both files if
-this changes.)*
+### The Theme Installer project (easiest)
 
-### 0. Theme Installer project (easiest)
-
-If you can import a Perspective project but would rather not touch the
-gateway's filesystem or open a terminal at all, skip everything below and use
-`Theme_Installer-<VERSION>.zip` instead — built alongside
-`ignition-themes-<VERSION>.zip` by the same `package.sh`, from the project
-`build_installer.py` generates. It embeds all 10 themes'
-files as data inside a gateway-scope script, so importing the project *is*
-shipping the payload:
+Import one project and press one button. `Theme_Installer-<VERSION>.zip` comes
+with each release; it embeds every theme's files as data inside a
+gateway-scope script, so importing the project *is* shipping the payload:
 
 1. Gateway web UI → **Config → Projects → Import**, pick
    `Theme_Installer-<VERSION>.zip`.
 2. Open `<gateway>/data/perspective/client/Theme_Installer`.
-3. Click **Install all themes**. It writes the files AND runs the config scan
-   itself — no separate "Scan File System" step, nothing else to do.
-4. The page's table updates itself: the Status column flips to "Installed"
-   for all 10 rows once the scan lands (a couple of seconds). Cross-check with
-   step 3 below if you want the `curl` version too.
+3. Click **Install all themes**. It writes the files and runs the config scan
+   itself — there is no separate "Scan File System" step.
+4. The page's table updates itself: the Status column flips to "Installed" for
+   all ten rows once the scan lands, a couple of seconds later.
 5. Optional: delete the `Theme_Installer` project afterwards. It is
-   parent-free and self-contained — removing it does not touch the themes it
-   already wrote, because those are gateway config resources, not project
-   resources.
+   parent-free and self-contained, and removing it does not touch the themes
+   it wrote — those are gateway config resources, not project resources.
 
-The project carries four more pages, linked from the header of each. None is
-required to install anything; they exist so the themes are not a black box on
-someone else's gateway. The first two are for anyone, the last two for people
-building on them:
+Re-running **Install custom themes** overwrites whatever is on the gateway
+with the embedded copies, so importing a newer release and pressing the button
+again is also the repair path if an Ignition upgrade ever damages an installed
+theme. Verified: a hand-corrupted `glass-green` variable was restored on disk
+and in the served CSS by one press. Installing never touches a stock theme,
+and the table says so per row.
+
+**Uninstalling**: the same page's **Remove custom themes** goes through
+`system.config.delete()`, which removes the resource and its files in one
+call, with no scan needed.
+
+**Trying them on**: once installed, the same page gives two ways to switch
+live in your own session, with no reload and no picker to build — the
+**Theme switcher** popup of swatches, and the **Theme** dropdown beside it.
+
+The project carries four more pages, linked from each header. None is needed
+to install anything; they exist so the themes are not a black box on someone
+else's gateway. The first two are for anyone, the last two for people building
+on them:
 
 * **The themes** — twelve miniature plant screens, each drawn in one theme's
   own colours: Ignition's light and dark at the top, then the ten this project
@@ -355,113 +92,112 @@ building on them:
   108 of Ignition's variables repainted on a typical theme, 12 left untouched,
   42 added, each grouped by what it affects and shown with a swatch.
 * **For builders** — the `--st-*` tokens and `st/...` classes a project can
-  use without inheriting anything.
+  use without inheriting anything. See "The style-class contract" below.
 
-The two previews pages are drawn from the theme files the installer already
+The two preview pages are drawn from the theme files the installer already
 embeds, so they show exactly what pressing Install produces, with no gateway
-round-trip. The two measurement pages read the gateway live.
+round-trip. The two measurement pages read the gateway live: they fetch the
+resolved stylesheet the browser is really being served
+(`/data/perspective/themes/<id>.css`, which is also how the stock base is
+read, since `light` and `dark` live inside the Perspective module rather than
+on disk) and measure it. No figure on either page is written down at build
+time, so neither can drift from what is installed — and a theme edited on the
+gateway shows its edits.
 
-"Under the hood" and "For builders" fetch the resolved stylesheet the browser
-is really being served (`/data/perspective/themes/<id>.css`, which is also how
-the stock base is read, since light and dark live inside the Perspective module
-rather than on disk) and measure it. No figure on either is written down at
-build time, so neither can drift from what is installed — and a theme edited on
-the gateway shows its edits.
+#### Updating the stock themes (optional)
 
-Re-running **Install custom themes** overwrites whatever is on the gateway
-with the embedded copies — so importing a newer release of the installer and
-pressing the button again is the repair path if an Ignition upgrade (or
-anything else) ever damages the installed themes. Verified live: a
-hand-corrupted `glass-green` variable was restored on disk and in the served
-css by one press. Installing the custom themes never touches a stock theme,
-and the table says so per row.
+Ignition's stock themes ship no scrollbar styling and no `color-scheme`
+declaration, so a dark stock session shows the OS's light scrollbar and
+Chrome's auto dark mode can repaint SVG fills. **Update stock themes** adds
+exactly those two things to the four on-disk stock variants (`light-cool`,
+`light-warm`, `dark-cool`, `dark-warm`) as one `theme-additions.css` plus one
+`@import` line appended to each variant's `index.css`. Their look does not
+change — verified, the served CSS diff is purely the appended block — and the
+additions read the variant's own `var(--border)` so the scrollbar matches each
+variant. **Restore stock themes** deletes the file and the line, verified
+byte-identical served CSS afterwards.
 
-**Updating the stock themes (optional, since v1.3.0)**: the stock themes ship
-no scrollbar styling and no `color-scheme` declaration, so a dark stock
-session shows the OS's light scrollbar and Chrome's auto dark mode can
-repaint SVG fills. **Update stock themes** adds exactly those two things to
-the four on-disk stock variants (`light-cool`, `light-warm`, `dark-cool`,
-`dark-warm`) as one `theme-additions.css` plus one `@import` line appended
-to each variant's `index.css` — their look does not change (verified: the
-served css diff is purely the appended block), and the additions read the
-variant's own `var(--border)` so the scrollbar matches each variant. **Restore
-stock themes** deletes the file and the line — verified byte-identical served
-css after restore. `light` and `dark` live inside the Perspective module jar
-(no files on disk), so they are never touched — pick `light-cool`/`dark-cool`
-to get the additions. Upgrades: tested empirically on a throwaway gateway,
-8.3.8 → 8.3.9 on the same data volume — the custom themes AND the updated
-stock variants all survived intact (the gateway writes stock theme files at
-first commissioning; this upgrade did not rewrite them). A future version
-that ships changed stock themes may still replace the variants' files — if a
-variant's row ever drops back to "Stock - not modified", press **Update stock
-themes** again, same as the custom repair path.
+`light` and `dark` live inside the Perspective module jar with no files on
+disk, so they are never touched; pick `light-cool`/`dark-cool` to get the
+additions.
 
-**Uninstalling**: open the same page and click **Remove custom themes** — goes
-through `system.config.delete()`, which removes the resource AND its files in
-one call, no scan needed.
+Upgrades were tested empirically on a throwaway gateway, 8.3.8 → 8.3.9 on the
+same data volume: the custom themes and the updated stock variants all
+survived intact. A future version that ships changed stock themes may still
+replace the variants' files — if a variant's row ever drops back to "Stock -
+not modified", press **Update stock themes** again.
 
-Prefer the `install.sh` route below if you want to inspect or script the
-install without a Designer/Gateway UI round-trip, or if you're deploying to
-several gateways from one place.
+### Installing the files directly
 
-### 1. Install the files
-
-Three `install.sh` modes (or copy manually — see below):
+Prefer this route to inspect or script the install without a Gateway UI
+round-trip, or to deploy to several gateways from one place. `install.sh` has
+three modes:
 
 ```bash
 # Local filesystem -- e.g. a mounted docker volume
 ./install.sh --data-dir /path/to/ignition/data
 
 # A running Ignition docker container
-./install.sh --docker ignition-module-testing
+./install.sh --docker <container-name>
 
 # A remote gateway over ssh (key-based auth; data-dir is on the REMOTE host)
 ./install.sh --ssh gateway.example.com --data-dir /path/to/ignition/data
 ```
 
 Each mode copies every theme directory next to `install.sh` into:
+
 ```text
 <data-dir>/config/resources/core/com.inductiveautomation.perspective/themes/<theme-id>/
 ```
+
 replacing any existing directory of the same name (idempotent — safe to
 re-run). It tries to match ownership to the gateway's own `light-cool`
-directory; if it can't detect that, it leaves ownership alone rather than
+directory; if it cannot detect that, it leaves ownership alone rather than
 guess. It refuses to touch `light`, `dark`, `light-cool`, `light-warm`,
-`dark-cool`, `dark-warm` under any circumstances.
+`dark-cool` or `dark-warm` under any circumstances.
 
-**Manual alternative** — if you'd rather not run a shell script against a
-gateway you don't fully trust yet, copy each theme folder yourself to the
-same destination path, preserving the four files inside each (`config.json`,
-`index.css`, `variables.css`, `globals.css` — plus `resource.json`), then
-match ownership to a sibling shipped theme directory by hand.
+**Manual alternative** — if you would rather not run a shell script against a
+gateway you do not fully trust yet, copy each theme folder yourself to the
+same destination path, preserving the five files inside each (`config.json`,
+`index.css`, `variables.css`, `globals.css`, `resource.json`), then match
+ownership to a sibling shipped theme directory by hand.
 
-### 2. Scan — the CONFIG scan, not the Projects one
+Then run the scan, and verify:
 
-Themes are gateway **config resources**, not project resources. In the
-gateway web UI: **Config → Platform → Overview → "Scan File System"**. This
-is a *different* button from the Projects page's own "Scan File System" —
-that one only picks up project resources (views, scripts, style classes) and
-will not register a new theme.
+#### Scan — the CONFIG scan, not the Projects one
+
+Themes are gateway **config resources**, not project resources. In the gateway
+web UI: **Config → Platform → Overview → "Scan File System"**. This is a
+*different* button from the Projects page's own "Scan File System" — that one
+only picks up project resources (views, scripts, style classes) and will not
+register a new theme.
 
 **No gateway restart is required.** Despite what the 8.1 and 8.3 docs say
-about a new theme needing a restart before it's selectable, this was tested
-end-to-end on Ignition 8.3.8: a brand-new theme dropped under
-`config/resources/.../themes/` and registered with a single config scan
-served immediately and was selectable in the same session — see
-`docs/THEMES-EVALUATION.md` for the full writeup.
+about a new theme needing a restart before it is selectable, this was tested
+end to end on Ignition 8.3.8: a brand-new theme dropped under
+`config/resources/.../themes/` and registered with a single config scan served
+immediately, and was selectable in the same session. `docs/THEMES-EVALUATION.md`
+has the full writeup.
 
-### 3. Verify
+#### Verify
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' https://<gateway>/data/perspective/themes/<theme-id>.css
 ```
+
 should return `200` for each installed theme id.
 
-### 4. Select a theme
+#### Uninstall
 
-A Perspective session's theme is `session.props.theme` (bindable,
-session-wide — not page-scoped, that's `system.perspective.setTheme()`
-instead). A minimal dropdown bound to it:
+Delete each theme's directory under `.../themes/<theme-id>/` and run the same
+Overview config scan again. There is no separate gateway-side registry to
+clean up — the config resource *is* the directory.
+
+### Selecting a theme
+
+A Perspective session's theme is `session.props.theme` — bindable and
+session-wide, as opposed to the page-scoped `system.perspective.setTheme()`. A
+minimal dropdown bound to it:
 
 ```json
 {
@@ -473,6 +209,7 @@ instead). A minimal dropdown bound to it:
       {"label": "Leather Dark", "value": "leather-dark"},
       {"label": "Leather Light", "value": "leather-light"},
       {"label": "Finance Ledger", "value": "finance-ledger"},
+      {"label": "Newsprint Dark", "value": "newsprint-dark"},
       {"label": "Nord Dark", "value": "nord-dark"},
       {"label": "Nord Light", "value": "nord-light"},
       {"label": "Industrial Dark", "value": "industrial-dark"},
@@ -493,46 +230,9 @@ instead). A minimal dropdown bound to it:
 }
 ```
 
-`themes.json` carries the same id/label/dark-flag list as data, if you'd
-rather build the options dynamically from a script than hand-write them.
-
-### 5. Uninstall
-
-Delete each theme's directory under `.../themes/<theme-id>/` and run the
-same Overview config scan again. There's no separate gateway-side registry to
-clean up — the config resource IS the directory.
-
-## Releasing
-
-```bash
-python3 build_theme.py       # regenerate out/ (always wipes + rebuilds)
-python3 build_installer.py   # regenerate installer-project/ from out/
-./package.sh                 # -> dist/ignition-themes-<VERSION>.zip
-                                                 # -> dist/Theme_Installer-<VERSION>.zip
-```
-
-`VERSION` is a plain one-line file. Bump it by hand before packaging a new
-release; neither `build_installer.py` nor `package.sh` touches it.
-`package.sh` refuses to run if `out/`, `out/themes.json`, or
-`installer-project/Theme_Installer/project.json` is missing (i.e.
-`build_theme.py` and/or `build_installer.py` haven't been run yet) rather than
-silently packaging a stale or empty `dist/`.
-
-## Where this deploys
-
-Gateway config resources, one directory per theme:
-
-```text
-data/config/resources/core/com.inductiveautomation.perspective/themes/<theme-id>/
-```
-
-`resource.json` deliberately carries no `lastModification` /
-`lastModificationSignature` — the gateway must stamp those itself on first
-scan; a hand-written signature that doesn't match content makes the config
-scan silently skip the resource (see `ignition-styles-template-v2/CLAUDE.md`
-and the workspace's `reference-ignition-config-resource-stamp` note).
-`out/themes.json` is not a gateway resource — it's a plain data file for
-whatever selector UI lists these themes for a user.
+`out/themes.json` carries the same id/label/dark-flag list as data, if you
+would rather build the options from a script than hand-write them. Or use one
+of the two switchers below, which build the list from the gateway itself.
 
 ## Adding a theme switcher
 
@@ -541,37 +241,34 @@ a user change their own session's theme, with no parent project and no style
 classes:
 
 - **`views/ThemeDropdown`** — one 34px dropdown. Embed it with an Embedded
-  View component (`props.path = "ThemeDropdown"`, about 260×34) and that is
-  the whole job.
-- **`views/SelectorPopup`** — the swatch grid, opened as a popup. Each theme
-  is a button in its own colours, so you can see what you are picking.
-
-`Theme_Installer`'s own page has both: the "Theme switcher" button opens the
-popup, and the dropdown to its right is `views/ThemeDropdown` embedded rather
-than duplicated.
+  View component (`props.path = "ThemeDropdown"`, about 260×34) and that is the
+  whole job.
+- **`views/SelectorPopup`** — the swatch grid, opened as a popup. Each theme is
+  a button in its own colours, so you can see what you are picking.
 
 **Both list the gateway, not this repo.** Each asks
 `system.config.getResources(moduleId="com.inductiveautomation.perspective",
-typeId="themes")` when it opens and adds Ignition's stock six as a fixed base
+typeId="themes")` when it opens, and adds Ignition's stock six as a fixed base
 (`light` and `dark` live inside the Perspective module's jar and never appear
 as resources). So a switcher copied onto a gateway that has none of these
-packs offers that gateway's themes instead of writing an id Perspective cannot
-resolve, and a theme from anywhere else shows up without either file being
-edited. The popup's swatch colours are still a fixed hand-verified list — a
-view binding cannot read a colour out of a theme's CSS — but a swatch is only
-*offered* when the gateway has that theme, the section heading counts what is
-there, and when none are, a line says so and points at the dropdown at its
-foot. Neither view depends on a script package: the listing is inline in each,
-duplicated on purpose so that copying one drags nothing else in.
+themes offers that gateway's own themes instead of writing an id Perspective
+cannot resolve, and a theme from anywhere else shows up without either file
+being edited.
 
-The same popup on a gateway with none of these packs installed:
+The popup's swatch colours are a fixed hand-verified list — a view binding
+cannot read a colour out of a theme's CSS — but a swatch is only *offered*
+when the gateway has that theme, the section heading counts what is there,
+and when none are, a line says so and points at the dropdown at its foot:
 
 ![The switcher popup where no custom theme is installed](images/switcher-none.png)
 
+Neither view depends on a script package: the listing is inline in each,
+duplicated on purpose so that copying one drags nothing else in.
+
 To use the popup in another project:
 
-1. Copy the whole `views/SelectorPopup` directory into the target project
-   (or regenerate `Theme_Installer` from this repo and lift it from there).
+1. Copy the whole `views/SelectorPopup` directory into the target project (or
+   lift it from `selector-popup/SelectorPopup.view.json` here).
 2. Add a button anywhere that calls:
    ```python
    system.perspective.openPopup(
@@ -585,68 +282,307 @@ To use the popup in another project:
        viewportBound=True,
        position={'width': 560, 'height': 590})
    ```
-   (`width`/`height` are NOT top-level `openPopup` kwargs on this Ignition
-   version — confirmed live and against IA's own scripting reference; they
-   go inside `position` as plain pixel integers. `viewportBound=True` still
-   keeps the frame fully on-screen on a short viewport.)
+   `width`/`height` are **not** top-level `openPopup` kwargs on this Ignition
+   version — confirmed live and against IA's own scripting reference. They go
+   inside `position` as plain pixel integers. `viewportBound=True` keeps the
+   frame fully on-screen on a short viewport.
 
-That's it — the popup writes `session.props.theme` on its own when a swatch
-is clicked; nothing else needs wiring up.
+That is it — the popup writes `session.props.theme` itself when a swatch is
+clicked; nothing else needs wiring up.
 
 Both views are hand-authored and commit-tracked at
 `selector-popup/SelectorPopup.view.json` and
-`selector-popup/ThemeDropdown.view.json` — `build_installer.py`
-copies them into the generated project verbatim (only their `resource.json`
-is built fresh each run). It is NOT derived from `out/` at build time and is not
-touched by `build_theme.py`. It started as a snapshot handed over from a
-Work-Dockers session that built the same picker for their own multi-project
-switcher rig; `selector-popup/README.md` documents exactly
-what was adapted (their preview/commit indirection stripped down to a plain
-`session.props.theme` write, their per-theme style-class labels replaced with
-plain IA-var styling, an inapplicable "stock components only" caveat removed,
-and the `openPopup` size kwargs corrected to a form that actually exists) and
-what this repo's own agent changed beyond that (a stale count, a button whose
-whole premise stopped applying, some rig-specific copy, and re-adding the
-`newsprint-dark` swatch with a freshly-read accent colour after this pack
-gained its 10th theme mid-adaptation) — plus everything that was kept exactly
-as handed over (the 48%-basis swatch geometry, `wrap` as a prop not a style
-key, the popup root's `height:100%`/`minHeight:0`, and every theme's swatch
-colours, spot-checked against `out/` before anything else was touched).
+`selector-popup/ThemeDropdown.view.json`; `build_installer.py` copies them into
+the generated project verbatim, and only their `resource.json` is built fresh
+each run.
 
-## Known gaps
+## What a theme covers
 
-- **The 69-class semantic layer is not ported.** A theme only reaches the IA
-  built-in custom properties (core + the extended set above); none of
-  `Styles_Template2`'s per-component style classes (`nav/item`,
-  `tables/frame`, `kpi/tile`, …) or the shared stylesheet's
-  table/popup/scrollbar rules exist here. A bare theme restyles stock IA
-  components only — see `docs/THEMES-EVALUATION.md`'s claim (b) for the full
-  boundary list.
-- **One elevation shadow across five `--boxShadow1..5` slots**, and **`none`
-  for packs with no shadow token at all** (`leather-dark`,
-  `industrial-dark`, `industrial-light` — all three declare no
-  `shadow.card`, by design in leather's case: it reads as a flat page, not a
-  dashboard with elevation). `--boxShadow--inset` inherits the same
-  single-value/`none` limitation. No pack currently defines a finer 1–5
-  elevation scale to derive from.
-- **Heading serif face is unreachable without a style class.** Leather's
-  signature Crimson Pro/Georgia heading face has no path to Perspective's
-  `ia.display.label` components from a theme alone — confirmed against the
-  live DOM (`ia.display.label` always renders as
-  `<div class="ia_labelComponent"><span>`, never a semantic heading element),
-  see `docs/THEMES-EVALUATION.md`. `globals.css` does not emit an `h1..h4`
-  rule for this reason (dropped along with the three `.psc-*` feasibility
-  rules below — git history keeps the original hand-authored versions from
-  the 2-pack experiment for reference).
-- **The `.psc-kpi-tile` / `.psc-pill-ok` / `[class*="psc-status/ok"]`
-  feasibility rules were dropped** from the generic generator. They answered
-  a one-off question during the 2-pack experiment (can a theme's
-  `globals.css` carry semantic utility classes a parent-free project
-  references via `props.style.classes`? — yes, confirmed live, see
-  `docs/THEMES-EVALUATION.md`) and were never meant to ship as part of the 9
-  curated themes. Git history on the original `test-aurora-violet` /
-  `test-leather-night-tan` output keeps them.
-- **The Equipment Schedule / Gantt component's colours are entirely
-  hard-coded in IA's own CSS**, regardless of theme — not something a
-  compensating rule can cheaply and safely fix. See `RELEASE-README.md` for
-  the full hard-coded-colour list.
+### Variable coverage
+
+Audited 25/08/2026 directly against a live 8.3.8 gateway
+(`curl http://<gw>/data/perspective/themes/{dark,light}.css`, every
+`--name: value;` enumerated): the flattened theme CSS defines exactly **120**
+unique custom properties each. Every theme here covers **110** of them.
+
+Beyond the core ~35 surfaces, borders, ink, accent, status, radius and
+elevation variables, the generator derives:
+
+- **Neutral midtones**: `--neutral-40/50/60/70/80`, interpolated (RGB lerp,
+  evenly spaced) between the pack's own `--neutral-30` and `--neutral-90` — no
+  source token supplies these directly. Added because the audit found ~98
+  component rules across `dark.css`/`light.css` reference these *directly*
+  (icon fills and strokes, secondary text, hairline borders, SVG symbol
+  strokes), not merely as indirection behind variables already covered.
+  Leaving them unthemed left a large swath of secondary chrome stock grey
+  regardless of theme.
+- **Controls**: `--checkbox--checked/unchecked/indeterminate/disabled`,
+  `--radio--selected/unselected/disabled`,
+  `--toggleSwitch--selected/unselected`,
+  `--progressLinearBar--determinate/indeterminate`,
+  `--progressLinearTrack--determinate/indeterminate`. All names confirmed
+  against the live CSS — an earlier pass guessed `--radio--checked/unchecked/
+  indeterminate` and `--toggleSwitch--on/off/disabled` by symmetry with
+  `--checkbox--*`; the real names differ, and there is no
+  `--radio--indeterminate` or `--toggleSwitch--disabled` at all.
+- **Status secondaries**: `--warningSecondary`, `--infoSecondary` — `--warning`
+  and `--info` re-emitted as a 16%-alpha wash.
+- **P&ID symbols**: `--symbolFill--default/running/faulted/stopped` and
+  matching `--symbolStroke--*` (the fill darkened 20%, for a visible outline
+  against its own fill; `default` reuses `--containerBorder`).
+  `--symbolFillAnimation--default/running` reuse `--neutral-80`, as IA's own
+  values for both do.
+- **Native pipes**: `--pipeStroke`, `--pipePrimaryFill`, `--pipeSecondaryFill`,
+  `--pipeSelectStroke`.
+- **Chart scales**, generated algorithmically (standard-library `colorsys`, not
+  read from any source pack — none defines a 10/16/6-step scale), anchored on
+  the theme's own final `--callToAction`/`--error`/`--neutral-10`, and
+  deterministic:
+  - `--qual-1..10`: ten hues rotated evenly around the wheel, `--qual-1` being
+    the accent hue itself; lightness ~65% / saturation 60% on dark themes,
+    ~46% / 60% on light.
+  - `--seq-1..6`: a monotonic ramp of the accent hue, weak → strong.
+  - `--div-1..16`: a diverging ramp from the accent hue through a neutral
+    midpoint matched to the page to the error hue.
+  - Every `--qual-*` is checked (warn-only) for contrast ≥1.5 against
+    `--neutral-10` and RGB distance ≥40 from its neighbour, wraparound
+    included. All ten themes pass with zero chart-scale warnings.
+- **Two variables IA's own themes never define at all**:
+  `--tooltip-background-color` and `--arrow-color` are referenced by
+  `.ia_form__tooltip-*` rules via `var()` with no fallback and no `:root`
+  value anywhere in IA's CSS, so a stock tooltip's background and arrow are
+  effectively unset. Every theme here gives them a real value.
+- **Misc**: `--boxShadow--inset`, `--indicator` and `--indicatorOff` (the LED
+  component's diode and the quality-overlay pending state),
+  `--contextBackground`, `--defaultSliderFocusColor`,
+  `--callToAction--activeAlt` and `--activeAltInvis`.
+
+**Deliberately left inherited** — the remaining 10 of the 120, geometry or
+pure IA brand constants rather than colours a theme should own: `--white`,
+`--black`, `--font-NotoSans`, `--opacity-25/50/85`, `--red-10/20/30/50/60`,
+and `--defaultSliderFocusBoxShadow` (a pure blur/spread value with no colour
+component — its colour half, `--defaultSliderFocusColor`, *is* themed).
+
+### Compensating rules for hard-coded IA colours
+
+The same audit scanned the live flattened CSS for colour literals applied
+directly to a component selector rather than through a variable. A handful of
+IA's own rules bypass the variable system entirely, so **no** theme — IA's own
+built-in ones included — can reach them by overriding `variables.css` alone.
+Each theme's `globals.css` adds three targeted compensating rules, judged
+common, visible and low-risk enough to be worth it — the same selectors IA
+itself defines, at the same alpha steps, just with the theme's own accent:
+
+- **`::selection`** — IA's `dark.css` hard-codes a fixed dark blue and
+  `light.css` defines none at all (browser default). Tinted with the theme's
+  own accent at 0.35 alpha.
+- **`.ia_slider__handle:focus`** — hard-codes its own blue `color` directly
+  rather than reading `--defaultSliderFocusColor`, the way IA's *other* slider
+  implementation does. Swapped to read the variable properly.
+- **Table row hover and selection** (`.ia_tableComponent__body__row--hovered`,
+  `.ia_tableComponent__selection`, `.ia_alarmJournalTableComponent__selection`,
+  `.ia_alarmStatusTableComponent__selection`) — the highest-traffic hard-code
+  found, since every table hits it. `!important` here because IA's own
+  declarations carry the same specificity and would otherwise win on source
+  order alone from within the same imported base stylesheet.
+
+Separately, and by the same `globals.css` mechanism, **scrollbars follow the
+theme**: `scrollbar-color` and the `::-webkit-scrollbar-*` rules use the
+theme's own `--containerBorder` for the thumb and `--callToAction` on hover,
+since stock themes leave scrollbars at browser default regardless of theme.
+
+### The occlusion-fix rule
+
+Every `globals.css` emits, alongside the page background:
+
+```css
+#app-container .center.view-parent > .view.ia_container--root {
+  background-color: transparent !important;
+}
+```
+
+Perspective's own top-level view root — the element carrying both `.view` and
+`.ia_container--root` — paints itself opaque with the theme's own
+`--containerRoot`, one level inside `#app-container`. That is stock behaviour
+for any `ia_container--primary` root container, not a bug in any project's
+view JSON, and it hides the page background on every ordinary page in every
+theme unless punched through. The selector is a structural Perspective shell
+pattern rather than something specific to one theme, so the fix generalises
+unchanged across all ten.
+
+## The style-class contract
+
+A theme is CSS only, and the conventional reading is that it therefore cannot
+ship Perspective style classes. The first half is true; the conclusion is not,
+and the difference is what lets a project drop a look-and-feel parent
+entirely.
+
+**Perspective emits whatever string sits in `style.classes` into the DOM as a
+`psc-<string>` class, resource or no resource.** So a theme's `globals.css` —
+just CSS served gateway-wide — can define `.psc-st\/containers\/card` and carry
+a whole semantic class contract. What is lost is only the Designer's
+style-class picker dropdown, which costs nothing for a UI that is generated
+rather than hand-assembled.
+
+`build_contract.py` appends that payload to each theme's `globals.css`, in
+cascade order:
+
+1. the theme's 40 `--st-*` tokens, hoisted to `:root`;
+2. `contract/chrome.css` verbatim — component chrome, shell and card grid,
+   written against `[class*="/family/name"]` attribute selectors;
+3. the 69-class contract, from each class's own definition.
+
+Two things worth knowing if you build on it or extend it:
+
+**Keep the slashes.** `st/containers/card`, not `st-containers-card`. Part 2 is
+keyed on `[class*="/tables/frame"]`-style attribute selectors, and slash names
+let 585 lines of chrome port byte for byte.
+
+**Double the selector; never use `!important`.** A theme loads *before* IA's
+own `PerspectiveComponents.css`, whereas a project style-class bundle loads
+*after* it — so moving a contract into a theme flips it from winning ties to
+losing them. Measured: `buttons/chip` silently dropped its `padding: 0 12px`
+to IA's `0`. `!important` fixes that but also beats *inline* styles, which
+inverts Perspective's own precedence and breaks every per-component override
+(measured: it forced topbar and sidebar padding over the components' own
+props). Doubling the class — `.psc-st\/x\/y.psc-st\/x\/y`, specificity 0-2-0 —
+beats IA's 0-1-0 component rules and still loses to inline, which is exactly
+how a real style class behaves.
+
+The installer's "For builders" page lists every token and class a project can
+use, read from the gateway live.
+
+## Building from source
+
+```bash
+python3 build_theme.py       # regenerate out/ (always wipes + rebuilds)
+python3 build_installer.py   # regenerate installer-project/ from out/
+./package.sh                 # -> dist/ignition-themes-<VERSION>.zip
+                             # -> dist/Theme_Installer-<VERSION>.zip
+```
+
+No third-party dependencies — the chart-scale generator uses only the
+standard library. `build_theme.py` wipes and rewrites everything under `out/`,
+so a rename can never leave a stale directory under an old theme id sitting
+beside the new one. It prints:
+
+- a `WARNING` line for every mapping entry that needed a fallback source,
+  bottomed out at a `literal:` default, or produced a chart colour with poor
+  contrast against the page or too close to its neighbour;
+- a `TWEAK` line per theme listing which variables a `TWEAKS` entry overrode;
+- a `SWATCH` line per theme with the ten `--qual-*` hex values, for eyeballing
+  hue spread.
+
+It exits non-zero only on a hard error — a `mapping.py` entry whose whole
+fallback chain resolved to nothing, which is an authoring bug in the generator
+rather than a finding about a source pack.
+
+`VERSION` is a plain one-line file, bumped by hand before packaging; neither
+`build_installer.py` nor `package.sh` touches it. `package.sh` refuses to run
+if `out/`, `out/themes.json` or
+`installer-project/Theme_Installer/project.json` is missing, rather than
+silently packaging a stale or empty `dist/`.
+
+### What is where
+
+- `packs/` — the ten source colour packs, each a JSON token set.
+- `mapping.py` — the curated token → built-in-Perspective-variable table, in
+  three parts (read its module docstring for the full grammar):
+  - `MAPPING`, the core ~35 IA variables, resolved straight from a pack;
+  - `EXTENDED_MAPPING`, a second pass resolved after `MAPPING` and any
+    `TWEAKS`, so it can `ref:` the final values;
+  - `TWEAKS`, per-theme literal overrides — data, not code — applied between
+    the two passes. Only `glass-green` has an entry today.
+- `build_theme.py` — the generator: resolves `MAPPING` against the pack,
+  applies `TWEAKS[id]`, resolves `EXTENDED_MAPPING`, generates the three chart
+  scales, writes `out/<id>/`.
+- `build_contract.py` — appends the `--st-*` / `st/...` contract payload to
+  each theme's `globals.css`. Its inputs are vendored under `contract/`.
+- `build_installer.py` — regenerates `installer-project/Theme_Installer/` from
+  scratch, embedding every theme's file contents as data in a gateway-scope
+  script (`ignition/script-python/themepack/code.py`). Data-dir resolution is
+  `IgnitionGateway.get().getSystemManager().getDataDir()`, verified live on
+  8.3.8. Install writes the files then requests one config scan; uninstall
+  goes through `system.config.delete()` instead. Every write is whitelisted
+  against whatever `out/` held at build time — there is no code path that can
+  reach `light`, `dark`, `light-cool`, `light-warm`, `dark-cool` or
+  `dark-warm`.
+- `out/<theme-id>/` — the ten generated theme directories, each with
+  `config.json`, `index.css`, `variables.css`, `globals.css` and
+  `resource.json`. This is exactly what gets deployed to
+  `data/config/resources/core/com.inductiveautomation.perspective/themes/<id>/`.
+- `insight/` — the capture scripts used to read a live gateway's stock
+  palettes for the audits above.
+- `docs/THEMES-EVALUATION.md` — the evaluation this project grew out of: what
+  a theme can and cannot reach, whether themes paint earlier than a project
+  stylesheet, and what a look-and-feel parent still buys on top of one.
+
+`resource.json` deliberately carries no `lastModification` or
+`lastModificationSignature`. The gateway must stamp those itself on first
+scan — a hand-written signature that does not match the content makes the
+config scan **silently** skip the resource.
+
+### The glass-green tweak
+
+`glass-green` (source pack `aurora-teal`) originally read as *violet with a
+teal accent* rather than a genuine green-glass theme. Root cause: the pack's
+`surface.page`/`surface.card`/`surface.sidebar` tokens were never diverged
+from `aurora-violet` when the pack was cloned — both packs' `surface.page` is
+the literal `"#1a1233"`, violet. Only the accent-adjacent tokens actually
+changed. A stylesheet-based renderer never showed this, because it reads
+`containers/page`'s *effective* `backgroundColor` override (already a correct
+dark teal) rather than the raw `surface.page` token; this generator reads the
+raw token, which is what let the violet leak through into a *theme*
+specifically.
+
+Fixed entirely in `mapping.TWEAKS["glass-green"]` — `packs/aurora-teal.json`
+is untouched. The tweak recomputes the surface stack from a new near-black
+green-tinted base (`#0d1412`) using the pack's own existing translucent
+white-glass alpha values, so the *glass effect* is unchanged and only what it
+sits on differs, and moves the accent from the pack's muted teal (`#0f766e`)
+to a brighter mint (`#2dd4bf`, hover `#5eead4`, active `#26b4a2`) with a fresh
+green `--success`. Every downstream variable that `ref:`s the accent, plus the
+chart scales and the compensating rules, inherits the fix automatically.
+`glass-violet` has no tweak and is unmodified.
+
+## Boundaries
+
+Worth knowing before you adopt these, and none of it is fixable from a theme:
+
+- **Elevation is one shadow across five slots.** `--boxShadow1..5` all take a
+  single value, and `none` for the packs that declare no shadow token at all
+  (`leather-dark`, `industrial-dark`, `industrial-light` — deliberate in
+  leather's case, which reads as a flat page rather than a dashboard with
+  elevation). `--boxShadow--inset` inherits the same limitation. No source
+  pack defines a finer 1–5 elevation scale to derive from.
+- **A heading serif face is unreachable.** Leather's Crimson Pro/Georgia
+  heading face has no path to Perspective's `ia.display.label` components from
+  a theme alone — confirmed against the live DOM, where `ia.display.label`
+  always renders as `<div class="ia_labelComponent"><span>` and never a
+  semantic heading element.
+- **The Equipment Schedule / Gantt component is entirely hard-coded.** Its
+  progress bar fill and track, tooltip, schedule-event blocks, lead-time
+  shading, move and selected placeholders, downtime and break-period washes
+  are all fixed colours regardless of theme. If your project uses it, expect
+  it to look the same IA purple/blue/peach under every theme here, and under
+  the stock ones too.
+- **Other lower-traffic hard-codes are left as IA constants**: generic black
+  elevation shadows across alarm table panels, the pager, table head and foot
+  containers, the toggle-switch thumb, editable table cells and form tooltips
+  (neutral black in IA's own themes too, so consistent with everything else);
+  the date-range picker's day-hover tint;
+  `.ia_form__actionBar--fixed`'s hairline border; and the video player's
+  control-popup background, which is deliberately black to match the
+  convention most video players use regardless of surrounding theme.
+
+## Upgrade risk
+
+Custom-named themes are low risk: the Perspective module's upgrade migrator
+only manages the bundled names (`light`, `dark`, and the four shipped
+variants) and never touches a custom directory. A theme installed here lives
+only on the gateway it was installed to, unless you also keep a copy
+elsewhere — git, a backup, or a release zip.
+
+## Licence
+
+Apache-2.0. See [LICENSE](LICENSE).
