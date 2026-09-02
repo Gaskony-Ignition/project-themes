@@ -111,21 +111,30 @@ def write_text(path, text):
 
 
 def resource_json(files, description=None):
-    """A project-resource resource.json -- lastModification.timestamp set
-    from the clock, deliberately NO lastModificationSignature (see this
-    repo's CLAUDE.md and out/<id>/resource.json's own header comment: a
-    hand-written signature that doesn't match content makes the config/
-    project scan silently skip the resource)."""
+    """A project-resource resource.json.
+
+    `lastModification` goes INSIDE `attributes`, which is where Ignition
+    reads it from -- checked against a resource the gateway wrote itself.
+    At the top level it parses as an unknown key and is silently dropped,
+    so the imported project shows a blank Author and Last Modified in the
+    Projects grid and the Designer. It looks like nothing is wrong until
+    someone compares the row with another project's.
+
+    Still deliberately NO lastModificationSignature: a hand-written
+    signature that doesn't match the content makes the scan silently skip
+    the resource. The gateway stamps it on first scan.
+    """
     doc = {
         "scope": "G",
         "version": 1,
         "restricted": False,
         "overridable": True,
         "files": files,
-        "attributes": {},
-        "lastModification": {
-            "actor": "external",
-            "timestamp": NOW,
+        "attributes": {
+            "lastModification": {
+                "actor": "external",
+                "timestamp": NOW,
+            },
         },
     }
     if description:

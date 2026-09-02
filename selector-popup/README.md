@@ -75,16 +75,15 @@ build time; the 10 swatches' hex values are static, hand-verified against
 `out/` once per swatch (see below), the way the original author built it.
 
 **We own this file outright now.** `source-switcher-view.json` next to it is
-kept only for provenance/audit trail — it is the as-handed-over popup from the
-Work-Dockers session that built it for their own multi-project switcher rig,
-and it is never read by any script in this repo. Edit `SelectorPopup.view.json`
+kept only for provenance/audit trail — it is the as-handed-over popup from
+another project that built the same picker for its own multi-project switcher
+rig, and it is never read by any script in this repo. Edit `SelectorPopup.view.json`
 directly for any future change; do not regenerate it from the source snapshot.
 
 ## Where it came from
 
-Commissioned by Nigel, built by an agent working in the Work-Dockers session
-against this repo's `out/` theme data, handed back as
-`source-switcher-view.json` (818 lines) with three adaptations specified by
+Built against this repo's `out/` theme data for another project's switcher rig,
+and handed back as `source-switcher-view.json` (818 lines) with three adaptations specified by
 its own author for landing here:
 
 1. Every swatch button wrote `self.session.custom.styleOverride` — that repo's

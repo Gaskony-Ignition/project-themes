@@ -6,9 +6,10 @@
   "files": [
     "view.json"
   ],
-  "attributes": {},
-  "lastModification": {
-    "actor": "external",
-    "timestamp": "2026-08-24T09:40:34Z"
+  "attributes": {
+    "lastModification": {
+      "actor": "external",
+      "timestamp": "2026-08-24T09:40:34Z"
+    }
   }
 }

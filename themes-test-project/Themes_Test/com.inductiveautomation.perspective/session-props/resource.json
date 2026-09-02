@@ -6,9 +6,10 @@
   "files": [
     "props.json"
   ],
-  "attributes": {},
-  "lastModification": {
-    "timestamp": "2026-08-24T09:22:37Z",
-    "actor": "external"
+  "attributes": {
+    "lastModification": {
+      "timestamp": "2026-08-24T09:22:37Z",
+      "actor": "external"
+    }
   }
 }
