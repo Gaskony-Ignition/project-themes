@@ -12,10 +12,11 @@
 # Contents of ignition-themes-<VERSION>.zip (all inside one top-level
 # ignition-themes-<VERSION>/ folder, so extracting it never sprays files into
 # the current directory):
-#   - the 9 theme directories, copied verbatim from out/
+#   - every theme directory, copied verbatim from out/
 #   - out/themes.json
 #   - install.sh (this repo's copy -- see below for why it's shared)
 #   - RELEASE-README.md
+#   - LICENSE (Apache-2.0; the project is public, so the artefact carries it)
 #
 # Contents of Theme_Installer-<VERSION>.zip: the CONTENTS of
 # installer-project/Theme_Installer/ (project.json at the zip root, no
@@ -50,6 +51,7 @@ VERSION=$(head -n1 VERSION | tr -d '[:space:]')
 [ -f out/themes.json ] || { echo "package.sh: out/themes.json not found -- run build_theme.py first" >&2; exit 1; }
 [ -f install.sh ] || { echo "package.sh: install.sh not found" >&2; exit 1; }
 [ -f RELEASE-README.md ] || { echo "package.sh: RELEASE-README.md not found" >&2; exit 1; }
+[ -f LICENSE ] || { echo "package.sh: LICENSE not found" >&2; exit 1; }
 [ -f installer-project/Theme_Installer/project.json ] || { echo "package.sh: installer-project/Theme_Installer/project.json not found -- run build_installer.py first" >&2; exit 1; }
 
 RELEASE_NAME="ignition-themes-$VERSION"
@@ -81,6 +83,9 @@ cp out/themes.json "$STAGE_DIR/themes.json"
 cp install.sh "$STAGE_DIR/install.sh"
 chmod +x "$STAGE_DIR/install.sh"
 cp RELEASE-README.md "$STAGE_DIR/RELEASE-README.md"
+# The project zip below is a strict Ignition project import zip and takes no
+# stray files, so the licence travels in this pack only. Both are Apache-2.0.
+cp LICENSE "$STAGE_DIR/LICENSE"
 
 ( cd "$DIST_DIR" && rm -f "$RELEASE_NAME.zip" && zip -rq "$RELEASE_NAME.zip" "$RELEASE_NAME" )
 
