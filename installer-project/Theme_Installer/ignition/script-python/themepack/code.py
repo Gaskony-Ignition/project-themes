@@ -7,7 +7,7 @@ build_installer.py from out/ -- DO NOT EDIT
 BY HAND. Regenerate with:
     python3 build_installer.py
 
-Version 1.12.0. Gateway scope only -- install()/install_all() write
+Version 1.13.0. Gateway scope only -- install()/install_all() write
 files under <dataDir>/config/resources/core/
 com.inductiveautomation.perspective/themes/<id>/ and request a
 config scan; uninstall()/uninstall_all() go through
@@ -1746,6 +1746,32 @@ def delete_theme(name):
     return True
 
 
+_GENERATED_HEADER = re.compile(r'\A\s*/\*.*?\*/\s*', re.S)
+
+
+def _reheader(text, filename, source, name):
+    """Replace a copied file's "DO NOT EDIT BY HAND" banner with the truth.
+
+    Nigel, 07/09/2026: that warning on every generated file makes it hard for
+    people to change anything if they want to. On the ten themselves it is
+    correct -- they are generated and Install overwrites them. On a COPY it is
+    the opposite of correct: the copy is yours, nothing regenerates it, and
+    carrying the banner over tells you not to do the one thing this page exists
+    for. So the banner is rewritten, not stripped silently: the new header says
+    where the file came from, which is the useful half of what it was saying.
+    """
+    if not filename.lower().endswith(".css"):
+        return text
+    match = _GENERATED_HEADER.match(text)
+    body = text[match.end():] if (match and "DO NOT EDIT" in match.group(0)) \
+        else text
+    return ("/* %s -- YOUR COPY of %s, and yours to edit.\n"
+            " * Nothing regenerates this file and Install does not overwrite\n"
+            " * it. The original is generated from packs/%s.json in the\n"
+            " * ignition-themes repo, which is why it says not to edit it.\n"
+            " */\n" % (filename, source, source)) + body
+
+
 def copy_theme(source, name):
     """Start a new theme from an existing one rather than from a bare base.
 
@@ -1766,13 +1792,7 @@ def copy_theme(source, name):
         if not _editor_is_text(entry):
             continue
         text = _read(os.path.join(src_dir, entry))
-        if entry == "index.css":
-            # The copy must import ITS OWN siblings, not the source's. Left
-            # alone this reads "../<base>/index.css" plus "./variables.css",
-            # which is already relative to the new directory -- but a source
-            # that imports anything else by relative path would silently keep
-            # pointing at the original.
-            text = text.replace('"./', '"./')
+        text = _reheader(text, entry, source, name)
         _write(os.path.join(dst_dir, entry), text)
         copied.append(entry)
     _stock_rewrite_manifest(dst_dir)
@@ -1783,3 +1803,203 @@ def copy_theme(source, name):
 def base_options():
     """The stock themes a new theme can be built on."""
     return list(STOCK_BUILTIN) + list(STOCK_UPDATABLE)
+
+
+# ---------------------------------------------------------------------------
+# LIVE PREVIEW
+#
+# The customiser's whole premise is copy-one-and-tune-it, and tuning without
+# seeing the result is guessing. The Installer's thumbnails are generated at
+# BUILD time from the repo, so they cannot answer "what does it look like now
+# that I changed the accent" -- this does, by reading the stylesheet the
+# browser is actually being served and drawing the same mini screen from it.
+#
+# Same layout and the same palette keys as build_installer.py's preview_svg,
+# deliberately: the picture on this page and the picture in the Installer's
+# table have to be the same picture or neither can be trusted.
+# ---------------------------------------------------------------------------
+
+def live_palette(theme):
+    """The dozen colours a preview is painted with, resolved from the LIVE
+    stylesheet. var() chains are followed; anything still unresolved is
+    dropped rather than drawn, because a var() reference painted literally
+    renders in the VIEWING page's colours and quietly shows the wrong thing."""
+    values = _vars_of(theme_css(theme))
+
+    def resolve(value, hops=0):
+        while value and value.startswith("var(") and hops < 6:
+            found = re.match(r'var\(\s*(--[A-Za-z0-9_-]+)', value)
+            if not found:
+                return ""
+            value = (values.get(found.group(1)) or "").strip()
+            hops += 1
+        return "" if (value or "").startswith("var(") else (value or "")
+
+    def pick(*names):
+        for name in names:
+            value = resolve((values.get(name) or "").strip())
+            if value and value != "transparent":
+                return value
+        return ""
+
+    page = pick("--st-page-solid", "--containerRoot")
+    return {
+        "page": page,
+        "sidebar": pick("--st-sidebar-solid", "--containerNested", "--container"),
+        "card": pick("--st-card", "--container"),
+        "text": pick("--st-fg", "--label"),
+        "muted": pick("--label--disabled", "--label"),
+        "chromeFg": pick("--st-chrome-fg", "--label"),
+        "accent": pick("--st-accent", "--callToAction"),
+        "onAccent": pick("--st-on-accent") or "#ffffff",
+        "border": pick("--st-chrome-border", "--border"),
+        "headBg": pick("--st-head-solid", "--containerNested", "--container"),
+        "headFg": pick("--st-head-fg", "--label"),
+        "rowBg": pick("--st-row-bg") or page,
+        "cellFg": pick("--st-cell-fg", "--label"),
+    }
+
+
+def live_preview_svg(theme, width=340, height=102):
+    """The mini screen, drawn from live values, at whatever size is asked for."""
+    pal = live_palette(theme)
+
+    def c(key, fallback="#888888"):
+        return pal.get(key) or fallback
+
+    sx = width / 200.0
+    sy = height / 60.0
+    parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" '
+             'viewBox="0 0 200 60">' % (width, height)]
+
+    def rect(x, y, w, h, fill, rx=0):
+        parts.append('<rect x="%s" y="%s" width="%s" height="%s" fill="%s" '
+                     'rx="%s"/>' % (x, y, w, h, fill, rx))
+
+    rect(0, 0, 200, 60, c("page"))
+    rect(0, 0, 200, 11, c("sidebar"))
+    rect(0, 11, 26, 49, c("sidebar"))
+    for i in range(3):
+        rect(5, 18 + i * 5, 16, 2, c("chromeFg"), 1)
+    rect(32, 16, 92, 26, c("card"), 2)
+    rect(36, 20, 54, 3, c("text"), 1)
+    rect(36, 26, 44, 2, c("muted"), 1)
+    rect(36, 32, 30, 7, c("accent"), 2)
+    rect(40, 35, 22, 2, c("onAccent"), 1)
+    rect(130, 16, 64, 26, c("headBg"), 2)
+    rect(130, 16, 64, 7, c("headBg"), 2)
+    rect(133, 19, 26, 2, c("headFg"), 1)
+    for i in range(2):
+        rect(130, 25 + i * 8, 64, 7, c("rowBg"))
+        rect(133, 28 + i * 8, 30, 2, c("cellFg"), 1)
+    rect(5, 4, 34, 3, c("chromeFg"), 1)
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def live_preview_uri(theme, width=340, height=102):
+    """base64 rather than percent-encoding: the SVG carries #rrggbb by the
+    dozen and a raw '#' truncates a url() at the first colour."""
+    import base64
+    svg = live_preview_svg(theme, width, height)
+    return "data:image/svg+xml;base64," + base64.b64encode(
+        svg.encode("utf-8")).decode("ascii")
+
+
+# ---------------------------------------------------------------------------
+# WHAT MAY BE CHANGED
+#
+# The ten pre-packaged themes are generated from packs/*.json and their files
+# say DO NOT EDIT BY HAND, which is the truth: Install overwrites them. A page
+# that invites you to edit one is inviting work that disappears at the next
+# install, so the customiser offers a COPY instead and the ten stay read-only.
+# ---------------------------------------------------------------------------
+
+def is_editable(theme):
+    """Only a theme made here may be changed from here."""
+    return theme_kind(theme) == "user"
+
+
+def why_not_editable(theme):
+    """The sentence the page shows instead of an editor, or '' when editable."""
+    kind = theme_kind(theme)
+    if kind == "user":
+        return ""
+    if kind == "packaged":
+        return ("This is one of the ten themes the project ships. Its files "
+                "are generated from the repo and Install puts them back, so a "
+                "change made here would disappear the next time anyone "
+                "pressed Install. Make a copy and the copy is yours.")
+    if kind == "stock":
+        return ("This is one of Ignition's own themes, shared by every "
+                "project on this gateway, and an Ignition upgrade replaces "
+                "it. Make a copy and the copy is yours.")
+    return "There is no theme selected."
+
+
+# ---------------------------------------------------------------------------
+# EVERY colour, across both files.
+#
+# tokens() reads one file, and the customiser first shipped pointed at
+# variables.css -- which is where Ignition's OWN variable names are re-pointed,
+# but NOT where the theme's identity lives. The --st-* tokens are declared in
+# globals.css, so "make the accent our company red" -- the single most likely
+# reason to open this page -- was the one thing the colour list could not do.
+# ---------------------------------------------------------------------------
+
+EDITOR_COLOUR_FILES = ["globals.css", "variables.css"]
+
+
+def all_tokens(theme):
+    """Every custom property the theme declares, from every file it declares
+    them in, each row saying WHICH file so a save edits the right one.
+
+    globals.css first: the --st-* tokens are the theme's own vocabulary and the
+    reason someone is here, where variables.css is mostly Ignition's names
+    re-pointed at them.
+    """
+    rows = []
+    for filename in EDITOR_COLOUR_FILES:
+        try:
+            found = tokens(theme, filename)
+        except (Exception, Throwable), e:
+            continue                     # a theme need not have both files
+        for row in found:
+            row = dict(row)
+            row["file"] = filename
+            # The --st-* tokens have their OWN grouping. Run through GROUPS
+            # (which classifies Ignition's variable names) they all land in
+            # "Everything else", which is the least useful thing a grouped
+            # list can say about the theme's own vocabulary.
+            if filename == "globals.css":
+                row["group"] = group_of(row["name"], TOKEN_GROUPS)
+            rows.append(row)
+    return rows
+
+
+def token_file(theme, name):
+    """Which of the theme's files declares this token. Last file wins, the
+    same way the browser resolves it."""
+    where = ""
+    for filename in EDITOR_COLOUR_FILES:
+        try:
+            for row in tokens(theme, filename):
+                if row["name"] == name:
+                    where = filename
+        except (Exception, Throwable), e:
+            continue
+    if not where:
+        raise ValueError("'%s' is not declared in this theme" % name)
+    return where
+
+
+def set_any_token(theme, name, value):
+    """set_token, but it finds the file for you.
+
+    The page cannot pass a filename it never showed the user, and guessing
+    variables.css silently edited nothing for every --st-* token: the write
+    went to a file that does not declare it, _token_replace raised, and the
+    status line said so -- but only after the user had typed a colour and
+    pressed Save.
+    """
+    return set_token(theme, name, value, filename=token_file(theme, name))

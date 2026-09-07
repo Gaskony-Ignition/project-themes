@@ -3,13 +3,16 @@
     "theme": "",
     "file": "variables.css",
     "key": "",
-    "files": [],
     "text": "",
     "status": "",
     "nudge": 0,
+    "kind": "",
     "tokens": [],
     "classes": [],
-    "kind": "",
+    "publishes": [],
+    "sel_name": "",
+    "sel_value": "",
+    "raw": false,
     "making": "",
     "new_name": "",
     "new_base": "dark"
@@ -37,7 +40,7 @@
         }
       }
     },
-    "custom.files": {
+    "custom.kind": {
       "binding": {
         "type": "property",
         "config": {
@@ -46,7 +49,21 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.list_files(theme)\n\texcept Exception:\n\t\treturn []\n\tout = []\n\tfor r in rows:\n\t\tif not r['editable']:\n\t\t\tcontinue\n\t\tmark = ''\n\t\ttry:\n\t\t\tif themepack.read_file(theme, r['name'])['modified']:\n\t\t\t\tmark = u'  \\u25cf'\n\t\texcept Exception:\n\t\t\tpass\n\t\t# The marker rides on the NAME. A column of its own needs a header,\n\t\t# and an empty header title falls back to the field name -- which is\n\t\t# how a 26px column came to be labelled 'sta'.\n\t\tout.append({'name': r['name'] + mark})\n\treturn out"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\treturn themepack.theme_kind(theme)"
+          }
+        ]
+      }
+    },
+    "custom.tokens": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.all_tokens(theme)\n\texcept Exception:\n\t\treturn []\n\tout = []\n\tlast = None\n\tfor r in rows:\n\t\tgroup = r['group']\n\t\tout.append({'group': group if group != last else '',\n\t\t            'name': r['name'],\n\t\t            'swatch': r['swatch'],\n\t\t            'value': r['value']})\n\t\tlast = group\n\treturn out"
           }
         ]
       }
@@ -65,20 +82,6 @@
         ]
       }
     },
-    "custom.tokens": {
-      "binding": {
-        "type": "property",
-        "config": {
-          "path": "view.custom.key"
-        },
-        "transforms": [
-          {
-            "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.contract(theme)\n\texcept Exception:\n\t\treturn []"
-          }
-        ]
-      }
-    },
     "custom.classes": {
       "binding": {
         "type": "property",
@@ -93,7 +96,7 @@
         ]
       }
     },
-    "custom.kind": {
+    "custom.publishes": {
       "binding": {
         "type": "property",
         "config": {
@@ -102,7 +105,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\treturn themepack.theme_kind(theme)"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.contract(theme)\n\texcept Exception:\n\t\treturn []"
           }
         ]
       }
@@ -194,7 +197,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Editor",
+              "text": "Customise",
               "style": {
                 "fontSize": "13px",
                 "padding": "9px 16px 8px",
@@ -251,7 +254,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Editor  \u00b7  v1.12.0",
+          "text": "Customise  \u00b7  v1.13.0",
           "style": {
             "fontSize": "24px",
             "color": "var(--label)",
@@ -270,7 +273,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Edits the theme files on THIS gateway, live. It is not a build tool: the ten pre-packaged themes are generated from the repo, so Install on the first page puts them back and your edits to them go with it. Make one of your own and nothing overwrites it.",
+          "text": "Make a theme of your own: copy one of the ten, then change its colours here. The ten themselves are generated from the repo and Install overwrites them, so they are read-only on this page -- a copy is yours and nothing overwrites it.",
           "style": {
             "fontSize": "12.5px",
             "color": "var(--label--disabled)",
@@ -1017,6 +1020,132 @@
         ]
       },
       {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "locked_wrap"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {}
+        },
+        "propConfig": {
+          "meta.visible": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "{view.custom.kind} != 'user'"
+              }
+            }
+          },
+          "props.style.display": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "if({view.custom.kind} != 'user', 'flex', 'none')"
+              }
+            }
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "locked"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "row",
+              "alignItems": "center",
+              "wrap": "wrap",
+              "style": {
+                "gap": "12px",
+                "rowGap": "8px",
+                "padding": "12px 14px",
+                "borderRadius": "4px",
+                "backgroundColor": "var(--containerNested)",
+                "borderStyle": "solid",
+                "borderWidth": "1px",
+                "borderColor": "var(--border)"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "why"
+                },
+                "position": {
+                  "grow": 1,
+                  "shrink": 1,
+                  "basis": "0px"
+                },
+                "props": {
+                  "style": {
+                    "fontSize": "12.5px",
+                    "lineHeight": "1.5",
+                    "color": "var(--label)"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.key"
+                      },
+                      "transforms": [
+                        {
+                          "type": "script",
+                          "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn 'There is no theme selected.'\n\treturn themepack.why_not_editable(theme)"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.input.button",
+                "meta": {
+                  "name": "btn_copyme"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Make my own copy",
+                  "style": {
+                    "height": "32px",
+                    "whiteSpace": "nowrap"
+                  }
+                },
+                "events": {
+                  "component": {
+                    "onActionPerformed": {
+                      "config": {
+                        "script": "\t# The funnel out of a read-only theme: pre-fill a sensible name so the\n\t# next click is Copy rather than a naming decision.\n\tself.view.custom.making = 'copy'\n\tself.view.custom.new_name = 'my-' + (self.view.custom.theme or 'theme')\n\tself.view.custom.status = ''"
+                      },
+                      "scope": "G",
+                      "type": "script"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
         "type": "ia.display.label",
         "meta": {
           "name": "status"
@@ -1065,164 +1194,7 @@
           {
             "type": "ia.container.flex",
             "meta": {
-              "name": "rail"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 1,
-              "basis": "215px"
-            },
-            "props": {
-              "direction": "column",
-              "style": {
-                "gap": "0px",
-                "minHeight": "0px",
-                "borderRadius": "4px",
-                "backgroundColor": "var(--container)",
-                "borderStyle": "solid",
-                "borderWidth": "1px",
-                "borderColor": "var(--border)",
-                "overflow": "hidden"
-              }
-            },
-            "children": [
-              {
-                "type": "ia.container.flex",
-                "meta": {
-                  "name": "head"
-                },
-                "position": {
-                  "grow": 0,
-                  "shrink": 0,
-                  "basis": "auto"
-                },
-                "props": {
-                  "direction": "column",
-                  "style": {
-                    "gap": "3px",
-                    "padding": "9px 11px 8px",
-                    "borderBottomStyle": "solid",
-                    "borderBottomWidth": "1px",
-                    "borderBottomColor": "var(--border)"
-                  }
-                },
-                "children": [
-                  {
-                    "type": "ia.display.label",
-                    "meta": {
-                      "name": "h"
-                    },
-                    "position": {
-                      "grow": 0,
-                      "shrink": 0,
-                      "basis": "auto"
-                    },
-                    "props": {
-                      "text": "Files",
-                      "style": {
-                        "fontSize": "11px",
-                        "fontWeight": 600,
-                        "letterSpacing": "0.06em",
-                        "textTransform": "uppercase",
-                        "color": "var(--label)"
-                      }
-                    }
-                  },
-                  {
-                    "type": "ia.display.label",
-                    "meta": {
-                      "name": "hint"
-                    },
-                    "position": {
-                      "grow": 0,
-                      "shrink": 0,
-                      "basis": "auto"
-                    },
-                    "props": {
-                      "text": "Click one to open it. A dot marks a file that no longer matches what the installer ships.",
-                      "style": {
-                        "fontSize": "11.5px",
-                        "lineHeight": "1.45",
-                        "color": "var(--label--disabled)"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "type": "ia.container.flex",
-                "meta": {
-                  "name": "body"
-                },
-                "position": {
-                  "grow": 1,
-                  "shrink": 1,
-                  "basis": "0px"
-                },
-                "props": {
-                  "direction": "column",
-                  "style": {
-                    "gap": "0px",
-                    "minHeight": "0px",
-                    "padding": "0px"
-                  }
-                },
-                "children": [
-                  {
-                    "type": "ia.display.table",
-                    "meta": {
-                      "name": "files"
-                    },
-                    "position": {
-                      "grow": 1,
-                      "shrink": 1,
-                      "basis": "0px"
-                    },
-                    "props": {
-                      "pager": {
-                        "top": false,
-                        "bottom": false
-                      },
-                      "columns": [
-                        {
-                          "field": "name",
-                          "header": {
-                            "title": "File"
-                          }
-                        }
-                      ],
-                      "style": {}
-                    },
-                    "propConfig": {
-                      "props.data": {
-                        "binding": {
-                          "type": "property",
-                          "config": {
-                            "path": "view.custom.files"
-                          }
-                        }
-                      }
-                    },
-                    "events": {
-                      "component": {
-                        "onRowClick": {
-                          "config": {
-                            "script": "\tdata = event.value or {}\n\t# Strip the edited marker back off -- the row carries it for display.\n\tname = (data.get('name', '') or '').split(' ')[0].strip()\n\tif name:\n\t\tself.view.custom.file = name\n\t\tself.view.custom.status = ''"
-                          },
-                          "scope": "G",
-                          "type": "script"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "ia.container.flex",
-            "meta": {
-              "name": "editorpane"
+              "name": "colours_wrap"
             },
             "position": {
               "grow": 1,
@@ -1230,105 +1202,56 @@
               "basis": "0px"
             },
             "props": {
-              "direction": "column",
-              "style": {
-                "gap": "0px",
-                "minHeight": "0px",
-                "borderRadius": "4px",
-                "backgroundColor": "var(--container)",
-                "borderStyle": "solid",
-                "borderWidth": "1px",
-                "borderColor": "var(--border)",
-                "overflow": "hidden"
+              "direction": "row",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.kind} != '' && !{view.custom.raw}"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.kind} != '' && !{view.custom.raw}, 'flex', 'none')"
+                  }
+                }
               }
             },
             "children": [
               {
                 "type": "ia.container.flex",
                 "meta": {
-                  "name": "head"
-                },
-                "position": {
-                  "grow": 0,
-                  "shrink": 0,
-                  "basis": "auto"
-                },
-                "props": {
-                  "direction": "column",
-                  "style": {
-                    "gap": "3px",
-                    "padding": "9px 11px 8px",
-                    "borderBottomStyle": "solid",
-                    "borderBottomWidth": "1px",
-                    "borderBottomColor": "var(--border)"
-                  }
-                },
-                "children": [
-                  {
-                    "type": "ia.display.label",
-                    "meta": {
-                      "name": "h"
-                    },
-                    "position": {
-                      "grow": 0,
-                      "shrink": 0,
-                      "basis": "auto"
-                    },
-                    "props": {
-                      "text": "The file",
-                      "style": {
-                        "fontSize": "11px",
-                        "fontWeight": 600,
-                        "letterSpacing": "0.06em",
-                        "textTransform": "uppercase",
-                        "color": "var(--label)"
-                      }
-                    }
-                  },
-                  {
-                    "type": "ia.display.label",
-                    "meta": {
-                      "name": "hint"
-                    },
-                    "position": {
-                      "grow": 0,
-                      "shrink": 0,
-                      "basis": "auto"
-                    },
-                    "props": {
-                      "text": "Saving writes it and runs a config scan, which is what makes the gateway use it. Undo my changes puts back what the installer ships for this one file.",
-                      "style": {
-                        "fontSize": "11.5px",
-                        "lineHeight": "1.45",
-                        "color": "var(--label--disabled)"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "type": "ia.container.flex",
-                "meta": {
-                  "name": "body"
+                  "name": "colours"
                 },
                 "position": {
                   "grow": 1,
                   "shrink": 1,
-                  "basis": "0px"
+                  "basis": "auto"
                 },
                 "props": {
                   "direction": "column",
                   "style": {
                     "gap": "0px",
                     "minHeight": "0px",
-                    "padding": "0px"
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "overflow": "hidden"
                   }
                 },
                 "children": [
                   {
                     "type": "ia.container.flex",
                     "meta": {
-                      "name": "fileactions"
+                      "name": "head"
                     },
                     "position": {
                       "grow": 0,
@@ -1336,13 +1259,10 @@
                       "basis": "auto"
                     },
                     "props": {
-                      "direction": "row",
-                      "alignItems": "center",
-                      "wrap": "wrap",
+                      "direction": "column",
                       "style": {
-                        "gap": "8px",
-                        "rowGap": "8px",
-                        "padding": "8px 10px",
+                        "gap": "3px",
+                        "padding": "9px 11px 8px",
                         "borderBottomStyle": "solid",
                         "borderBottomWidth": "1px",
                         "borderBottomColor": "var(--border)"
@@ -1352,48 +1272,28 @@
                       {
                         "type": "ia.display.label",
                         "meta": {
-                          "name": "openfile"
+                          "name": "h"
                         },
                         "position": {
                           "grow": 0,
-                          "shrink": 1,
+                          "shrink": 0,
                           "basis": "auto"
                         },
                         "props": {
+                          "text": "This theme's values",
                           "style": {
-                            "fontSize": "13px",
+                            "fontSize": "11px",
                             "fontWeight": 600,
-                            "color": "var(--label)",
-                            "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
-                          }
-                        },
-                        "propConfig": {
-                          "props.text": {
-                            "binding": {
-                              "type": "expr",
-                              "config": {
-                                "expression": "if({view.custom.file} = '', '-- pick a file on the left --', {view.custom.file})"
-                              }
-                            }
+                            "letterSpacing": "0.06em",
+                            "textTransform": "uppercase",
+                            "color": "var(--label)"
                           }
                         }
                       },
                       {
-                        "type": "ia.container.flex",
+                        "type": "ia.display.label",
                         "meta": {
-                          "name": "gap"
-                        },
-                        "position": {
-                          "grow": 1,
-                          "shrink": 1,
-                          "basis": "0px"
-                        },
-                        "props": {}
-                      },
-                      {
-                        "type": "ia.input.button",
-                        "meta": {
-                          "name": "btn_save"
+                          "name": "hint"
                         },
                         "position": {
                           "grow": 0,
@@ -1401,98 +1301,20 @@
                           "basis": "auto"
                         },
                         "props": {
-                          "text": "Save",
+                          "text": "Mostly colours, and a few sizes, grouped by what they affect. Click one, change it, Save -- each save writes the file and runs the scan that makes the gateway use it.",
                           "style": {
-                            "height": "32px",
-                            "whiteSpace": "nowrap"
-                          }
-                        },
-                        "events": {
-                          "component": {
-                            "onActionPerformed": {
-                              "config": {
-                                "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\tfilename = self.view.custom.file\n\tif not filename:\n\t\tself.view.custom.status = 'Pick a file first'\n\t\treturn\n\ttry:\n\t\tresult = themepack.write_file(theme, filename,\n\t\t                              self.view.custom.text)\n\t\tself.view.custom.status = ('Saved %s (%d bytes) and scanned'\n\t\t                           % (filename, result['bytes']))\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
-                              },
-                              "scope": "G",
-                              "type": "script"
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "type": "ia.input.button",
-                        "meta": {
-                          "name": "btn_revert"
-                        },
-                        "position": {
-                          "grow": 0,
-                          "shrink": 0,
-                          "basis": "auto"
-                        },
-                        "props": {
-                          "text": "Undo my changes",
-                          "style": {
-                            "height": "32px",
-                            "whiteSpace": "nowrap",
-                            "backgroundColor": "var(--containerBackground)",
-                            "color": "var(--label)",
-                            "borderStyle": "solid",
-                            "borderWidth": "1px",
-                            "borderColor": "var(--border)"
-                          }
-                        },
-                        "events": {
-                          "component": {
-                            "onActionPerformed": {
-                              "config": {
-                                "script": "\timport themepack\n\tfilename = self.view.custom.file\n\tif not filename:\n\t\tself.view.custom.status = 'Pick a file first'\n\t\treturn\n\ttry:\n\t\tthemepack.revert_file(self.view.custom.theme, filename)\n\t\tself.view.custom.status = ('Put back what the installer ships for %s'\n\t\t                           % filename)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
-                              },
-                              "scope": "G",
-                              "type": "script"
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "type": "ia.input.button",
-                        "meta": {
-                          "name": "btn_scan"
-                        },
-                        "position": {
-                          "grow": 0,
-                          "shrink": 0,
-                          "basis": "auto"
-                        },
-                        "props": {
-                          "text": "Re-scan",
-                          "style": {
-                            "height": "32px",
-                            "whiteSpace": "nowrap",
-                            "backgroundColor": "var(--containerBackground)",
-                            "color": "var(--label)",
-                            "borderStyle": "solid",
-                            "borderWidth": "1px",
-                            "borderColor": "var(--border)"
-                          }
-                        },
-                        "events": {
-                          "component": {
-                            "onActionPerformed": {
-                              "config": {
-                                "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
-                              },
-                              "scope": "G",
-                              "type": "script"
-                            }
+                            "fontSize": "11.5px",
+                            "lineHeight": "1.45",
+                            "color": "var(--label--disabled)"
                           }
                         }
                       }
                     ]
                   },
                   {
-                    "type": "ia.input.text-area",
+                    "type": "ia.container.flex",
                     "meta": {
-                      "name": "raw"
+                      "name": "body"
                     },
                     "position": {
                       "grow": 1,
@@ -1500,31 +1322,280 @@
                       "basis": "0px"
                     },
                     "props": {
+                      "direction": "column",
                       "style": {
-                        "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace",
-                        "fontSize": "12.5px",
-                        "lineHeight": "1.55",
-                        "whiteSpace": "pre",
-                        "tabSize": "2",
-                        "border": "none",
-                        "borderRadius": "0px",
-                        "padding": "10px 12px",
-                        "backgroundColor": "var(--container)",
-                        "minHeight": "0",
-                        "overflow": "auto"
+                        "gap": "0px",
+                        "minHeight": "0px",
+                        "padding": "0px"
                       }
                     },
-                    "propConfig": {
-                      "props.text": {
-                        "binding": {
-                          "type": "property",
-                          "config": {
-                            "path": "view.custom.text",
-                            "bidirectional": true
+                    "children": [
+                      {
+                        "type": "ia.display.table",
+                        "meta": {
+                          "name": "tokens"
+                        },
+                        "position": {
+                          "grow": 1,
+                          "shrink": 1,
+                          "basis": "0px"
+                        },
+                        "props": {
+                          "pager": {
+                            "top": false,
+                            "bottom": false
+                          },
+                          "columns": [
+                            {
+                              "field": "group",
+                              "header": {
+                                "title": "Affects"
+                              },
+                              "width": 150,
+                              "strictWidth": true
+                            },
+                            {
+                              "field": "name",
+                              "header": {
+                                "title": "Token"
+                              }
+                            },
+                            {
+                              "field": "swatch",
+                              "header": {
+                                "title": "Colour"
+                              },
+                              "width": 58,
+                              "strictWidth": true
+                            },
+                            {
+                              "field": "value",
+                              "header": {
+                                "title": "Value"
+                              },
+                              "width": 130,
+                              "strictWidth": true
+                            }
+                          ],
+                          "style": {}
+                        },
+                        "propConfig": {
+                          "props.data": {
+                            "binding": {
+                              "type": "property",
+                              "config": {
+                                "path": "view.custom.tokens"
+                              }
+                            }
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onRowClick": {
+                              "config": {
+                                "script": "\tdata = event.value or {}\n\tself.view.custom.sel_name = data.get('name', '')\n\tself.view.custom.sel_value = data.get('value', '')\n\tself.view.custom.status = ''"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
                           }
                         }
+                      },
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "edit_wrap"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "style": {}
+                        },
+                        "propConfig": {
+                          "meta.visible": {
+                            "binding": {
+                              "type": "expr",
+                              "config": {
+                                "expression": "{view.custom.kind} = 'user'"
+                              }
+                            }
+                          },
+                          "props.style.display": {
+                            "binding": {
+                              "type": "expr",
+                              "config": {
+                                "expression": "if({view.custom.kind} = 'user', 'flex', 'none')"
+                              }
+                            }
+                          }
+                        },
+                        "children": [
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "edit"
+                            },
+                            "position": {
+                              "grow": 1,
+                              "shrink": 1,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "direction": "row",
+                              "alignItems": "center",
+                              "wrap": "wrap",
+                              "style": {
+                                "gap": "9px",
+                                "rowGap": "8px",
+                                "padding": "9px 10px",
+                                "borderTopStyle": "solid",
+                                "borderTopWidth": "1px",
+                                "borderTopColor": "var(--border)"
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "ia.display.label",
+                                "meta": {
+                                  "name": "sel"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 1,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "style": {
+                                    "fontSize": "12.5px",
+                                    "fontWeight": 600,
+                                    "color": "var(--label)",
+                                    "minWidth": "180px",
+                                    "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
+                                  }
+                                },
+                                "propConfig": {
+                                  "props.text": {
+                                    "binding": {
+                                      "type": "expr",
+                                      "config": {
+                                        "expression": "if({view.custom.sel_name} = '', '-- pick a value above --', {view.custom.sel_name})"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.input.text-field",
+                                "meta": {
+                                  "name": "val"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "170px"
+                                },
+                                "props": {
+                                  "deferUpdates": false,
+                                  "placeholder": "#3b4252",
+                                  "style": {
+                                    "height": "32px",
+                                    "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
+                                  }
+                                },
+                                "propConfig": {
+                                  "props.text": {
+                                    "binding": {
+                                      "type": "property",
+                                      "config": {
+                                        "path": "view.custom.sel_value",
+                                        "bidirectional": true
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.display.label",
+                                "meta": {
+                                  "name": "chip"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "text": "",
+                                  "style": {
+                                    "width": "32px",
+                                    "height": "32px",
+                                    "borderRadius": "3px",
+                                    "borderStyle": "solid",
+                                    "borderWidth": "1px",
+                                    "borderColor": "var(--border)"
+                                  }
+                                },
+                                "propConfig": {
+                                  "props.style.backgroundColor": {
+                                    "binding": {
+                                      "type": "property",
+                                      "config": {
+                                        "path": "view.custom.sel_value"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "ia.container.flex",
+                                "meta": {
+                                  "name": "gap"
+                                },
+                                "position": {
+                                  "grow": 1,
+                                  "shrink": 1,
+                                  "basis": "0px"
+                                },
+                                "props": {}
+                              },
+                              {
+                                "type": "ia.input.button",
+                                "meta": {
+                                  "name": "btn_save_token"
+                                },
+                                "position": {
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
+                                },
+                                "props": {
+                                  "text": "Save",
+                                  "style": {
+                                    "height": "32px",
+                                    "whiteSpace": "nowrap"
+                                  }
+                                },
+                                "events": {
+                                  "component": {
+                                    "onActionPerformed": {
+                                      "config": {
+                                        "script": "\timport themepack\n\tname = self.view.custom.sel_name\n\tif not name:\n\t\tself.view.custom.status = 'Pick a value in the list first'\n\t\treturn\n\tvalue = self.view.custom.sel_value\n\ttry:\n\t\t# set_any_token finds the file: --st-* live in globals.css and\n\t\t# Ignition's own names in variables.css, and the page never showed\n\t\t# the user which is which.\n\t\tthemepack.set_any_token(self.view.custom.theme, name, value)\n\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n\t\t# equally true of a save that wrote back what was already there.\n\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                      },
+                                      "scope": "G",
+                                      "type": "script"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
                       }
-                    }
+                    ]
                   }
                 ]
               }
@@ -1533,52 +1604,64 @@
           {
             "type": "ia.container.flex",
             "meta": {
-              "name": "contract"
+              "name": "rawpane_wrap"
             },
             "position": {
-              "grow": 0,
+              "grow": 1,
               "shrink": 1,
-              "basis": "320px"
+              "basis": "0px"
             },
             "props": {
-              "direction": "column",
-              "style": {
-                "gap": "0px",
-                "minHeight": "0px",
-                "borderRadius": "4px",
-                "backgroundColor": "var(--container)",
-                "borderStyle": "solid",
-                "borderWidth": "1px",
-                "borderColor": "var(--border)",
-                "overflow": "hidden"
+              "direction": "row",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.kind} = 'user' && {view.custom.raw}"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.kind} = 'user' && {view.custom.raw}, 'flex', 'none')"
+                  }
+                }
               }
             },
             "children": [
               {
                 "type": "ia.container.flex",
                 "meta": {
-                  "name": "head"
+                  "name": "rawpane"
                 },
                 "position": {
-                  "grow": 0,
-                  "shrink": 0,
+                  "grow": 1,
+                  "shrink": 1,
                   "basis": "auto"
                 },
                 "props": {
                   "direction": "column",
                   "style": {
-                    "gap": "3px",
-                    "padding": "9px 11px 8px",
-                    "borderBottomStyle": "solid",
-                    "borderBottomWidth": "1px",
-                    "borderBottomColor": "var(--border)"
+                    "gap": "0px",
+                    "minHeight": "0px",
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "overflow": "hidden"
                   }
                 },
                 "children": [
                   {
-                    "type": "ia.display.label",
+                    "type": "ia.container.flex",
                     "meta": {
-                      "name": "h"
+                      "name": "head"
                     },
                     "position": {
                       "grow": 0,
@@ -1586,20 +1669,310 @@
                       "basis": "auto"
                     },
                     "props": {
-                      "text": "What this theme publishes",
+                      "direction": "column",
                       "style": {
-                        "fontSize": "11px",
-                        "fontWeight": 600,
-                        "letterSpacing": "0.06em",
-                        "textTransform": "uppercase",
-                        "color": "var(--label)"
+                        "gap": "3px",
+                        "padding": "9px 11px 8px",
+                        "borderBottomStyle": "solid",
+                        "borderBottomWidth": "1px",
+                        "borderBottomColor": "var(--border)"
                       }
-                    }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "h"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Raw files",
+                          "style": {
+                            "fontSize": "11px",
+                            "fontWeight": 600,
+                            "letterSpacing": "0.06em",
+                            "textTransform": "uppercase",
+                            "color": "var(--label)"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "hint"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "The theme's files as they are on disk. For structural changes -- a rule of your own, an extra import -- rather than colours.",
+                          "style": {
+                            "fontSize": "11.5px",
+                            "lineHeight": "1.45",
+                            "color": "var(--label--disabled)"
+                          }
+                        }
+                      }
+                    ]
                   },
                   {
-                    "type": "ia.display.label",
+                    "type": "ia.container.flex",
                     "meta": {
-                      "name": "hint"
+                      "name": "body"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 1,
+                      "basis": "0px"
+                    },
+                    "props": {
+                      "direction": "column",
+                      "style": {
+                        "gap": "0px",
+                        "minHeight": "0px",
+                        "padding": "0px"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "fileactions"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "alignItems": "center",
+                          "wrap": "wrap",
+                          "style": {
+                            "gap": "8px",
+                            "rowGap": "8px",
+                            "padding": "8px 10px",
+                            "borderBottomStyle": "solid",
+                            "borderBottomWidth": "1px",
+                            "borderBottomColor": "var(--border)"
+                          }
+                        },
+                        "children": [
+                          {
+                            "type": "ia.input.dropdown",
+                            "meta": {
+                              "name": "file"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "190px"
+                            },
+                            "props": {
+                              "allowClearing": false,
+                              "showSearch": false,
+                              "style": {
+                                "height": "32px"
+                              }
+                            },
+                            "propConfig": {
+                              "props.options": {
+                                "binding": {
+                                  "type": "property",
+                                  "config": {
+                                    "path": "view.custom.key"
+                                  },
+                                  "transforms": [
+                                    {
+                                      "type": "script",
+                                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.list_files(theme)\n\texcept Exception:\n\t\treturn []\n\treturn [{'value': r['name'], 'label': r['name']}\n\t        for r in rows if r['editable']]"
+                                    }
+                                  ]
+                                }
+                              },
+                              "props.value": {
+                                "binding": {
+                                  "type": "property",
+                                  "config": {
+                                    "path": "view.custom.file",
+                                    "bidirectional": true
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "ia.container.flex",
+                            "meta": {
+                              "name": "gap"
+                            },
+                            "position": {
+                              "grow": 1,
+                              "shrink": 1,
+                              "basis": "0px"
+                            },
+                            "props": {}
+                          },
+                          {
+                            "type": "ia.input.button",
+                            "meta": {
+                              "name": "btn_save"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "Save file",
+                              "style": {
+                                "height": "32px",
+                                "whiteSpace": "nowrap"
+                              }
+                            },
+                            "events": {
+                              "component": {
+                                "onActionPerformed": {
+                                  "config": {
+                                    "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\tfilename = self.view.custom.file\n\tif not filename:\n\t\tself.view.custom.status = 'Pick a file first'\n\t\treturn\n\ttry:\n\t\tresult = themepack.write_file(theme, filename,\n\t\t                              self.view.custom.text)\n\t\tself.view.custom.status = ('Saved %s (%d bytes) and scanned'\n\t\t                           % (filename, result['bytes']))\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                  },
+                                  "scope": "G",
+                                  "type": "script"
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "ia.input.button",
+                            "meta": {
+                              "name": "btn_scan"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "Re-scan",
+                              "style": {
+                                "height": "32px",
+                                "whiteSpace": "nowrap",
+                                "backgroundColor": "var(--containerBackground)",
+                                "color": "var(--label)",
+                                "borderStyle": "solid",
+                                "borderWidth": "1px",
+                                "borderColor": "var(--border)"
+                              }
+                            },
+                            "events": {
+                              "component": {
+                                "onActionPerformed": {
+                                  "config": {
+                                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\t# Bump the key too, or the scan runs and every binding on this page\n\t\t# keeps showing what it read before it.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                  },
+                                  "scope": "G",
+                                  "type": "script"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ia.input.text-area",
+                        "meta": {
+                          "name": "raw"
+                        },
+                        "position": {
+                          "grow": 1,
+                          "shrink": 1,
+                          "basis": "0px"
+                        },
+                        "props": {
+                          "style": {
+                            "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace",
+                            "fontSize": "12.5px",
+                            "lineHeight": "1.55",
+                            "whiteSpace": "pre",
+                            "tabSize": "2",
+                            "border": "none",
+                            "borderRadius": "0px",
+                            "padding": "10px 12px",
+                            "backgroundColor": "var(--container)",
+                            "minHeight": "0",
+                            "overflow": "auto"
+                          }
+                        },
+                        "propConfig": {
+                          "props.text": {
+                            "binding": {
+                              "type": "property",
+                              "config": {
+                                "path": "view.custom.text",
+                                "bidirectional": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "side"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 1,
+              "basis": "352px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "10px",
+                "minHeight": "0px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "preview"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 1,
+                  "basis": "228px"
+                },
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "gap": "0px",
+                    "minHeight": "0px",
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "overflow": "hidden"
+                  }
+                },
+                "children": [
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "head"
                     },
                     "position": {
                       "grow": 0,
@@ -1607,20 +1980,178 @@
                       "basis": "auto"
                     },
                     "props": {
-                      "text": "Read-only. These are the tokens and style classes a project can build against without inheriting anything.",
+                      "direction": "column",
                       "style": {
-                        "fontSize": "11.5px",
-                        "lineHeight": "1.45",
-                        "color": "var(--label--disabled)"
+                        "gap": "3px",
+                        "padding": "9px 11px 8px",
+                        "borderBottomStyle": "solid",
+                        "borderBottomWidth": "1px",
+                        "borderBottomColor": "var(--border)"
                       }
-                    }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "h"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Preview",
+                          "style": {
+                            "fontSize": "11px",
+                            "fontWeight": 600,
+                            "letterSpacing": "0.06em",
+                            "textTransform": "uppercase",
+                            "color": "var(--label)"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "hint"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "The same imaginary plant page, painted from the stylesheet this gateway is actually serving. If it looks behind after a save, Refresh -- the scan and the served copy can lag a moment.",
+                          "style": {
+                            "fontSize": "11.5px",
+                            "lineHeight": "1.45",
+                            "color": "var(--label--disabled)"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "body"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 1,
+                      "basis": "0px"
+                    },
+                    "props": {
+                      "direction": "column",
+                      "style": {
+                        "gap": "0px",
+                        "minHeight": "0px",
+                        "padding": "0px"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "shot"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "",
+                          "style": {
+                            "height": "96px",
+                            "width": "320px",
+                            "margin": "10px",
+                            "backgroundRepeat": "no-repeat",
+                            "backgroundPosition": "center",
+                            "backgroundSize": "contain",
+                            "borderRadius": "3px"
+                          }
+                        },
+                        "propConfig": {
+                          "props.style.backgroundImage": {
+                            "binding": {
+                              "type": "property",
+                              "config": {
+                                "path": "view.custom.key"
+                              },
+                              "transforms": [
+                                {
+                                  "type": "script",
+                                  "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\ttry:\n\t\treturn 'url(%s)' % themepack.live_preview_uri(theme, 320, 96)\n\texcept Exception:\n\t\treturn ''"
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.container.flex",
+                        "meta": {
+                          "name": "prefresh"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "direction": "row",
+                          "style": {
+                            "padding": "0 10px 10px",
+                            "gap": "8px"
+                          }
+                        },
+                        "children": [
+                          {
+                            "type": "ia.input.button",
+                            "meta": {
+                              "name": "btn_refresh"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "Refresh",
+                              "style": {
+                                "height": "32px",
+                                "whiteSpace": "nowrap",
+                                "backgroundColor": "var(--containerBackground)",
+                                "color": "var(--label)",
+                                "borderStyle": "solid",
+                                "borderWidth": "1px",
+                                "borderColor": "var(--border)"
+                              }
+                            },
+                            "events": {
+                              "component": {
+                                "onActionPerformed": {
+                                  "config": {
+                                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\t# Bump the key too, or the scan runs and every binding on this page\n\t\t# keeps showing what it read before it.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                  },
+                                  "scope": "G",
+                                  "type": "script"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               },
               {
                 "type": "ia.container.flex",
                 "meta": {
-                  "name": "body"
+                  "name": "contract"
                 },
                 "position": {
                   "grow": 1,
@@ -1632,66 +2163,19 @@
                   "style": {
                     "gap": "0px",
                     "minHeight": "0px",
-                    "padding": "0px"
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "overflow": "hidden"
                   }
                 },
                 "children": [
                   {
-                    "type": "ia.display.table",
+                    "type": "ia.container.flex",
                     "meta": {
-                      "name": "tokens"
-                    },
-                    "position": {
-                      "grow": 1,
-                      "shrink": 1,
-                      "basis": "0px"
-                    },
-                    "props": {
-                      "pager": {
-                        "top": false,
-                        "bottom": false
-                      },
-                      "columns": [
-                        {
-                          "field": "token",
-                          "header": {
-                            "title": "Token"
-                          }
-                        },
-                        {
-                          "field": "swatch",
-                          "header": {
-                            "title": "Colour"
-                          },
-                          "width": 58,
-                          "strictWidth": true
-                        },
-                        {
-                          "field": "value",
-                          "header": {
-                            "title": "Value"
-                          },
-                          "width": 96,
-                          "strictWidth": true
-                        }
-                      ],
-                      "style": {}
-                    },
-                    "propConfig": {
-                      "props.data": {
-                        "binding": {
-                          "type": "property",
-                          "config": {
-                            "path": "view.custom.tokens"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  {
-                    "type": "ia.display.label",
-                    "meta": {
-                      "name": "cls_h"
+                      "name": "head"
                     },
                     "position": {
                       "grow": 0,
@@ -1699,24 +2183,62 @@
                       "basis": "auto"
                     },
                     "props": {
-                      "text": "Style classes",
+                      "direction": "column",
                       "style": {
-                        "fontSize": "11px",
-                        "fontWeight": 600,
-                        "letterSpacing": "0.06em",
-                        "textTransform": "uppercase",
-                        "color": "var(--label--disabled)",
-                        "padding": "9px 10px 5px",
-                        "borderTopStyle": "solid",
-                        "borderTopWidth": "1px",
-                        "borderTopColor": "var(--border)"
+                        "gap": "3px",
+                        "padding": "9px 11px 8px",
+                        "borderBottomStyle": "solid",
+                        "borderBottomWidth": "1px",
+                        "borderBottomColor": "var(--border)"
                       }
-                    }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "h"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "What this theme publishes",
+                          "style": {
+                            "fontSize": "11px",
+                            "fontWeight": 600,
+                            "letterSpacing": "0.06em",
+                            "textTransform": "uppercase",
+                            "color": "var(--label)"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "hint"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Read-only. The tokens and style classes a project can build against.",
+                          "style": {
+                            "fontSize": "11.5px",
+                            "lineHeight": "1.45",
+                            "color": "var(--label--disabled)"
+                          }
+                        }
+                      }
+                    ]
                   },
                   {
-                    "type": "ia.display.table",
+                    "type": "ia.container.flex",
                     "meta": {
-                      "name": "classes"
+                      "name": "body"
                     },
                     "position": {
                       "grow": 1,
@@ -1724,32 +2246,238 @@
                       "basis": "0px"
                     },
                     "props": {
-                      "pager": {
-                        "top": false,
-                        "bottom": false
-                      },
-                      "columns": [
-                        {
-                          "field": "klass",
-                          "header": {
-                            "title": "Class"
+                      "direction": "column",
+                      "style": {
+                        "gap": "0px",
+                        "minHeight": "0px",
+                        "padding": "0px"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.display.table",
+                        "meta": {
+                          "name": "publishes"
+                        },
+                        "position": {
+                          "grow": 1,
+                          "shrink": 1,
+                          "basis": "0px"
+                        },
+                        "props": {
+                          "pager": {
+                            "top": false,
+                            "bottom": false
+                          },
+                          "columns": [
+                            {
+                              "field": "token",
+                              "header": {
+                                "title": "Token"
+                              }
+                            },
+                            {
+                              "field": "swatch",
+                              "header": {
+                                "title": "Colour"
+                              },
+                              "width": 58,
+                              "strictWidth": true
+                            },
+                            {
+                              "field": "value",
+                              "header": {
+                                "title": "Value"
+                              },
+                              "width": 96,
+                              "strictWidth": true
+                            }
+                          ],
+                          "style": {}
+                        },
+                        "propConfig": {
+                          "props.data": {
+                            "binding": {
+                              "type": "property",
+                              "config": {
+                                "path": "view.custom.publishes"
+                              }
+                            }
                           }
                         }
-                      ],
-                      "style": {}
-                    },
-                    "propConfig": {
-                      "props.data": {
-                        "binding": {
-                          "type": "property",
-                          "config": {
-                            "path": "view.custom.classes"
+                      },
+                      {
+                        "type": "ia.display.label",
+                        "meta": {
+                          "name": "cls_h"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Style classes",
+                          "style": {
+                            "fontSize": "11px",
+                            "fontWeight": 600,
+                            "letterSpacing": "0.06em",
+                            "textTransform": "uppercase",
+                            "color": "var(--label--disabled)",
+                            "padding": "9px 10px 5px",
+                            "borderTopStyle": "solid",
+                            "borderTopWidth": "1px",
+                            "borderTopColor": "var(--border)"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.display.table",
+                        "meta": {
+                          "name": "classes"
+                        },
+                        "position": {
+                          "grow": 1,
+                          "shrink": 1,
+                          "basis": "0px"
+                        },
+                        "props": {
+                          "pager": {
+                            "top": false,
+                            "bottom": false
+                          },
+                          "columns": [
+                            {
+                              "field": "klass",
+                              "header": {
+                                "title": "Class"
+                              }
+                            }
+                          ],
+                          "style": {}
+                        },
+                        "propConfig": {
+                          "props.data": {
+                            "binding": {
+                              "type": "property",
+                              "config": {
+                                "path": "view.custom.classes"
+                              }
+                            }
                           }
                         }
                       }
-                    }
+                    ]
                   }
                 ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "advanced_wrap"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "style": {}
+        },
+        "propConfig": {
+          "meta.visible": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "{view.custom.kind} = 'user'"
+              }
+            }
+          },
+          "props.style.display": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "if({view.custom.kind} = 'user', 'flex', 'none')"
+              }
+            }
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "advanced"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "row",
+              "alignItems": "center",
+              "style": {
+                "gap": "10px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.input.button",
+                "meta": {
+                  "name": "btn_raw"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Advanced: edit the files directly",
+                  "style": {
+                    "height": "32px",
+                    "whiteSpace": "nowrap",
+                    "backgroundColor": "var(--containerBackground)",
+                    "color": "var(--label)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)"
+                  }
+                },
+                "events": {
+                  "component": {
+                    "onActionPerformed": {
+                      "config": {
+                        "script": "\tself.view.custom.raw = not self.view.custom.raw\n\tself.view.custom.status = ''"
+                      },
+                      "scope": "G",
+                      "type": "script"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "rawhint"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Colours are easier to change in the list above; this is for structural edits.",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)",
+                    "whiteSpace": "nowrap"
+                  }
+                }
               }
             ]
           }

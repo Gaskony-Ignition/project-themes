@@ -770,7 +770,9 @@ def _nav(active):
     # works" went for being redundant once that happened, and "For builders"
     # moved into the Editor, where the token and class list is something you
     # read WHILE editing rather than a page of its own.
-    pages = [("Installer", "/"), ("Editor", "/editor")]
+    # The route stays /editor; the LABEL changed when the page stopped
+    # being a file editor (Nigel, 07/09/2026).
+    pages = [("Installer", "/"), ("Customise", "/editor")]
     tabs = []
     for title, path in pages:
         current = title == active
@@ -1601,6 +1603,20 @@ EDITOR_FILE_ROWS = (
     "\t\tout.append({'name': r['name'] + mark})\n"
     "\treturn out"
 )
+# The raw pane's file picker. Only the editable text files -- resource.json is
+# the manifest and is rewritten on every save.
+EDITOR_FILE_OPTIONS = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn []\n"
+    "\ttry:\n"
+    "\t\trows = themepack.list_files(theme)\n"
+    "\texcept Exception:\n"
+    "\t\treturn []\n"
+    "\treturn [{'value': r['name'], 'label': r['name']}\n"
+    "\t        for r in rows if r['editable']]"
+)
 EDITOR_TEXT = (
     "\timport themepack\n"
     "\ttheme, filename = (value + '|').split('|')[:2]\n"
@@ -1673,6 +1689,9 @@ EDITOR_REFRESH = (
     "\timport themepack\n"
     "\ttry:\n"
     "\t\tthemepack.refresh()\n"
+    "\t\t# Bump the key too, or the scan runs and every binding on this page\n"
+    "\t\t# keeps showing what it read before it.\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n"
     "\texcept Exception, e:\n"
     "\t\tself.view.custom.status = str(e)"
@@ -1696,6 +1715,92 @@ EDITOR_KIND = (
 )
 # The badge answers "am I allowed to break this?", which is the first thing
 # anyone wants to know on this page.
+# What the page may offer for the selected theme. The ten are generated and
+# Install overwrites them, so they are shown read-only with a copy offered
+# instead -- see why_not_editable().
+EDITOR_LOCKED = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn 'There is no theme selected.'\n"
+    "\treturn themepack.why_not_editable(theme)"
+)
+EDITOR_PREVIEW = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn ''\n"
+    "\ttry:\n"
+    "\t\treturn 'url(%s)' % themepack.live_preview_uri(theme, 320, 96)\n"
+    "\texcept Exception:\n"
+    "\t\treturn ''"
+)
+# The colours, grouped by what they affect, from the file this theme actually
+# declares -- you can only change what is written here.
+EDITOR_TOKEN_ROWS = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn []\n"
+    "\ttry:\n"
+    "\t\trows = themepack.all_tokens(theme)\n"
+    "\texcept Exception:\n"
+    "\t\treturn []\n"
+    "\tout = []\n"
+    "\tlast = None\n"
+    "\tfor r in rows:\n"
+    "\t\tgroup = r['group']\n"
+    "\t\tout.append({'group': group if group != last else '',\n"
+    "\t\t            'name': r['name'],\n"
+    "\t\t            'swatch': r['swatch'],\n"
+    "\t\t            'value': r['value']})\n"
+    "\t\tlast = group\n"
+    "\treturn out"
+)
+EDITOR_PICK_TOKEN = (
+    "\tdata = event.value or {}\n"
+    "\tself.view.custom.sel_name = data.get('name', '')\n"
+    "\tself.view.custom.sel_value = data.get('value', '')\n"
+    "\tself.view.custom.status = ''"
+)
+EDITOR_SAVE_TOKEN = (
+    "\timport themepack\n"
+    "\tname = self.view.custom.sel_name\n"
+    "\tif not name:\n"
+    "\t\tself.view.custom.status = 'Pick a value in the list first'\n"
+    "\t\treturn\n"
+    "\tvalue = self.view.custom.sel_value\n"
+    "\ttry:\n"
+    "\t\t# set_any_token finds the file: --st-* live in globals.css and\n"
+    "\t\t# Ignition's own names in variables.css, and the page never showed\n"
+    "\t\t# the user which is which.\n"
+    "\t\tthemepack.set_any_token(self.view.custom.theme, name, value)\n"
+    "\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n"
+    "\t\t# equally true of a save that wrote back what was already there.\n"
+    "\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_COPY_THIS = (
+    "\t# The funnel out of a read-only theme: pre-fill a sensible name so the\n"
+    "\t# next click is Copy rather than a naming decision.\n"
+    "\tself.view.custom.making = 'copy'\n"
+    "\tself.view.custom.new_name = 'my-' + (self.view.custom.theme or 'theme')\n"
+    "\tself.view.custom.status = ''"
+)
+EDITOR_TOGGLE_RAW = (
+    "\tself.view.custom.raw = not self.view.custom.raw\n"
+    "\tself.view.custom.status = ''"
+)
+IS_EDITABLE = "{view.custom.kind} = 'user'"
+IS_LOCKED = "{view.custom.kind} != 'user'"
+SHOW_RAW = "{view.custom.kind} = 'user' && {view.custom.raw}"
+# The colour list is shown for ANY theme: reading what a theme sets is what
+# you do before deciding to copy it. Only the strip that CHANGES one is gated.
+SHOW_TOKENS = "{view.custom.kind} != '' && !{view.custom.raw}"
+
+
 EDITOR_KIND_LABEL = (
     "\timport themepack\n"
     "\ttheme = (value + '|').split('|')[0]\n"
@@ -2057,13 +2162,202 @@ def _editor_pane():
         [actions, _raw_editor()], "0px")
 
 
+def _locked_banner():
+    """Shown instead of an editor for a theme that is not yours.
+
+    This is the whole repositioning in one component. The generated files say
+    DO NOT EDIT BY HAND and mean it -- Install overwrites them -- so rather
+    than inviting an edit that disappears, the page says why and offers the
+    copy that makes it stick.
+    """
+    return {
+        "type": "ia.container.flex", "meta": {"name": "locked"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
+                  "style": {"gap": "12px", "rowGap": "8px",
+                            "padding": "12px 14px", "borderRadius": "4px",
+                            "backgroundColor": "var(--containerNested)",
+                            "borderStyle": "solid", "borderWidth": "1px",
+                            "borderColor": "var(--border)"}},
+        "children": [
+            {"type": "ia.display.label", "meta": {"name": "why"},
+             "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+             "props": {"style": {"fontSize": "12.5px", "lineHeight": "1.5",
+                                 "color": "var(--label)"}},
+             "propConfig": {"props.text": {"binding": _prop(
+                 "view.custom.key", EDITOR_LOCKED)}}},
+            _button("btn_copyme", "Make my own copy", EDITOR_COPY_THIS,
+                    primary=True),
+        ],
+    }
+
+
+def _preview_pane():
+    """The mini screen, painted from the LIVE stylesheet.
+
+    Tuning colours without seeing the result is guessing, and this is the one
+    thing the Installer's build-time thumbnails cannot do -- they show what the
+    repo ships, not what this gateway is serving after your last save.
+    """
+    return _pane(
+        "preview", "Preview",
+        "The same imaginary plant page, painted from the stylesheet this "
+        "gateway is actually serving. If it looks behind after a save, "
+        "Refresh -- the scan and the served copy can lag a moment.",
+        [{"type": "ia.display.label", "meta": {"name": "shot"},
+          "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+          "props": {"text": "",
+                    "style": {"height": "96px", "width": "320px",
+                              "margin": "10px",
+                              "backgroundRepeat": "no-repeat",
+                              "backgroundPosition": "center",
+                              "backgroundSize": "contain",
+                              "borderRadius": "3px"}},
+          "propConfig": {"props.style.backgroundImage": {"binding": _prop(
+              "view.custom.key", EDITOR_PREVIEW)}}},
+         {"type": "ia.container.flex", "meta": {"name": "prefresh"},
+          "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+          "props": {"direction": "row",
+                    "style": {"padding": "0 10px 10px", "gap": "8px"}},
+          "children": [_button("btn_refresh", "Refresh", EDITOR_REFRESH)]}],
+        # An EXPLICIT height. A pane at basis "auto" has grow 0 and its body
+        # has basis 0px, so there is nothing to give the picture height and
+        # the pane rendered as a header with an empty box under it.
+        "228px")
+
+
+def _colour_pane():
+    """The colours, and the one you picked with a field to change it.
+
+    A table plus an edit strip, not an in-cell editor: Perspective's Table
+    never opened one for a column marked editable (its _isCellEditable gate is
+    reached through prop shapes not in any documentation we have), and a named
+    field leaves the token you are changing on screen while you change it.
+    """
+    table = _table("tokens", [
+        # Two rules here, both learned the hard way.
+        #
+        # No empty header titles: an empty one falls back to the FIELD NAME,
+        # which is how a 46px swatch column came out labelled "swatc".
+        #
+        # And the columns must FILL the row. onRowClick is fired from
+        # handleBodyClick via getCellInfo(e.target), which needs a .tc under
+        # the pointer -- with every column given a fixed width the row was
+        # 530px of cells in a 1100px pane, so a click anywhere right of the
+        # last column hit dead space and silently did nothing. The Token
+        # column takes the slack.
+        _col("group", "Affects", 150, True),
+        _col("name", "Token"),
+        _col("swatch", "Colour", 58, True),
+        _col("value", "Value", 130, True),
+    ], "view.custom.tokens")
+    table["props"]["style"] = {}
+    table["events"] = {"component": {"onRowClick": {
+        "config": {"script": EDITOR_PICK_TOKEN}, "scope": "G",
+        "type": "script"}}}
+    strip = {
+        "type": "ia.container.flex", "meta": {"name": "edit"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
+                  "style": {"gap": "9px", "rowGap": "8px",
+                            "padding": "9px 10px",
+                            "borderTopStyle": "solid", "borderTopWidth": "1px",
+                            "borderTopColor": "var(--border)"}},
+        "children": [
+            {"type": "ia.display.label", "meta": {"name": "sel"},
+             "position": {"grow": 0, "shrink": 1, "basis": "auto"},
+             "props": {"style": {
+                 "fontSize": "12.5px", "fontWeight": 600,
+                 "color": "var(--label)", "minWidth": "180px",
+                 "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', "
+                               "Consolas, monospace"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "expr", "config": {"expression":
+                     "if({view.custom.sel_name} = '', "
+                     "'-- pick a value above --', "
+                     "{view.custom.sel_name})"}}}}},
+            {"type": "ia.input.text-field", "meta": {"name": "val"},
+             "position": {"grow": 0, "shrink": 0, "basis": "170px"},
+             # deferUpdates false so Save cannot read a stale value however
+             # fast the click follows the last keystroke.
+             "props": {"deferUpdates": False, "placeholder": "#3b4252",
+                       "style": {"height": "32px",
+                                 "fontFamily": "'DejaVu Sans Mono', "
+                                               "'Liberation Mono', Consolas, "
+                                               "monospace"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "property",
+                 "config": {"path": "view.custom.sel_value",
+                            "bidirectional": True}}}}},
+            # The swatch of what is in the box, so a typo shows before it is
+            # saved rather than after the page repaints.
+            {"type": "ia.display.label", "meta": {"name": "chip"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": "",
+                       "style": {"width": "32px", "height": "32px",
+                                 "borderRadius": "3px",
+                                 "borderStyle": "solid", "borderWidth": "1px",
+                                 "borderColor": "var(--border)"}},
+             "propConfig": {"props.style.backgroundColor": {"binding": _prop(
+                 "view.custom.sel_value")}}},
+            _spacer(),
+            _button("btn_save_token", "Save", EDITOR_SAVE_TOKEN,
+                    primary=True),
+        ],
+    }
+    return _pane(
+        "colours", "This theme's values",
+        "Mostly colours, and a few sizes, grouped by what they affect. Click "
+        "one, change it, Save -- each save writes the file and runs the scan "
+        "that makes the gateway use it.",
+        [table, _only_when(strip, IS_EDITABLE, layout=True)], "0px")
+
+
+def _raw_pane():
+    """The escape hatch. Structural edits -- a new rule, an @import -- are not
+    colours, and a theme of your own is yours to break."""
+    actions = {
+        "type": "ia.container.flex", "meta": {"name": "fileactions"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
+                  "style": {"gap": "8px", "rowGap": "8px",
+                            "padding": "8px 10px",
+                            "borderBottomStyle": "solid",
+                            "borderBottomWidth": "1px",
+                            "borderBottomColor": "var(--border)"}},
+        "children": [
+            {"type": "ia.input.dropdown", "meta": {"name": "file"},
+             "position": {"grow": 0, "shrink": 0, "basis": "190px"},
+             "props": {"allowClearing": False, "showSearch": False,
+                       "style": {"height": "32px"}},
+             "propConfig": {
+                 "props.options": {"binding": _prop("view.custom.key",
+                                                    EDITOR_FILE_OPTIONS)},
+                 "props.value": {"binding": {
+                     "type": "property",
+                     "config": {"path": "view.custom.file",
+                                "bidirectional": True}}}}},
+            _spacer(),
+            _button("btn_save", "Save file", EDITOR_SAVE, primary=True),
+            _button("btn_scan", "Re-scan", EDITOR_REFRESH),
+        ],
+    }
+    return _pane(
+        "rawpane", "Raw files",
+        "The theme's files as they are on disk. For structural changes -- a "
+        "rule of your own, an extra import -- rather than colours.",
+        [actions, _raw_editor()], "0px")
+
+
 def build_editor_view_json(themes, version):
-    """Page: the theme files on this gateway, and what they publish."""
+    """Page: copy one of ours, then tune the copy."""
     return {
         "custom": {"theme": "", "file": "variables.css", "key": "",
-                   "files": [], "text": "", "status": "", "nudge": 0,
-                   "tokens": [], "classes": [], "kind": "",
-                   "making": "", "new_name": "", "new_base": "dark"},
+                   "text": "", "status": "", "nudge": 0, "kind": "",
+                   "tokens": [], "classes": [], "publishes": [],
+                   "sel_name": "", "sel_value": "",
+                   "raw": False, "making": "", "new_name": "",
+                   "new_base": "dark"},
         "propConfig": {
             "custom.theme": {"binding": _expr("1", EDITOR_FIRST_THEME)},
             # One key for everything that depends on the selection, and nudge
@@ -2073,14 +2367,17 @@ def build_editor_view_json(themes, version):
                 "expression": "{view.custom.theme} + '|' + "
                               "{view.custom.file} + '|' + "
                               "{view.custom.nudge}"}}},
-            "custom.files": {"binding": _prop("view.custom.key",
-                                              EDITOR_FILE_ROWS)},
-            "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
+            "custom.kind": {"binding": _prop("view.custom.key", EDITOR_KIND)},
             "custom.tokens": {"binding": _prop("view.custom.key",
-                                               EDITOR_TOKENS)},
+                                               EDITOR_TOKEN_ROWS)},
+            "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
             "custom.classes": {"binding": _prop("view.custom.key",
                                                 EDITOR_CLASSES)},
-            "custom.kind": {"binding": _prop("view.custom.key", EDITOR_KIND)},
+            # Its own prop. Bound to custom.tokens it showed the COLOUR list
+            # under the "what this theme publishes" heading -- two different
+            # questions answered with one answer.
+            "custom.publishes": {"binding": _prop("view.custom.key",
+                                                  EDITOR_TOKENS)},
         },
         "params": {},
         "root": {
@@ -2090,22 +2387,23 @@ def build_editor_view_json(themes, version):
                                 "height": "100%", "overflow": "hidden",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
-                _nav("Editor"),
-                _label("title", "Editor  ·  v" + version, size="24px",
+                _nav("Customise"),
+                _label("title", "Customise  ·  v" + version, size="24px",
                        weight=600),
                 _prose("sub",
-                       "Edits the theme files on THIS gateway, live. It is not "
-                       "a build tool: the ten pre-packaged themes are generated "
-                       "from the repo, so Install on the first page puts them "
-                       "back and your edits to them go with it. Make one of "
-                       "your own and nothing overwrites it.",
+                       "Make a theme of your own: copy one of the ten, then "
+                       "change its colours here. The ten themselves are "
+                       "generated from the repo and Install overwrites them, "
+                       "so they are read-only on this page -- a copy is yours "
+                       "and nothing overwrites it.",
                        size="12.5px", colour="var(--label--disabled)"),
                 _theme_bar(),
                 _only_when(_make_panel(), "{view.custom.making} != ''",
                            layout=True),
+                _only_when(_locked_banner(), IS_LOCKED, layout=True),
                 # The status line is the page's only feedback and every button
-                # writes to it, so it gets its own row rather than competing
-                # for space in a toolbar.
+                # writes to it, so it gets a row rather than competing for
+                # space in a toolbar.
                 {"type": "ia.display.label", "meta": {"name": "status"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
                  "props": {"style": {"fontSize": "12px", "minHeight": "15px",
@@ -2113,28 +2411,49 @@ def build_editor_view_json(themes, version):
                  "propConfig": {"props.text": {"binding": _prop(
                      "view.custom.status")}}},
 
-                # The three panes. This row is the ONE grower on the page.
+                # This row is the ONE grower on the page.
                 {"type": "ia.container.flex", "meta": {"name": "panes"},
                  "position": {"grow": 1, "shrink": 1, "basis": "0px"},
                  "props": {"direction": "row",
                            "style": {"gap": "10px", "minHeight": "0px"}},
                  "children": [
-                     _pane("rail", "Files",
-                           "Click one to open it. A dot marks a file that no "
-                           "longer matches what the installer ships.",
-                           [_file_rail()], "215px"),
-                     _editor_pane(),
-                     _pane("contract", "What this theme publishes",
-                           "Read-only. These are the tokens and style classes "
-                           "a project can build against without inheriting "
-                           "anything.",
-                           [_contract_tokens(),
-                            _pane_head("cls_h", "Style classes"),
-                            _contract_classes()], "320px"),
+                     _only_when(_colour_pane(), SHOW_TOKENS, layout=True),
+                     _only_when(_raw_pane(), SHOW_RAW, layout=True),
+                     # A locked theme still shows what it publishes: reading a
+                     # theme is exactly what you do before deciding to copy it.
+                     {"type": "ia.container.flex", "meta": {"name": "side"},
+                      "position": {"grow": 0, "shrink": 1, "basis": "352px"},
+                      "props": {"direction": "column",
+                                "style": {"gap": "10px", "minHeight": "0px"}},
+                      "children": [
+                          _preview_pane(),
+                          _pane("contract", "What this theme publishes",
+                                "Read-only. The tokens and style classes a "
+                                "project can build against.",
+                                [_contract_tokens(),
+                                 _pane_head("cls_h", "Style classes"),
+                                 _contract_classes()], "0px"),
+                      ]},
                  ]},
+                # The escape hatch is a toggle, not a tab: most visits change a
+                # colour and never want a text box.
+                _only_when(
+                    {"type": "ia.container.flex", "meta": {"name": "advanced"},
+                     "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                     "props": {"direction": "row", "alignItems": "center",
+                               "style": {"gap": "10px"}},
+                     "children": [
+                         _button("btn_raw", "Advanced: edit the files directly",
+                                 EDITOR_TOGGLE_RAW),
+                         _cap("rawhint",
+                              "Colours are easier to change in the list above; "
+                              "this is for structural edits."),
+                     ]},
+                    IS_EDITABLE, layout=True),
             ],
         },
     }
+
 
 
 def _pane_head(name, text):
@@ -2164,11 +2483,14 @@ def _contract_tokens():
     # No 'where' column: it is the widest field contract() returns and this
     # pane is 320px. The token, its colour and its value are what is useful
     # beside the file that defines them.
-    table = _table("tokens", [
+    # NOT "tokens" -- the Colours pane already owns that name, and two
+    # components with one meta.name in a single view is a name collision, not
+    # a tidiness question.
+    table = _table("publishes", [
         _col("token", "Token"),
         _col("swatch", "Colour", 58, True),
         _col("value", "Value", 96, True),
-    ], "view.custom.tokens")
+    ], "view.custom.publishes")
     table["props"]["style"] = {}
     return table
 
@@ -2313,7 +2635,7 @@ def main():
     write_json(os.path.join(page_config_dir, "config.json"), {
         "pages": {
             "/": {"title": "Theme Installer", "viewPath": "Installer"},
-            "/editor": {"title": "Editor", "viewPath": "Editor"},
+            "/editor": {"title": "Customise", "viewPath": "Editor"},
         }
     })
     write_json(os.path.join(page_config_dir, "resource.json"), resource_json(["config.json"]))

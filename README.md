@@ -85,12 +85,13 @@ The project is two pages, linked from each header:
   every row of the same imaginary plant page drawn in that theme's colours.
   Seeing what you are about to install belongs on the page that installs it, in
   the row that says whether it is installed.
-* **Editor** — the theme files on this gateway, in three headed panes: the
-  files down the left, the one you opened filling the middle with the buttons
-  that write it, and on the right what the theme publishes for a project to
-  build against. Above them, one row for whole-theme actions — which theme you
-  are editing, whether it is pre-packaged, Ignition's own or yours, and the
-  buttons to make, copy or delete one.
+* **Customise** — make a theme of your own. The ten are generated from
+  `packs/` and Install overwrites them, so they are read-only here and the page
+  offers a copy instead; a copy is yours and nothing overwrites it. Its values
+  are listed grouped by what they affect — click one, change it, Save — beside
+  a live preview painted from the stylesheet the gateway is actually serving,
+  and the tokens and style classes the theme publishes. Raw file editing is
+  behind an "Advanced" toggle for structural changes.
 
 The thumbnails are SVGs generated at build time from the theme files the
 installer already embeds, so a row's picture and the files Install writes cannot
