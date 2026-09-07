@@ -594,8 +594,14 @@ def build_view_json(themes, version):
     # against access-manager/.../Roles/view.json and
     # toolbox-playbooks/.../Monitor/view.json, both of which use
     # self.view.custom.<x> the same way this view does).
+    # The thumbnails, baked in at build time as one dict literal. They are
+    # derived from out/ exactly like the gallery is, so a row's picture and the
+    # files Install writes cannot drift apart -- and no gateway round-trip is
+    # needed to draw them.
+    previews_literal = json.dumps(preview_cell_map(themes), sort_keys=True)
     status_transform_code = (
         "\timport themepack\n"
+        "\tPREVIEWS = " + previews_literal + "\n"
         "\trows = themepack.status()\n"
         "\tSTOCK_STATE = {\n"
         "\t\t'stock': 'Stock - not modified',\n"
@@ -610,6 +616,7 @@ def build_view_json(themes, version):
         "\t\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n"
         "\t\telse:\n"
         "\t\t\trow['state'] = STOCK_STATE.get(row.get('stock'), '?')\n"
+        "\t\trow['preview'] = PREVIEWS.get(row['id'], '')\n"
         "\treturn rows"
     )
     install_all_script = (
@@ -906,11 +913,24 @@ def build_view_json(themes, version):
                     # nothing, and a Perspective table does not size itself to
                     # its rows either, so basis auto gave a header and no body.
                     # 16 rows (10 custom + 6 stock) at ~31px plus the header.
-                    "position": {"grow": 0, "shrink": 0, "basis": "505px"},
+                    # 16 rows at 44px (measured -- the thumbnail sets the row
+                    # height and the table measures it from content) plus a
+                    # 32px header. Not grow 1: this page scrolls, and a grow-1
+                    # item in an overflowing column collapses to nothing.
+                    "position": {"grow": 0, "shrink": 0, "basis": "740px"},
                     "props": {
                         "data": [],
                         "pager": {"top": False, "bottom": False},
                         "columns": [
+                            {
+                                # The picture first, so the table reads as the
+                                # gallery it replaces rather than as a list
+                                # with a decoration on the end.
+                                "field": "preview",
+                                "header": {"title": "Preview"},
+                                "width": 168,
+                                "strictWidth": True,
+                            },
                             {
                                 "field": "set",
                                 "header": {"title": "Set"},
@@ -944,7 +964,6 @@ def build_view_json(themes, version):
                         }
                     },
                 },
-                _gallery_block(themes),
             ],
         },
     }
@@ -1277,6 +1296,87 @@ def theme_palette(theme):
     }
 
 
+def preview_svg(pal):
+    """The mini screen again, as ONE SVG string, for the status table.
+
+    Nigel, 07/09/2026: put the theme images in the table. The gallery draws the
+    same screen out of Perspective components, which cannot go in a table cell
+    -- a view-render column takes ONE viewPath for every row, and a per-row
+    preview would have to be parameterised, which this repo already records as
+    failing silently (see the note above preview_node). An SVG needs none of
+    that: it is a string, it goes in a custom cell's backgroundImage, and the
+    swatch column already proves custom-cell styles work.
+
+    Same palette, same layout as preview_node, drawn small enough to read at
+    the ~64px a table row can give it.
+    """
+    def c(key, fallback="#888888"):
+        return pal.get(key) or fallback
+
+    W, H = 200, 60
+    parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" '
+             'viewBox="0 0 %d %d">' % (W, H, W, H)]
+    def rect(x, y, w, h, fill, rx=0):
+        parts.append('<rect x="%s" y="%s" width="%s" height="%s" fill="%s" '
+                     'rx="%s"/>' % (x, y, w, h, fill, rx))
+
+    rect(0, 0, W, H, c("page"))                       # the page
+    rect(0, 0, W, 11, c("sidebar"), 0)                # top bar
+    rect(0, 11, 26, H - 11, c("sidebar"), 0)          # nav rail
+    # three nav lines
+    for i in range(3):
+        rect(5, 18 + i * 5, 16, 2, c("chromeFg"), 1)
+    # the card
+    rect(32, 16, 92, 26, c("card"), 2)
+    rect(36, 20, 54, 3, c("text"), 1)
+    rect(36, 26, 44, 2, c("muted"), 1)
+    rect(36, 32, 30, 7, c("accent"), 2)
+    rect(40, 35, 22, 2, c("onAccent"), 1)
+    # the table
+    rect(130, 16, 64, 26, c("headBg"), 2)
+    rect(130, 16, 64, 7, c("headBg"), 2)
+    rect(133, 19, 26, 2, c("headFg"), 1)
+    for i in range(2):
+        rect(130, 25 + i * 8, 64, 7, c("rowBg"))
+        rect(133, 28 + i * 8, 30, 2, c("cellFg"), 1)
+    # title text in the top bar
+    rect(5, 4, 34, 3, c("chromeFg"), 1)
+    # No outer stroke. At 148px wide in a table row the border lands on the
+    # row divider and reads as the thumbnail being clipped; the page colour
+    # already separates one preview from the next.
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def preview_data_uri(pal):
+    """base64 rather than percent-encoding: an SVG carries #rrggbb by the
+    dozen, and a raw '#' inside a url() truncates it at the first colour."""
+    import base64
+    return "data:image/svg+xml;base64," + base64.b64encode(
+        preview_svg(pal).encode("utf-8")).decode("ascii")
+
+
+def preview_cell_map(themes):
+    """{theme id: custom cell} for every theme the status table can list --
+    ours from out/, Ignition's own from the captured stock palettes."""
+    cells = {}
+    order, _labels, palettes = _stock_palettes()
+    for theme_id in order:
+        cells[theme_id] = palettes[theme_id]
+    for theme in themes:
+        cells[theme["id"]] = theme_palette(theme)
+    return dict((k, {"value": "",
+                     "style": {"backgroundImage": "url(%s)" % preview_data_uri(v),
+                               "backgroundRepeat": "no-repeat",
+                               "backgroundPosition": "center",
+                               "backgroundSize": "contain",
+                               # Fits INSIDE the 44px row the thumbnail itself
+                               # creates, so the image is never cut by the row
+                               # divider.
+                               "height": "38px", "width": "148px"}})
+                for k, v in cells.items())
+
+
 def _flex(name, children=None, direction="column", grow=0, basis="auto", style=None):
     node = {"type": "ia.container.flex", "meta": {"name": name},
             "position": {"grow": grow, "shrink": 0, "basis": basis},
@@ -1415,12 +1515,14 @@ def _stock_palettes():
 
 
 def _gallery_block(themes):
-    """The previews, on the page that installs them.
+    """The previews as a wall of cards. NOT CURRENTLY USED.
 
-    This was its own page. Nigel, 07/09/2026: seeing the small preview of what
-    has been or is about to be installed belongs beside the Install button, not
-    one navigation away from it. Same painted screens, same build-time literal
-    colours -- only the location changed.
+    It moved here from its own page on 07/09/2026, and moved again the same
+    day: Nigel asked for the theme images to go INTO the status table, and once
+    every row carries its own thumbnail a second copy of the same sixteen
+    pictures underneath is duplication rather than emphasis. Kept because the
+    cards are considerably more readable than a 148px thumbnail and this is the
+    only thing that draws them; delete it if it is still unused in a month.
     """
     order, labels, palettes = _stock_palettes()
     stock = [preview_node("stock%d" % i, palettes[theme_id],

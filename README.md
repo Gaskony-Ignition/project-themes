@@ -79,18 +79,19 @@ live in your own session, with no reload and no picker to build — the
 
 The project is two pages, linked from each header:
 
-* **Installer** — the buttons, a status table for all 16 themes on the gateway,
-  and the previews: twelve miniature plant screens, each drawn in one theme's
-  own colours. Seeing what you are about to install belongs on the page that
-  installs it.
+* **Installer** — the buttons and a status table covering all 16 themes on the
+  gateway, each row carrying a thumbnail of the same imaginary plant page drawn
+  in that theme's own colours. Seeing what you are about to install belongs on
+  the page that installs it, in the row that says whether it is installed.
 * **Editor** — the theme files on this gateway. Files down the left, the one
   you picked filling the middle, and a toolbar that saves, reverts and scans.
   Down the right, what the theme publishes: its `--st-*` tokens with their live
   values and its `st/...` style classes — the contract a project builds
   against, read while you edit rather than on a page of its own.
 
-The previews are drawn from the theme files the installer already embeds, so
-they show exactly what pressing Install produces with no gateway round-trip.
+The thumbnails are SVGs generated at build time from the theme files the
+installer already embeds, so a row's picture and the files Install writes cannot
+drift apart, and drawing them needs no gateway round-trip.
 The Editor reads the gateway live: the files it edits are the ones on disk, and
 the token and class lists come from the resolved stylesheet the browser is
 really being served (`/data/perspective/themes/<id>.css`), so the page cannot
