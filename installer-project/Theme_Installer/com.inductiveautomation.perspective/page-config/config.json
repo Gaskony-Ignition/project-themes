@@ -12,9 +12,9 @@
       "title": "How it works",
       "viewPath": "How"
     },
-    "/changes": {
-      "title": "Under the hood",
-      "viewPath": "Changes"
+    "/editor": {
+      "title": "Editor",
+      "viewPath": "Editor"
     },
     "/contract": {
       "title": "The contract",

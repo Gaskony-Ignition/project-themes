@@ -138,7 +138,7 @@
           {
             "type": "ia.display.label",
             "meta": {
-              "name": "tab_changes"
+              "name": "tab_editor"
             },
             "position": {
               "grow": 0,
@@ -146,7 +146,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Under the hood",
+              "text": "Editor",
               "style": {
                 "fontSize": "13px",
                 "padding": "9px 16px 8px",
@@ -163,7 +163,7 @@
               "dom": {
                 "onClick": {
                   "config": {
-                    "script": "\tsystem.perspective.navigate(page='/changes')"
+                    "script": "\tsystem.perspective.navigate(page='/editor')"
                   },
                   "scope": "G",
                   "type": "script"
@@ -1669,7 +1669,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "For the detail: 'Under the hood' measures, live against this gateway, every colour a theme changes. 'For builders' lists the tokens and style classes a project can use.",
+          "text": "To change one: 'Editor' edits the theme files on this gateway, token by token, and shows how each compares with the theme it is built on. 'For builders' lists the tokens and style classes a project can use.",
           "style": {
             "fontSize": "12px",
             "color": "var(--label--disabled)",

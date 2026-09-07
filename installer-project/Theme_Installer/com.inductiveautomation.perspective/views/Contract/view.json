@@ -196,7 +196,7 @@
           {
             "type": "ia.display.label",
             "meta": {
-              "name": "tab_changes"
+              "name": "tab_editor"
             },
             "position": {
               "grow": 0,
@@ -204,7 +204,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Under the hood",
+              "text": "Editor",
               "style": {
                 "fontSize": "13px",
                 "padding": "9px 16px 8px",
@@ -221,7 +221,7 @@
               "dom": {
                 "onClick": {
                   "config": {
-                    "script": "\tsystem.perspective.navigate(page='/changes')"
+                    "script": "\tsystem.perspective.navigate(page='/editor')"
                   },
                   "scope": "G",
                   "type": "script"
@@ -316,7 +316,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "What a project can rely on without inheriting anything. Both lists are read out of the installed theme itself, so this page cannot advertise a token or a class the theme does not actually ship. v1.7.5",
+          "text": "What a project can rely on without inheriting anything. Both lists are read out of the installed theme itself, so this page cannot advertise a token or a class the theme does not actually ship. v1.8.0",
           "style": {
             "fontSize": "13px",
             "color": "var(--label--disabled)"

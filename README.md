@@ -88,9 +88,14 @@ on them:
 * **How it works** — Ignition draws every screen from a palette of named
   colours; a theme re-points those names. One before/after pair and three
   steps (install, pick, change your mind).
-* **Under the hood** — the measured diff against the stock theme underneath:
-  108 of Ignition's variables repainted on a typical theme, 12 left untouched,
-  42 added, each grouped by what it affects and shown with a swatch.
+* **Editor** — edits the theme files **on this gateway**. `variables.css` is
+  a form: every token as a row with a swatch, grouped by what it affects, with
+  the value of the theme it is built on beside it — click a row, change the
+  value, Save. The other files get a plain text box. Every save writes the file
+  (staged, then renamed), rewrites the resource manifest and runs a config
+  scan, which is what makes the gateway notice. It is not a build tool: the ten
+  themes are generated from `packs/`, so Install puts back what shipped and an
+  edit made here goes. "Revert to shipped" does that for one file on purpose.
 * **For builders** — the `--st-*` tokens and `st/...` classes a project can
   use without inheriting anything. See "The style-class contract" below.
 

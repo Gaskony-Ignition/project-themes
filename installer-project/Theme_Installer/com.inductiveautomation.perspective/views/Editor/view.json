@@ -1,0 +1,1252 @@
+{
+  "custom": {
+    "theme": "",
+    "file": "variables.css",
+    "against": "",
+    "key": "",
+    "rows": [],
+    "text": "",
+    "status": "",
+    "sel_name": "",
+    "sel_value": "",
+    "nudge": 0
+  },
+  "propConfig": {
+    "custom.theme": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "1"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tfor r in themepack.list_themes():\n\t\tif r['ours']:\n\t\t\treturn r['id']\n\trows = themepack.list_themes()\n\treturn rows[0]['id'] if rows else ''"
+          }
+        ]
+      }
+    },
+    "custom.against": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.theme"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\tif not value:\n\t\treturn ''\n\treturn themepack.base_of(value)"
+          }
+        ]
+      }
+    },
+    "custom.key": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "{view.custom.theme} + '|' + {view.custom.file} + '|' + {view.custom.against} + '|' + {view.custom.nudge}"
+        }
+      }
+    },
+    "custom.rows": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme, filename, against = (value + '||').split('|')[:3]\n\tif not theme or filename != 'variables.css':\n\t\treturn []\n\ttry:\n\t\treturn themepack.tokens_compared(theme, against or None)\n\texcept Exception, e:\n\t\treturn []"
+          }
+        ]
+      }
+    },
+    "custom.text": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme, filename = (value + '|').split('|')[:2]\n\tif not theme or not filename:\n\t\treturn ''\n\ttry:\n\t\treturn themepack.read_file(theme, filename)['text']\n\texcept Exception, e:\n\t\treturn str(e)"
+          }
+        ]
+      }
+    }
+  },
+  "params": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {
+      "direction": "column",
+      "style": {
+        "padding": "18px",
+        "gap": "14px",
+        "backgroundColor": "var(--containerRoot)"
+      }
+    },
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "tabs"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "flex-end",
+          "style": {
+            "gap": "2px",
+            "marginBottom": "6px",
+            "borderBottomStyle": "solid",
+            "borderBottomWidth": "1px",
+            "borderBottomColor": "var(--border)"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "tab_home"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Installer",
+              "style": {
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
+              }
+            },
+            "events": {
+              "dom": {
+                "onClick": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "tab_themes"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "The themes",
+              "style": {
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
+              }
+            },
+            "events": {
+              "dom": {
+                "onClick": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/themes')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "tab_how"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "How it works",
+              "style": {
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
+              }
+            },
+            "events": {
+              "dom": {
+                "onClick": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/how')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "tab_editor"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Editor",
+              "style": {
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "default",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "var(--callToAction)",
+                "color": "var(--label)",
+                "fontWeight": 600
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "tab_contract"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "For builders",
+              "style": {
+                "fontSize": "13px",
+                "padding": "9px 16px 8px",
+                "cursor": "pointer",
+                "whiteSpace": "nowrap",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent",
+                "color": "var(--label--disabled)",
+                "fontWeight": 400
+              }
+            },
+            "events": {
+              "dom": {
+                "onClick": {
+                  "config": {
+                    "script": "\tsystem.perspective.navigate(page='/contract')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "spacer"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {}
+          },
+          {
+            "type": "ia.display.view",
+            "meta": {
+              "name": "theme_switcher"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "230px"
+            },
+            "props": {
+              "path": "ThemeDropdown",
+              "style": {
+                "minHeight": "34px",
+                "marginBottom": "4px"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "title"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Editor",
+          "style": {
+            "fontSize": "24px",
+            "color": "var(--label)",
+            "fontWeight": 600
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "sub"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "text": "Edits the theme files ON THIS GATEWAY. It is not a build tool: the ten themes are generated from the repo, so pressing Install on the first page puts back what shipped and your edits here go. Every save rewrites the resource manifest and runs a scan, which is what makes the gateway notice. v1.8.0",
+          "style": {
+            "fontSize": "13px",
+            "color": "var(--label--disabled)"
+          }
+        }
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "controls"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "flex-end",
+          "style": {
+            "gap": "12px",
+            "flexWrap": "wrap"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "pick_theme"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "3px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Theme",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              },
+              {
+                "type": "ia.input.dropdown",
+                "meta": {
+                  "name": "dd"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "allowClearing": false,
+                  "showSearch": false,
+                  "style": {
+                    "height": "34px",
+                    "minWidth": "220px"
+                  }
+                },
+                "propConfig": {
+                  "props.options": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "1"
+                      },
+                      "transforms": [
+                        {
+                          "type": "script",
+                          "code": "\timport themepack\n\trows = themepack.list_themes()\n\treturn [{'value': r['id'],\n\t         'label': r['id'] + ('' if r['ours'] else '  (not ours)')}\n\t        for r in rows]"
+                        }
+                      ]
+                    }
+                  },
+                  "props.value": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.theme",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "pick_file"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "3px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "File",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              },
+              {
+                "type": "ia.input.dropdown",
+                "meta": {
+                  "name": "dd"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "allowClearing": false,
+                  "showSearch": false,
+                  "style": {
+                    "height": "34px",
+                    "minWidth": "190px"
+                  }
+                },
+                "propConfig": {
+                  "props.options": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.theme"
+                      },
+                      "transforms": [
+                        {
+                          "type": "script",
+                          "code": "\timport themepack\n\tif not value:\n\t\treturn []\n\ttry:\n\t\trows = themepack.list_files(value)\n\texcept Exception:\n\t\treturn []\n\treturn [{'value': r['name'], 'label': r['name']}\n\t        for r in rows if r['editable']]"
+                        }
+                      ]
+                    }
+                  },
+                  "props.value": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.file",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "pick_against"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {
+                "gap": "3px"
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "cap"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Compare with",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              },
+              {
+                "type": "ia.input.dropdown",
+                "meta": {
+                  "name": "dd"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "allowClearing": false,
+                  "showSearch": false,
+                  "style": {
+                    "height": "34px",
+                    "minWidth": "190px"
+                  }
+                },
+                "propConfig": {
+                  "props.options": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.theme"
+                      },
+                      "transforms": [
+                        {
+                          "type": "script",
+                          "code": "\timport themepack\n\tif not value:\n\t\treturn []\n\treturn [{'value': t, 'label': t} for t in themepack.compare_options(value)]"
+                        }
+                      ]
+                    }
+                  },
+                  "props.value": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.against",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.file} = 'variables.css'"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "gap"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {}
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "btn_revert"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Revert to shipped",
+              "style": {
+                "height": "34px",
+                "whiteSpace": "nowrap",
+                "backgroundColor": "var(--containerBackground)",
+                "color": "var(--label)",
+                "borderStyle": "solid",
+                "borderWidth": "1px",
+                "borderColor": "var(--border)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\tfilename = self.view.custom.file\n\ttry:\n\t\tthemepack.revert_file(theme, filename)\n\t\tself.view.custom.status = ('Put back what the installer ships for %s'\n\t\t                            % filename)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "btn_refresh"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Scan now",
+              "style": {
+                "height": "34px",
+                "whiteSpace": "nowrap",
+                "backgroundColor": "var(--containerBackground)",
+                "color": "var(--label)",
+                "borderStyle": "solid",
+                "borderWidth": "1px",
+                "borderColor": "var(--border)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "btn_save"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Save",
+              "style": {
+                "height": "34px",
+                "whiteSpace": "nowrap"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\tfilename = self.view.custom.file\n\ttry:\n\t\tthemepack.write_file(theme, filename, self.view.custom.text)\n\t\tself.view.custom.status = 'Saved %s and scanned' % filename\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.file} != 'variables.css'"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "status"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "style": {
+            "fontSize": "12px",
+            "color": "var(--label--disabled)",
+            "minHeight": "16px"
+          }
+        },
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.status"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "body"
+        },
+        "position": {
+          "grow": 1,
+          "shrink": 1,
+          "basis": "0px"
+        },
+        "props": {
+          "direction": "column",
+          "style": {
+            "gap": "8px"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "tok_sub_wrap"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 1,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.file} = 'variables.css'"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.file} = 'variables.css', 'flex', 'none')"
+                  }
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.label",
+                "meta": {
+                  "name": "tok_sub"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Click a row to load it into the field below, then Save token. 'Compared with' is the other theme's own value for the same token -- where that reads as var(--something), the theme you are comparing against points the token at another one rather than naming a colour.",
+                  "style": {
+                    "fontSize": "12px",
+                    "color": "var(--label--disabled)"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "tokens_wrap"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.file} = 'variables.css'"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.file} = 'variables.css', 'flex', 'none')"
+                  }
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "ia.display.table",
+                "meta": {
+                  "name": "tokens"
+                },
+                "position": {
+                  "grow": 1,
+                  "shrink": 1,
+                  "basis": "0px"
+                },
+                "props": {
+                  "pager": {
+                    "top": false,
+                    "bottom": false
+                  },
+                  "columns": [
+                    {
+                      "field": "group",
+                      "header": {
+                        "title": "Affects"
+                      },
+                      "width": 170,
+                      "strictWidth": true
+                    },
+                    {
+                      "field": "name",
+                      "header": {
+                        "title": "Token"
+                      },
+                      "width": 200,
+                      "strictWidth": true
+                    },
+                    {
+                      "field": "swatch",
+                      "header": {
+                        "title": "Colour"
+                      },
+                      "width": 70,
+                      "strictWidth": true
+                    },
+                    {
+                      "field": "value",
+                      "header": {
+                        "title": "Value"
+                      },
+                      "width": 190,
+                      "strictWidth": true
+                    },
+                    {
+                      "field": "compared",
+                      "header": {
+                        "title": "Compared with"
+                      },
+                      "width": 170,
+                      "strictWidth": true
+                    },
+                    {
+                      "field": "state",
+                      "header": {
+                        "title": "vs comparison"
+                      },
+                      "width": 150,
+                      "strictWidth": true
+                    }
+                  ]
+                },
+                "propConfig": {
+                  "props.data": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.rows"
+                      }
+                    }
+                  }
+                },
+                "events": {
+                  "component": {
+                    "onRowClick": {
+                      "config": {
+                        "script": "\tdata = event.value or {}\n\tself.view.custom.sel_name = data.get('name', '')\n\tself.view.custom.sel_value = data.get('value', '')\n\tself.view.custom.status = ''"
+                      },
+                      "scope": "G",
+                      "type": "script"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "edit_wrap"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 1,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.file} = 'variables.css'"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.file} = 'variables.css', 'flex', 'none')"
+                  }
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "edit"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "direction": "row",
+                  "alignItems": "center",
+                  "style": {
+                    "gap": "10px",
+                    "padding": "10px 12px",
+                    "backgroundColor": "var(--containerBackground)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "borderRadius": "3px"
+                  }
+                },
+                "children": [
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "cap"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Token",
+                      "style": {
+                        "fontSize": "12px",
+                        "color": "var(--label--disabled)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "sel"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "style": {
+                        "fontSize": "13px",
+                        "fontWeight": 600,
+                        "color": "var(--label)",
+                        "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace",
+                        "minWidth": "200px"
+                      }
+                    },
+                    "propConfig": {
+                      "props.text": {
+                        "binding": {
+                          "type": "expr",
+                          "config": {
+                            "expression": "if({view.custom.sel_name} = '', '-- click a row --', {view.custom.sel_name})"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.input.text-field",
+                    "meta": {
+                      "name": "val"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "220px"
+                    },
+                    "props": {
+                      "deferUpdates": false,
+                      "style": {
+                        "height": "34px",
+                        "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
+                      }
+                    },
+                    "propConfig": {
+                      "props.text": {
+                        "binding": {
+                          "type": "property",
+                          "config": {
+                            "path": "view.custom.sel_value",
+                            "bidirectional": true
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "preview"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "",
+                      "style": {
+                        "width": "34px",
+                        "height": "34px",
+                        "borderStyle": "solid",
+                        "borderWidth": "1px",
+                        "borderColor": "var(--border)",
+                        "borderRadius": "3px"
+                      }
+                    },
+                    "propConfig": {
+                      "props.style.backgroundColor": {
+                        "binding": {
+                          "type": "property",
+                          "config": {
+                            "path": "view.custom.sel_value"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "gap"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 1,
+                      "basis": "0px"
+                    },
+                    "props": {}
+                  },
+                  {
+                    "type": "ia.input.button",
+                    "meta": {
+                      "name": "btn_save_token"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Save token",
+                      "style": {
+                        "height": "34px",
+                        "whiteSpace": "nowrap"
+                      }
+                    },
+                    "events": {
+                      "component": {
+                        "onActionPerformed": {
+                          "config": {
+                            "script": "\timport themepack\n\tname = self.view.custom.sel_name\n\tif not name:\n\t\tself.view.custom.status = 'Pick a token in the table first'\n\t\treturn\n\ttry:\n\t\tvalue = self.view.custom.sel_value\n\t\tthemepack.set_token(self.view.custom.theme, name, value)\n\t\t# Report the VALUE, not just the name. 'Saved --neutral-10' is\n\t\t# equally true of a save that wrote back the value already there,\n\t\t# so it cannot tell a real save from a no-op -- which cost an\n\t\t# afternoon of debugging the wrong end of this page.\n\t\tself.view.custom.status = ('Saved %s = %s and scanned'\n\t\t                           % (name, value))\n\t\t# Nudge the key so the rows re-read from disk and the swatch,\n\t\t# the value and the comparison all catch up in one go.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                          },
+                          "scope": "G",
+                          "type": "script"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "raw_wrap"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {
+              "direction": "column",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.file} != 'variables.css'"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.file} != 'variables.css', 'flex', 'none')"
+                  }
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "ia.input.text-area",
+                "meta": {
+                  "name": "raw"
+                },
+                "position": {
+                  "grow": 1,
+                  "shrink": 1,
+                  "basis": "0px"
+                },
+                "props": {
+                  "style": {
+                    "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace",
+                    "fontSize": "12.5px",
+                    "lineHeight": "1.5",
+                    "whiteSpace": "pre",
+                    "tabSize": "2",
+                    "minHeight": "0",
+                    "overflow": "auto"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "property",
+                      "config": {
+                        "path": "view.custom.text",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -51,6 +51,11 @@ THEME_DROPDOWN_SRC = os.path.join(HERE, "selector-popup", "ThemeDropdown.view.js
 # gateway rather than anything baked in here.
 INSIGHT_SRC = os.path.join(HERE, "insight", "insight_code.py")
 
+# The theme-file editor -- same rules as insight/ above: hand-authored,
+# commit-tracked, appended verbatim. It is the reason this project can edit a
+# gateway's themes without a Designer module (Nigel, 07/09/2026).
+EDITOR_SRC = os.path.join(HERE, "editor", "editor_code.py")
+
 THEME_FILES = ["config.json", "index.css", "variables.css", "globals.css", "resource.json"]
 
 NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -564,6 +569,12 @@ def build_themepack_code(themes, version):
     with open(INSIGHT_SRC) as handle:
         lines.append(handle.read().rstrip("\n"))
     lines.append('')
+
+    # The editor functions, same deal. Appended AFTER insight so it can use
+    # _read/_write/_rescan/_stock_rewrite_manifest and THEMES, all defined above.
+    with open(EDITOR_SRC) as handle:
+        lines.append(handle.read().rstrip("\n"))
+    lines.append('')
     return "\n".join(lines)
 
 
@@ -974,7 +985,7 @@ def _nav(active):
     tabs drawn to look like one: the active tab carries the accent underline
     and does not offer to navigate to the page you are already on."""
     pages = [("Installer", "/"), ("The themes", "/themes"),
-             ("How it works", "/how"), ("Under the hood", "/changes"),
+             ("How it works", "/how"), ("Editor", "/editor"),
              ("For builders", "/contract")]
     tabs = []
     for title, path in pages:
@@ -1506,43 +1517,274 @@ def build_how_view_json(themes, version):
                       "dark are never modified."),
              ]},
             _prose("deeper",
-                   "For the detail: 'Under the hood' measures, live against "
-                   "this gateway, every colour a theme changes. 'For builders' "
-                   "lists the tokens and style classes a project can use.",
+                   "To change one: 'Editor' edits the theme files on this "
+                   "gateway, token by token, and shows how each compares with "
+                   "the theme it is built on. 'For builders' lists the tokens "
+                   "and style classes a project can use.",
                    size="12px", colour="var(--label--disabled)"),
         ]},
     }
 
 
 
-# Everything below the headline is about a COMPARISON. When there is none to
-# make -- a base theme, which has nothing behind it -- three tiles reading 0,
-# a card saying "0 of 0 variables" and a table of nothing but headers read as a
-# broken page. The headline is the whole answer in that case, so the rest goes.
-WHEN_COMPARING = {"binding": {
-    "type": "expr",
-    "config": {"expression": "{view.custom.counts.total} > 0"}}}
+# ---------------------------------------------------------------------------
+# THE EDITOR
+#
+# Replaces the "Under the hood" page (dropped 07/09/2026). That page measured
+# what a theme changes and let you do nothing about it; this one measures the
+# same thing and puts a field next to it. The comparison it did -- this theme
+# against the stock one it is built on, or against any other theme -- is folded
+# in as two columns here, so nothing it could answer was lost.
+#
+# Ectobox ship a Designer module for this. It is a good tool and Nigel did not
+# want a module, so the same job is done by themepack's editor functions and
+# this page. See editor/editor_code.py for what the gateway side actually does.
+#
+# WHY A TOKEN FORM RATHER THAN A TEXT BOX. Perspective has no code editor, so a
+# raw file editor here is a monospace TextArea -- typing hex into a wall of CSS
+# and finding out whether you got it right by looking at another page. What our
+# variables.css actually IS, though, is a flat list of name/value pairs, and a
+# list of name/value pairs is a form. The raw box stays for index.css and
+# globals.css, which are structure rather than values.
+# ---------------------------------------------------------------------------
+
+EDITOR_FILE_OPTIONS = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn []\n"
+    "\ttry:\n"
+    "\t\trows = themepack.list_files(value)\n"
+    "\texcept Exception:\n"
+    "\t\treturn []\n"
+    "\treturn [{'value': r['name'], 'label': r['name']}\n"
+    "\t        for r in rows if r['editable']]"
+)
+EDITOR_THEME_OPTIONS = (
+    "\timport themepack\n"
+    "\trows = themepack.list_themes()\n"
+    "\treturn [{'value': r['id'],\n"
+    "\t         'label': r['id'] + ('' if r['ours'] else '  (not ours)')}\n"
+    "\t        for r in rows]"
+)
+EDITOR_FIRST_THEME = (
+    "\timport themepack\n"
+    "\tfor r in themepack.list_themes():\n"
+    "\t\tif r['ours']:\n"
+    "\t\t\treturn r['id']\n"
+    "\trows = themepack.list_themes()\n"
+    "\treturn rows[0]['id'] if rows else ''"
+)
+EDITOR_AGAINST_OPTIONS = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn []\n"
+    "\treturn [{'value': t, 'label': t} for t in themepack.compare_options(value)]"
+)
+EDITOR_DEFAULT_AGAINST = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn ''\n"
+    "\treturn themepack.base_of(value)"
+)
+# One key so the rows depend on theme, file AND comparison -- the same
+# single-key trick the retired Changes page used, for the same reason: three
+# separate bindings fire in an order nobody controls.
+EDITOR_TOKENS = (
+    "\timport themepack\n"
+    "\ttheme, filename, against = (value + '||').split('|')[:3]\n"
+    "\tif not theme or filename != 'variables.css':\n"
+    "\t\treturn []\n"
+    "\ttry:\n"
+    "\t\treturn themepack.tokens_compared(theme, against or None)\n"
+    "\texcept Exception, e:\n"
+    "\t\treturn []"
+)
+EDITOR_TEXT = (
+    "\timport themepack\n"
+    "\ttheme, filename = (value + '|').split('|')[:2]\n"
+    "\tif not theme or not filename:\n"
+    "\t\treturn ''\n"
+    "\ttry:\n"
+    "\t\treturn themepack.read_file(theme, filename)['text']\n"
+    "\texcept Exception, e:\n"
+    "\t\treturn str(e)"
+)
+# WHY NOT EDIT IN THE TABLE. Perspective's Table does support in-cell editing,
+# and a column marked editable with an onEditCellCommit handler is the obvious
+# shape for this page. Measured on 8.3.8: it never opened an editor. The gate
+# is Table's own _isCellEditable, reached through props.cells.allowEditOn and a
+# columnConfig lookup, and getting it to fire depends on prop shapes that are
+# not in any documentation we have. A row click and an explicit field are
+# plainly supported, obvious to use, and leave the token you are changing named
+# on screen while you change it -- which an in-cell editor does not.
+EDITOR_PICK_ROW = (
+    "\tdata = event.value or {}\n"
+    "\tself.view.custom.sel_name = data.get('name', '')\n"
+    "\tself.view.custom.sel_value = data.get('value', '')\n"
+    "\tself.view.custom.status = ''"
+)
+EDITOR_SAVE_TOKEN = (
+    "\timport themepack\n"
+    "\tname = self.view.custom.sel_name\n"
+    "\tif not name:\n"
+    "\t\tself.view.custom.status = 'Pick a token in the table first'\n"
+    "\t\treturn\n"
+    "\ttry:\n"
+    "\t\tvalue = self.view.custom.sel_value\n"
+    "\t\tthemepack.set_token(self.view.custom.theme, name, value)\n"
+    "\t\t# Report the VALUE, not just the name. 'Saved --neutral-10' is\n"
+    "\t\t# equally true of a save that wrote back the value already there,\n"
+    "\t\t# so it cannot tell a real save from a no-op -- which cost an\n"
+    "\t\t# afternoon of debugging the wrong end of this page.\n"
+    "\t\tself.view.custom.status = ('Saved %s = %s and scanned'\n"
+    "\t\t                           % (name, value))\n"
+    "\t\t# Nudge the key so the rows re-read from disk and the swatch,\n"
+    "\t\t# the value and the comparison all catch up in one go.\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_SAVE_TEXT = (
+    "\timport themepack\n"
+    "\ttheme = self.view.custom.theme\n"
+    "\tfilename = self.view.custom.file\n"
+    "\ttry:\n"
+    "\t\tthemepack.write_file(theme, filename, self.view.custom.text)\n"
+    "\t\tself.view.custom.status = 'Saved %s and scanned' % filename\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_REVERT = (
+    "\timport themepack\n"
+    "\ttheme = self.view.custom.theme\n"
+    "\tfilename = self.view.custom.file\n"
+    "\ttry:\n"
+    "\t\tthemepack.revert_file(theme, filename)\n"
+    "\t\tself.view.custom.status = ('Put back what the installer ships for %s'\n"
+    "\t\t                            % filename)\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_REFRESH = (
+    "\timport themepack\n"
+    "\ttry:\n"
+    "\t\tthemepack.refresh()\n"
+    "\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+
+# The raw box is only for the files a form cannot represent. Showing it for
+# variables.css as well would be two ways to edit one file, which is two ways
+# for them to disagree about what is saved.
+IS_TOKENS = "{view.custom.file} = 'variables.css'"
+IS_RAW = "{view.custom.file} != 'variables.css'"
 
 
-def _only_when_comparing(node):
-    node.setdefault("propConfig", {})["meta.visible"] = WHEN_COMPARING
-    return node
+def _only_when(node, expression, layout=False):
+    """Hide a component -- and, with layout=True, take its SPACE back too.
 
+    meta.visible alone is not enough. It resolves to the class
+    component-meta-hidden, which stops a component being seen and leaves it in
+    the flex layout: measured on 8.3.8, the hidden raw editor still claimed
+    322px of a 660px body and squeezed the token table into the other half.
+    That is the two-growers-in-one-container trap arriving through the back
+    door, and a screenshot does not show it -- the space just looks like
+    padding.
 
-def build_changes_view_json(themes, version):
-    """Page: what this theme actually changes, measured against stock."""
-    return {
-        "custom": {"theme": "", "against": "", "key": "",
-                   "rows": [], "counts": {}, "layers": [], "headline": ""},
+    So layout=True binds display as well. It also WRAPS the component in a
+    plain flex container and binds display on the wrapper, because most
+    components ignore style.display on their own root: ia.display.table stayed
+    297px tall and ia.display.label stayed 34px tall with the binding applied
+    and no error. A flex container honours it. Wrapping everything is one rule
+    instead of a list of which components happen to obey.
+    """
+    visible = {"binding": {"type": "expr", "config": {"expression": expression}}}
+    if not layout:
+        node.setdefault("propConfig", {})["meta.visible"] = visible
+        return node
+
+    grows = node.get("position", {}).get("grow", 0)
+    wrapper = {
+        "type": "ia.container.flex",
+        "meta": {"name": node["meta"]["name"] + "_wrap"},
+        "position": {"grow": grows, "shrink": 1,
+                     "basis": "0px" if grows else "auto"},
+        "props": {"direction": "column", "style": {}},
         "propConfig": {
-            "custom.theme": {"binding": _expr("1", FIRST_INSTALLED)},
-            # One key so the rows depend on BOTH dropdowns. See _expr's note.
+            "meta.visible": visible,
+            "props.style.display": {"binding": {"type": "expr", "config": {
+                "expression": "if(%s, 'flex', 'none')" % expression}}},
+        },
+        "children": [node],
+    }
+    return wrapper
+
+
+def _button(name, text, script, primary=False):
+    return {
+        "type": "ia.input.button", "meta": {"name": name},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"text": text,
+                  "style": {"height": "34px", "whiteSpace": "nowrap"}
+                  if primary else
+                  {"height": "34px", "whiteSpace": "nowrap",
+                   "backgroundColor": "var(--containerBackground)",
+                   "color": "var(--label)",
+                   "borderStyle": "solid", "borderWidth": "1px",
+                   "borderColor": "var(--border)"}},
+        "events": {"component": {"onActionPerformed": {
+            "config": {"script": script}, "scope": "G", "type": "script"}}},
+    }
+
+
+def _picker(name, label, custom_path, options_code, width="220px"):
+    """Same shape as _theme_picker, but the options come from a script that
+    takes a value -- these three dropdowns each depend on the one before it."""
+    return {
+        "type": "ia.container.flex", "meta": {"name": name},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "column", "style": {"gap": "3px"}},
+        "children": [
+            _label("cap", label, size="12px", colour="var(--label--disabled)"),
+            {"type": "ia.input.dropdown", "meta": {"name": "dd"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"allowClearing": False, "showSearch": False,
+                       "style": {"height": "34px", "minWidth": width}},
+             "propConfig": {
+                 "props.options": {"binding": _prop("view.custom.theme",
+                                                    options_code)},
+                 # bidirectional lives INSIDE config or the dropdown never
+                 # writes the selection back -- silently.
+                 "props.value": {"binding": {
+                     "type": "property",
+                     "config": {"path": custom_path, "bidirectional": True}}},
+             }},
+        ],
+    }
+
+
+def build_editor_view_json(themes, version):
+    """Page: edit this gateway's theme files."""
+    return {
+        "custom": {"theme": "", "file": "variables.css", "against": "",
+                   "key": "", "rows": [], "text": "", "status": "",
+                   "sel_name": "", "sel_value": "", "nudge": 0},
+        "propConfig": {
+            "custom.theme": {"binding": _expr("1", EDITOR_FIRST_THEME)},
+            "custom.against": {"binding": _prop("view.custom.theme",
+                                                EDITOR_DEFAULT_AGAINST)},
             "custom.key": {"binding": {"type": "expr", "config": {
-                "expression": "{view.custom.theme} + '|' + {view.custom.against}"}}},
-            "custom.rows": {"binding": _prop("view.custom.key", CHANGES_ROWS)},
-            "custom.counts": {"binding": _prop("view.custom.key", CHANGES_COUNTS)},
-            "custom.layers": {"binding": _prop("view.custom.theme", CHANGES_LAYERS)},
-            "custom.headline": {"binding": _prop("view.custom.key", CHANGES_HEADLINE)},
+                # nudge is bumped by every save, so the rows re-read from
+                # disk and the swatch, the value and the comparison all catch
+                # up together. The whole path goes INSIDE the braces.
+                "expression": "{view.custom.theme} + '|' + "
+                              "{view.custom.file} + '|' + "
+                              "{view.custom.against} + '|' + "
+                              "{view.custom.nudge}"}}},
+            "custom.rows": {"binding": _prop("view.custom.key", EDITOR_TOKENS)},
+            "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
         },
         "params": {},
         "root": {
@@ -1551,66 +1793,171 @@ def build_changes_view_json(themes, version):
                       "style": {"padding": "18px", "gap": "14px",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
-                _nav("Under the hood"),
-                _label("title", "Under the hood", size="24px", weight=600),
-                {"type": "ia.display.label", "meta": {"name": "headline"},
-                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                 "props": {"style": {"fontSize": "14px", "color": "var(--label)",
-                                     "lineHeight": "1.5"}},
-                 "propConfig": {"props.text": {
-                     "binding": _prop("view.custom.headline")}}},
+                _nav("Editor"),
+                _label("title", "Editor", size="24px", weight=600),
                 _label("sub",
-                       "Measured on this gateway when you opened the page, not "
-                       "written down when the theme was built. v" + version,
-                       size="12px", colour="var(--label--disabled)"),
-                {"type": "ia.container.flex", "meta": {"name": "pickers"},
+                       "Edits the theme files ON THIS GATEWAY. It is not a "
+                       "build tool: the ten themes are generated from the "
+                       "repo, so pressing Install on the first page puts back "
+                       "what shipped and your edits here go. Every save "
+                       "rewrites the resource manifest and runs a scan, which "
+                       "is what makes the gateway notice. v" + version,
+                       size="13px", colour="var(--label--disabled)"),
+                {"type": "ia.container.flex", "meta": {"name": "controls"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                 "props": {"direction": "row", "style": {"gap": "14px"}},
+                 "props": {"direction": "row", "alignItems": "flex-end",
+                           "style": {"gap": "12px", "flexWrap": "wrap"}},
                  "children": [
                      _theme_picker("pick_theme", "Theme", "view.custom.theme",
-                                   INSTALLED_OPTIONS),
-                     _theme_picker("pick_against",
-                                   "Compared with (Ignition's own are listed first)",
-                                   "view.custom.against", AGAINST_OPTIONS),
+                                   EDITOR_THEME_OPTIONS),
+                     _picker("pick_file", "File", "view.custom.file",
+                             EDITOR_FILE_OPTIONS, width="190px"),
+                     _only_when(
+                         _picker("pick_against", "Compare with",
+                                 "view.custom.against",
+                                 EDITOR_AGAINST_OPTIONS, width="190px"),
+                         IS_TOKENS),
+                     {"type": "ia.container.flex", "meta": {"name": "gap"},
+                      "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+                      "props": {}},
+                     _button("btn_revert", "Revert to shipped", EDITOR_REVERT),
+                     _button("btn_refresh", "Scan now", EDITOR_REFRESH),
+                     _only_when(_button("btn_save", "Save", EDITOR_SAVE_TEXT,
+                                        primary=True), IS_RAW),
                  ]},
-                _only_when_comparing(
-                {"type": "ia.container.flex", "meta": {"name": "stats"},
+                {"type": "ia.display.label", "meta": {"name": "status"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                 "props": {"direction": "row", "style": {"gap": "10px"}},
+                 "props": {"style": {"fontSize": "12px",
+                                     "color": "var(--label--disabled)",
+                                     "minHeight": "16px"}},
+                 "propConfig": {"props.text": {
+                     "binding": _prop("view.custom.status")}}},
+
+                # The body is the ONE grower. Its two children are mutually
+                # exclusive and each fill it -- two growers in one container is
+                # the trap that makes a Perspective page lay out at random.
+                {"type": "ia.container.flex", "meta": {"name": "body"},
+                 "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+                 "props": {"direction": "column", "style": {"gap": "8px"}},
                  "children": [
-                     _stat("overridden", "of Ignition's variables repainted"),
-                     _stat("inherited", "left exactly as Ignition set them"),
-                     _stat("added", "new variables this theme adds"),
-                 ]}),
-                _only_when_comparing(
-                    _label("anatomy_h", "How it is built", size="15px",
-                           weight=600)),
-                _only_when_comparing(
-                {"type": "ia.container.flex", "meta": {"name": "layers"},
-                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                 "props": {"direction": "row", "style": {"gap": "10px"}},
-                 "children": [_layer_card(i) for i in range(3)]}),
-                _only_when_comparing(
-                    _label("table_h",
-                           "Every difference, grouped by what it affects",
-                           size="15px", weight=600)),
-                _only_when_comparing(_label("table_sub",
-                       "Rules first, then the variables. Scrollbars, "
-                       "colour-scheme and component chrome set no custom "
-                       "properties at all, so a variables-only list shows "
-                       "nothing when they are the only thing that changed.",
-                       size="12px", colour="var(--label--disabled)")),
-                _only_when_comparing(_table("changes", [
-                    _col("group", "Affects", 180, True),
-                    _col("variable", "Variable", 195, True),
-                    _col("what", "What it is"),
-                    _col("swatch", "Colour", 70, True),
-                    _col("value", "This theme", 165, True),
-                    _col("compared", "Compared with", 150, True),
-                    _col("state", "Change", 130, True),
-                ], "view.custom.rows")),
+                     _only_when(_label(
+                         "tok_sub",
+                         "Click a row to load it into the field below, then "
+                         "Save token. 'Compared with' is the other theme's "
+                         "own value for the same token -- where that reads as "
+                         "var(--something), the theme you are comparing "
+                         "against points the token at another one rather than "
+                         "naming a colour.",
+                         size="12px", colour="var(--label--disabled)"),
+                         IS_TOKENS, layout=True),
+                     _only_when(_editable_token_table(), IS_TOKENS,
+                                layout=True),
+                     _only_when(_token_edit_strip(), IS_TOKENS, layout=True),
+                     _only_when(_raw_editor(), IS_RAW, layout=True),
+                 ]},
             ],
         },
+    }
+
+
+def _editable_token_table():
+    columns = [
+        _col("group", "Affects", 170, True),
+        _col("name", "Token", 200, True),
+        _col("swatch", "Colour", 70, True),
+        _col("value", "Value", 190, True),
+        _col("compared", "Compared with", 170, True),
+        _col("state", "vs comparison", 150, True),
+    ]
+    table = _table("tokens", columns, "view.custom.rows")
+    # onRowClick carries only the CONFIGURED columns, which is why 'name' and
+    # 'value' are both columns rather than one being derived in the script.
+    table["events"] = {"component": {"onRowClick": {
+        "config": {"script": EDITOR_PICK_ROW}, "scope": "G", "type": "script"}}}
+    return table
+
+
+def _token_edit_strip():
+    """The row you clicked, with a field and a Save. Named, so you can see what
+    you are about to change -- an in-cell editor hides that behind the cursor."""
+    return {
+        "type": "ia.container.flex", "meta": {"name": "edit"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center",
+                  "style": {"gap": "10px", "padding": "10px 12px",
+                            "backgroundColor": "var(--containerBackground)",
+                            "borderStyle": "solid", "borderWidth": "1px",
+                            "borderColor": "var(--border)",
+                            "borderRadius": "3px"}},
+        "children": [
+            _label("cap", "Token", size="12px",
+                   colour="var(--label--disabled)"),
+            {"type": "ia.display.label", "meta": {"name": "sel"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"style": {
+                 "fontSize": "13px", "fontWeight": 600, "color": "var(--label)",
+                 "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', "
+                               "Consolas, monospace",
+                 "minWidth": "200px"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "expr", "config": {"expression":
+                     "if({view.custom.sel_name} = '', "
+                     "'-- click a row --', {view.custom.sel_name})"}}}}},
+            {"type": "ia.input.text-field", "meta": {"name": "val"},
+             "position": {"grow": 0, "shrink": 0, "basis": "220px"},
+             # deferUpdates false, explicitly: the field writes back as it is
+             # typed rather than on blur, so Save cannot read a stale value
+             # however fast someone goes from the field to the button.
+             "props": {"deferUpdates": False,
+                       "style": {
+                           "height": "34px",
+                           "fontFamily": "'DejaVu Sans Mono', "
+                                         "'Liberation Mono', Consolas, "
+                                         "monospace"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "property",
+                 "config": {"path": "view.custom.sel_value",
+                            "bidirectional": True}}}}},
+            # The swatch of what is CURRENTLY in the box, so a typo is visible
+            # before it is saved rather than after the page repaints.
+            {"type": "ia.display.label", "meta": {"name": "preview"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": "",
+                       "style": {"width": "34px", "height": "34px",
+                                 "borderStyle": "solid", "borderWidth": "1px",
+                                 "borderColor": "var(--border)",
+                                 "borderRadius": "3px"}},
+             "propConfig": {"props.style.backgroundColor": {"binding": {
+                 "type": "property",
+                 "config": {"path": "view.custom.sel_value"}}}}},
+            {"type": "ia.container.flex", "meta": {"name": "gap"},
+             "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+             "props": {}},
+            _button("btn_save_token", "Save token", EDITOR_SAVE_TOKEN,
+                    primary=True),
+        ],
+    }
+
+
+def _raw_editor():
+    return {
+        "type": "ia.input.text-area", "meta": {"name": "raw"},
+        "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+        "props": {"style": {
+            # ui-monospace resolves to a PROPORTIONAL face on this platform;
+            # name real families. Never set -webkit-font-smoothing.
+            "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace",
+            "fontSize": "12.5px", "lineHeight": "1.5",
+            "whiteSpace": "pre", "tabSize": "2",
+            # A flex item's min-height defaults to its CONTENT. globals.css is
+            # hundreds of lines, so the box claimed all of it, ignored its own
+            # flex-basis and was pushed off the bottom of the page with the
+            # space above it reading as a layout bug. Zero minimum, and the
+            # overflow scrolls inside the box where it belongs.
+            "minHeight": "0", "overflow": "auto"}},
+        "propConfig": {"props.text": {"binding": {
+            "type": "property",
+            "config": {"path": "view.custom.text", "bidirectional": True}}}},
     }
 
 
@@ -1687,6 +2034,11 @@ def main():
               "hand-authored, not generated" % os.path.relpath(INSIGHT_SRC, HERE))
         sys.exit(1)
 
+    if not os.path.isfile(EDITOR_SRC):
+        print("build_installer.py: %s not found -- the editor functions are "
+              "hand-authored, not generated" % os.path.relpath(EDITOR_SRC, HERE))
+        sys.exit(1)
+
     for src in (SELECTOR_POPUP_SRC, THEME_DROPDOWN_SRC):
         if not os.path.isfile(src):
             print("build_installer.py: %s not found -- the theme-switcher views "
@@ -1700,7 +2052,7 @@ def main():
     page_config_dir = os.path.join(persp_dir, "page-config")
     stylesheet_dir = os.path.join(persp_dir, "stylesheet")
     view_dir = os.path.join(persp_dir, "views", "Installer")
-    changes_dir = os.path.join(persp_dir, "views", "Changes")
+    editor_dir = os.path.join(persp_dir, "views", "Editor")
     themes_dir = os.path.join(persp_dir, "views", "Themes")
     how_dir = os.path.join(persp_dir, "views", "How")
     contract_dir = os.path.join(persp_dir, "views", "Contract")
@@ -1708,7 +2060,7 @@ def main():
     dropdown_dir = os.path.join(persp_dir, "views", "ThemeDropdown")
 
     for d in (script_dir, session_props_dir, page_config_dir, stylesheet_dir,
-              view_dir, popup_dir, dropdown_dir, changes_dir, contract_dir,
+              view_dir, popup_dir, dropdown_dir, editor_dir, contract_dir,
               themes_dir, how_dir):
         os.makedirs(d)
 
@@ -1745,7 +2097,7 @@ def main():
             "/": {"title": "Theme Installer", "viewPath": "Installer"},
             "/themes": {"title": "The themes", "viewPath": "Themes"},
             "/how": {"title": "How it works", "viewPath": "How"},
-            "/changes": {"title": "Under the hood", "viewPath": "Changes"},
+            "/editor": {"title": "Editor", "viewPath": "Editor"},
             "/contract": {"title": "The contract", "viewPath": "Contract"},
         }
     })
@@ -1794,9 +2146,9 @@ def main():
     # views/Changes and views/Contract -- the insight pages. Generated, but
     # they contain no data of their own: every number is bound to a themepack
     # call that reads the live gateway.
-    write_json(os.path.join(changes_dir, "view.json"),
-               build_changes_view_json(themes, version))
-    write_json(os.path.join(changes_dir, "resource.json"), resource_json(["view.json"]))
+    write_json(os.path.join(editor_dir, "view.json"),
+               build_editor_view_json(themes, version))
+    write_json(os.path.join(editor_dir, "resource.json"), resource_json(["view.json"]))
     write_json(os.path.join(contract_dir, "view.json"),
                build_contract_view_json(themes, version))
     write_json(os.path.join(contract_dir, "resource.json"), resource_json(["view.json"]))
