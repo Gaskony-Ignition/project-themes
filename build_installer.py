@@ -1741,19 +1741,15 @@ EDITOR_TEXT = (
     "\texcept Exception, e:\n"
     "\t\treturn str(e)"
 )
-EDITOR_CLASSES = (
+EDITOR_ABOUT = (
     "\timport themepack\n"
     "\ttheme = (value + '|').split('|')[0]\n"
     "\tif not theme:\n"
     "\t\treturn []\n"
     "\ttry:\n"
-    "\t\trows = themepack.editor_classes(theme)\n"
+    "\t\treturn themepack.about(theme)\n"
     "\texcept Exception:\n"
-    "\t\trows = []\n"
-    "\tif not rows:\n"
-    "\t\treturn [{'klass': 'None yet -- these come from a copy of "
-    "one of ours'}]\n"
-    "\treturn rows"
+    "\t\treturn []"
 )
 EDITOR_PICK_FILE = (
     "\tdata = event.value or {}\n"
@@ -2502,7 +2498,7 @@ def build_editor_view_json(themes, version):
     return {
         "custom": {"theme": "", "file": "variables.css", "key": "",
                    "text": "", "status": "", "nudge": 0, "kind": "",
-                   "tokens": [], "classes": [],
+                   "tokens": [], "about": [],
                    "sel_name": "", "sel_value": "",
                    "raw": False, "making": "", "new_name": "",
                    "new_base": "dark"},
@@ -2519,8 +2515,8 @@ def build_editor_view_json(themes, version):
             "custom.tokens": {"binding": _prop("view.custom.key",
                                                EDITOR_TOKEN_ROWS)},
             "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
-            "custom.classes": {"binding": _prop("view.custom.key",
-                                                EDITOR_CLASSES)},
+            "custom.about": {"binding": _prop("view.custom.key",
+                                              EDITOR_ABOUT)},
         },
         "params": {},
         "root": {
@@ -2572,7 +2568,7 @@ def build_editor_view_json(themes, version):
                           # preview is what fills the 380px of dead space the
                           # preview left below itself. The token table, which
                           # is three columns, keeps the wide middle.
-                          _only_when(_classes_pane(),
+                          _only_when(_about_pane(),
                                      "{view.custom.kind} != ''", layout=True),
                       ]},
                  ]},
@@ -2629,20 +2625,28 @@ def _file_rail():
     return table
 
 
-def _classes_pane():
-    """The st/... class list, in the narrow column under the preview."""
-    pane = _pane("classes_pane", "Style classes",
-                 "Read-only. Every st/... class this theme ships.",
-                 [_contract_classes()], "0px")
-    pane["position"] = {"grow": 1, "shrink": 1, "basis": "0px"}
-    pane["props"]["style"]["minHeight"] = "152px"
+def _about_pane():
+    """Three facts about the theme, one line each.
+
+    This was a list of the 69 st/... class names. Every one of the ten ships
+    the SAME 69 -- measured, not assumed -- so per theme it answered "does
+    this carry the contract" with a scroll, and told you nothing about the
+    theme you had open. One line says it; the names belong in the README,
+    where someone building a project would look for them.
+    """
+    table = _table("about", [
+        # BOTH titles are a space, not "". An empty title falls back to the
+        # FIELD NAME, which put a column headed "fact" over three facts --
+        # the same trap that once labelled a swatch column "swatc".
+        _col("fact", " ", 96, True),
+        _col("detail", " "),
+    ], "view.custom.about")
+    # Exactly three rows plus the header strip: 30 + 3 x 30, then stop. At
+    # 164 the pane carried 40px of empty table under the last fact.
+    table["props"]["style"] = {"minHeight": "126px"}
+    pane = _pane("about_pane", "About this theme", "", [table], "auto",
+                 hug=True)
     return pane
-
-
-def _contract_classes():
-    table = _table("classes", [_col("klass", "Class")], "view.custom.classes")
-    table["props"]["style"] = {"minHeight": "122px"}
-    return table
 
 
 def _raw_editor():

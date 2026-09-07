@@ -921,6 +921,41 @@ def live_preview_uri(theme, width=340, height=102):
 # install, so the customiser offers a COPY instead and the ten stay read-only.
 # ---------------------------------------------------------------------------
 
+def about(theme):
+    """The handful of facts about a theme that are worth a line each.
+
+    Replaces a 69-row list of st/... class names. Every one of the ten
+    publishes the SAME class set -- verified by comparing the sorted class
+    lists across finance-ledger, nord-dark, glass-violet, industrial-light and
+    leather-dark: identical -- so listing them per theme answered one yes/no
+    question with a scroll, and said nothing about the theme you were on.
+    """
+    rows = []
+    kind = theme_kind(theme)
+    base = user_base_of(theme) if kind == "user" else base_of(theme)
+    rows.append({"fact": "Built on", "detail": base or "nothing -- it IS a base"})
+    try:
+        classes = editor_classes(theme)
+    except (Exception, Throwable), e:
+        classes = []
+    if classes:
+        rows.append({"fact": "Style classes",
+                     "detail": "%d, the standard contract"
+                               % len(classes)})
+    else:
+        rows.append({"fact": "Style classes",
+                     "detail": "none -- a stock base ships none"})
+    try:
+        found = [r for r in list_themes() if r["id"] == theme]
+    except (Exception, Throwable), e:
+        found = []
+    if found:
+        rows.append({"fact": "Files",
+                     "detail": "%d files, %d KB"
+                               % (found[0]["files"], found[0]["bytes"] / 1024)})
+    return rows
+
+
 def editor_css(theme):
     """What the browser WILL get: the served stylesheet with this theme's own
     files appended, so the last save counts even before the scan does.

@@ -8,7 +8,7 @@
     "nudge": 0,
     "kind": "",
     "tokens": [],
-    "classes": [],
+    "about": [],
     "sel_name": "",
     "sel_value": "",
     "raw": false,
@@ -81,7 +81,7 @@
         ]
       }
     },
-    "custom.classes": {
+    "custom.about": {
       "binding": {
         "type": "property",
         "config": {
@@ -90,7 +90,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.editor_classes(theme)\n\texcept Exception:\n\t\trows = []\n\tif not rows:\n\t\treturn [{'klass': 'None yet -- these come from a copy of one of ours'}]\n\treturn rows"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.about(theme)\n\texcept Exception:\n\t\treturn []"
           }
         ]
       }
@@ -2150,12 +2150,12 @@
               {
                 "type": "ia.container.flex",
                 "meta": {
-                  "name": "classes_pane_wrap"
+                  "name": "about_pane_wrap"
                 },
                 "position": {
-                  "grow": 1,
-                  "shrink": 1,
-                  "basis": "0px"
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
                 },
                 "props": {
                   "direction": "row",
@@ -2183,7 +2183,7 @@
                   {
                     "type": "ia.container.flex",
                     "meta": {
-                      "name": "classes_pane"
+                      "name": "about_pane"
                     },
                     "position": {
                       "grow": 1,
@@ -2194,7 +2194,7 @@
                       "direction": "column",
                       "style": {
                         "gap": "0px",
-                        "minHeight": "152px",
+                        "minHeight": "0px",
                         "borderRadius": "4px",
                         "backgroundColor": "var(--container)",
                         "borderStyle": "solid",
@@ -2236,32 +2236,13 @@
                               "basis": "auto"
                             },
                             "props": {
-                              "text": "Style classes",
+                              "text": "About this theme",
                               "style": {
                                 "fontSize": "11px",
                                 "fontWeight": 600,
                                 "letterSpacing": "0.06em",
                                 "textTransform": "uppercase",
                                 "color": "var(--label)"
-                              }
-                            }
-                          },
-                          {
-                            "type": "ia.display.label",
-                            "meta": {
-                              "name": "hint"
-                            },
-                            "position": {
-                              "grow": 0,
-                              "shrink": 0,
-                              "basis": "auto"
-                            },
-                            "props": {
-                              "text": "Read-only. Every st/... class this theme ships.",
-                              "style": {
-                                "fontSize": "11.5px",
-                                "lineHeight": "1.45",
-                                "color": "var(--label--disabled)"
                               }
                             }
                           }
@@ -2273,9 +2254,9 @@
                           "name": "body"
                         },
                         "position": {
-                          "grow": 1,
-                          "shrink": 1,
-                          "basis": "0px"
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
                         },
                         "props": {
                           "direction": "column",
@@ -2289,7 +2270,7 @@
                           {
                             "type": "ia.display.table",
                             "meta": {
-                              "name": "classes"
+                              "name": "about"
                             },
                             "position": {
                               "grow": 1,
@@ -2303,14 +2284,22 @@
                               },
                               "columns": [
                                 {
-                                  "field": "klass",
+                                  "field": "fact",
                                   "header": {
-                                    "title": "Class"
+                                    "title": " "
+                                  },
+                                  "width": 96,
+                                  "strictWidth": true
+                                },
+                                {
+                                  "field": "detail",
+                                  "header": {
+                                    "title": " "
                                   }
                                 }
                               ],
                               "style": {
-                                "minHeight": "122px"
+                                "minHeight": "126px"
                               }
                             },
                             "propConfig": {
@@ -2318,7 +2307,7 @@
                                 "binding": {
                                   "type": "property",
                                   "config": {
-                                    "path": "view.custom.classes"
+                                    "path": "view.custom.about"
                                   }
                                 }
                               }
