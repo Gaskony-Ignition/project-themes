@@ -87,6 +87,30 @@
           {
             "type": "ia.display.label",
             "meta": {
+              "name": "brand"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Theme Installer  1.15.0",
+              "style": {
+                "fontSize": "13.5px",
+                "fontWeight": 600,
+                "whiteSpace": "nowrap",
+                "color": "var(--label)",
+                "padding": "9px 18px 8px 2px",
+                "borderBottomStyle": "solid",
+                "borderBottomWidth": "2px",
+                "borderBottomColor": "transparent"
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
               "name": "tab_home"
             },
             "position": {
@@ -194,25 +218,6 @@
           }
         },
         "children": [
-          {
-            "type": "ia.display.label",
-            "meta": {
-              "name": "heading"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Theme Installer  \u00b7  v1.14.0",
-              "style": {
-                "fontSize": "24px",
-                "fontWeight": 600,
-                "color": "var(--label)"
-              }
-            }
-          },
           {
             "type": "ia.container.flex",
             "meta": {

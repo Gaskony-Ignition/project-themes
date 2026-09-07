@@ -698,8 +698,8 @@ def build_view_json(themes, version):
             "children": [
                 # Same nav as the insight pages. Without it those pages are
                 # reachable only by typing the URL, which is not shipping them.
-                _nav("Installer"),
-                _action_grid(themes, version),
+                _nav("Installer", version),
+                _action_grid(themes),
                 {
                     "type": "ia.display.table",
                     "meta": {"name": "themes_table"},
@@ -810,11 +810,17 @@ def _label(name, text, size="13px", colour="var(--label)", weight=None, grow=0):
             "props": {"text": text, "style": style}}
 
 
-def _nav(active):
+def _nav(active, version):
     """A tab strip across the top. These are separate PAGES, so this cannot be
     an ia.container.tab -- that switches views inside one view. It is a row of
     tabs drawn to look like one: the active tab carries the accent underline
-    and does not offer to navigate to the page you are already on."""
+    and does not offer to navigate to the page you are already on.
+
+    It also carries the project's name and version (Nigel, 07/09/2026). Both
+    pages opened with a 24px heading that repeated the tab you had just
+    clicked and stamped the same version twice; the strip already spans the
+    page and had room, so the identity moved into it and the pages got the
+    height back."""
     # Two pages (Nigel, 07/09/2026). "The themes" was folded into the
     # Installer -- seeing what you are about to install, on the page that
     # installs it, is better than a gallery you have to navigate to. "How it
@@ -824,7 +830,18 @@ def _nav(active):
     # The route stays /editor; the LABEL changed when the page stopped
     # being a file editor (Nigel, 07/09/2026).
     pages = [("Installer", "/"), ("Customise", "/editor")]
-    tabs = []
+    # The name leads, the way an app bar does. Bottom-aligned with the tabs and
+    # padded to match them, or it floats off the baseline they sit on.
+    tabs = [{"type": "ia.display.label", "meta": {"name": "brand"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": "Theme Installer  " + version,
+                       "style": {"fontSize": "13.5px", "fontWeight": 600,
+                                 "whiteSpace": "nowrap",
+                                 "color": "var(--label)",
+                                 "padding": "9px 18px 8px 2px",
+                                 "borderBottomStyle": "solid",
+                                 "borderBottomWidth": "2px",
+                                 "borderBottomColor": "transparent"}}}]
     for title, path in pages:
         current = title == active
         style = {"fontSize": "13px", "padding": "9px 16px 8px",
@@ -1478,8 +1495,8 @@ def _act_button(name, text, script, kind="normal"):
                 "config": {"script": script}, "scope": "G", "type": "script"}}}}
 
 
-def _action_grid(themes, version):
-    """The top of the Installer: title, then three cards of related buttons.
+def _action_grid(themes):
+    """The top of the Installer: three cards of related buttons.
 
     Nigel, 07/09/2026: the two paragraphs sprawling across the page followed by
     a flat row of five buttons was not organised. The prose was accurate and
@@ -1494,11 +1511,8 @@ def _action_grid(themes, version):
         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
         "props": {"direction": "column", "style": {"gap": "12px"}},
         "children": [
-            {"type": "ia.display.label", "meta": {"name": "heading"},
-             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-             "props": {"text": "Theme Installer  ·  v" + version,
-                       "style": {"fontSize": "24px", "fontWeight": 600,
-                                 "color": "var(--label)"}}},
+            # No heading. It said the name of the project on the page you were
+            # already on, under a tab strip that now says it once.
             {"type": "ia.container.flex", "meta": {"name": "cards"},
              "position": {"grow": 0, "shrink": 0, "basis": "auto"},
              "props": {"direction": "row", "alignItems": "stretch",
@@ -2504,9 +2518,7 @@ def build_editor_view_json(themes, version):
                                 "height": "100%", "overflow": "hidden",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
-                _nav("Customise"),
-                _label("title", "Customise  ·  v" + version, size="24px",
-                       weight=600),
+                _nav("Customise", version),
                 _prose("sub",
                        "Make a theme of your own: copy one of the ten, then "
                        "change its colours here. The ten themselves are "
