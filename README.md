@@ -85,15 +85,12 @@ The project is two pages, linked from each header:
   every row of the same imaginary plant page drawn in that theme's colours.
   Seeing what you are about to install belongs on the page that installs it, in
   the row that says whether it is installed.
-* **Editor** — the theme files on this gateway. Files down the left, the one
-  you picked filling the middle, and a toolbar that saves, reverts and scans.
-  Themes of your own are made and removed here too: name one, pick a stock base
-  or copy the theme you have open, and Delete appears only for themes made this
-  way — the ten pre-packaged ones belong to the Installer's Remove button and
-  Ignition's own are never deleted at all.
-  Down the right, what the theme publishes: its `--st-*` tokens with their live
-  values and its `st/...` style classes — the contract a project builds
-  against, read while you edit rather than on a page of its own.
+* **Editor** — the theme files on this gateway, in three headed panes: the
+  files down the left, the one you opened filling the middle with the buttons
+  that write it, and on the right what the theme publishes for a project to
+  build against. Above them, one row for whole-theme actions — which theme you
+  are editing, whether it is pre-packaged, Ignition's own or yours, and the
+  buttons to make, copy or delete one.
 
 The thumbnails are SVGs generated at build time from the theme files the
 installer already embeds, so a row's picture and the files Install writes cannot

@@ -1592,11 +1592,13 @@ EDITOR_FILE_ROWS = (
     "\t\tmark = ''\n"
     "\t\ttry:\n"
     "\t\t\tif themepack.read_file(theme, r['name'])['modified']:\n"
-    "\t\t\t\tmark = 'edited'\n"
+    "\t\t\t\tmark = u'  \\u25cf'\n"
     "\t\texcept Exception:\n"
     "\t\t\tpass\n"
-    "\t\tout.append({'name': r['name'],\n"
-    "\t\t            'state': mark})\n"
+    "\t\t# The marker rides on the NAME. A column of its own needs a header,\n"
+    "\t\t# and an empty header title falls back to the field name -- which is\n"
+    "\t\t# how a 26px column came to be labelled 'sta'.\n"
+    "\t\tout.append({'name': r['name'] + mark})\n"
     "\treturn out"
 )
 EDITOR_TEXT = (
@@ -1631,7 +1633,8 @@ EDITOR_CLASSES = (
 )
 EDITOR_PICK_FILE = (
     "\tdata = event.value or {}\n"
-    "\tname = data.get('name', '')\n"
+    "\t# Strip the edited marker back off -- the row carries it for display.\n"
+    "\tname = (data.get('name', '') or '').split(' ')[0].strip()\n"
     "\tif name:\n"
     "\t\tself.view.custom.file = name\n"
     "\t\tself.view.custom.status = ''"
@@ -1691,12 +1694,53 @@ EDITOR_KIND = (
     "\t\treturn ''\n"
     "\treturn themepack.theme_kind(theme)"
 )
+# The badge answers "am I allowed to break this?", which is the first thing
+# anyone wants to know on this page.
+EDITOR_KIND_LABEL = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn ''\n"
+    "\tkind = themepack.theme_kind(theme)\n"
+    "\tbase = themepack.base_of(theme)\n"
+    "\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n"
+    "\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n"
+    "\t# point: the separator here arrived on the page as mojibake.\n"
+    "\twords = {\n"
+    "\t\t'packaged': 'One of the ten pre-packaged themes, built on %s. "
+    "Install on the first page puts it back.',\n"
+    "\t\t'stock': \"One of Ignition's own, built on %s. Editing it changes "
+    "every project using it.\",\n"
+    "\t\t'user': 'Yours, built on %s. Nothing on the Installer page "
+    "overwrites it.',\n"
+    "\t}\n"
+    "\ttext = words.get(kind, kind)\n"
+    "\tif '%s' in text:\n"
+    "\t\ttext = text % (base or 'a stock theme')\n"
+    "\treturn text"
+)
+EDITOR_START_NEW = (
+    "\tself.view.custom.making = 'new'\n"
+    "\tself.view.custom.new_name = ''\n"
+    "\tself.view.custom.status = ''"
+)
+EDITOR_START_COPY = (
+    "\tself.view.custom.making = 'copy'\n"
+    "\tself.view.custom.new_name = ''\n"
+    "\tself.view.custom.status = ''"
+)
+EDITOR_CANCEL = (
+    "\tself.view.custom.making = ''\n"
+    "\tself.view.custom.new_name = ''\n"
+    "\tself.view.custom.status = ''"
+)
 EDITOR_NEW = (
     "\timport themepack\n"
     "\tname = (self.view.custom.new_name or '').strip()\n"
     "\ttry:\n"
     "\t\tthemepack.new_theme(name, self.view.custom.new_base)\n"
     "\t\tself.view.custom.new_name = ''\n"
+    "\t\tself.view.custom.making = ''\n"
     "\t\tself.view.custom.theme = name\n"
     "\t\tself.view.custom.file = 'variables.css'\n"
     "\t\tself.view.custom.status = ('Created %s on %s -- it renders like its "
@@ -1713,6 +1757,7 @@ EDITOR_COPY = (
     "\ttry:\n"
     "\t\tthemepack.copy_theme(source, name)\n"
     "\t\tself.view.custom.new_name = ''\n"
+    "\t\tself.view.custom.making = ''\n"
     "\t\tself.view.custom.theme = name\n"
     "\t\tself.view.custom.status = 'Copied %s to %s' % (source, name)\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
@@ -1762,120 +1807,254 @@ def _button(name, text, script, primary=False):
     }
 
 
-def _panel(name, children, basis, style=None):
-    """A bordered column. The three of them are the page."""
-    base = {"gap": "0px", "backgroundColor": "var(--container)",
-            "borderStyle": "solid", "borderWidth": "1px",
-            "borderColor": "var(--border)", "borderRadius": "3px",
-            "overflow": "hidden", "minHeight": "0px"}
-    base.update(style or {})
-    return {"type": "ia.container.flex", "meta": {"name": name},
-            "position": {"grow": 1 if basis == "0px" else 0,
-                         "shrink": 1, "basis": basis},
-            "props": {"direction": "column", "style": base},
-            "children": children}
+# ---------------------------------------------------------------------------
+# THE EDITOR
+#
+# Rewritten a third time, 07/09/2026. Nigel on v1.11.0: "poorly organised and I
+# have no idea how to use it... please take notice of both the example module
+# and our finished installer page for quality."
+#
+# What the Installer page got right, applied here:
+#   - every group of controls has a heading and ONE line saying what it does,
+#   - a button sits with the thing it acts on rather than in a shared toolbar,
+#   - and the page says what it is before it shows you a workspace.
+#
+# The three things you can do here are different in kind, so they are three
+# places on the page rather than one row of seven buttons:
+#   THEME level   pick one, make one, copy one, delete one you made
+#   FILE level    open one, save it, put it back
+#   REFERENCE     what this theme publishes for a project to build on
+# In v1.11.0 Save sat next to "Revert to shipped" and a theme dropdown, three
+# scopes in one strip, which is most of why it read as unusable.
+# ---------------------------------------------------------------------------
+
+def _pane(name, title, hint, children, basis, body_pad="0px"):
+    """A bordered column with a heading and one line of explanation.
+
+    The hint is not decoration. Every pane on this page needed a sentence: a
+    file list nobody has been told is clickable, and a token list nobody has
+    been told is read-only reference, are both furniture.
+    """
+    head = [{"type": "ia.display.label", "meta": {"name": "h"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": title,
+                       "style": {"fontSize": "11px", "fontWeight": 600,
+                                 "letterSpacing": "0.06em",
+                                 "textTransform": "uppercase",
+                                 "color": "var(--label)"}}}]
+    if hint:
+        head.append({"type": "ia.display.label", "meta": {"name": "hint"},
+                     "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                     "props": {"text": hint,
+                               "style": {"fontSize": "11.5px",
+                                         "lineHeight": "1.45",
+                                         "color": "var(--label--disabled)"}}})
+    return {
+        "type": "ia.container.flex", "meta": {"name": name},
+        "position": {"grow": 1 if basis == "0px" else 0, "shrink": 1,
+                     "basis": basis},
+        "props": {"direction": "column",
+                  "style": {"gap": "0px", "minHeight": "0px",
+                            "borderRadius": "4px",
+                            "backgroundColor": "var(--container)",
+                            "borderStyle": "solid", "borderWidth": "1px",
+                            "borderColor": "var(--border)",
+                            "overflow": "hidden"}},
+        "children": [
+            {"type": "ia.container.flex", "meta": {"name": "head"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"direction": "column",
+                       "style": {"gap": "3px", "padding": "9px 11px 8px",
+                                 "borderBottomStyle": "solid",
+                                 "borderBottomWidth": "1px",
+                                 "borderBottomColor": "var(--border)"}},
+             "children": head},
+            {"type": "ia.container.flex", "meta": {"name": "body"},
+             "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+             "props": {"direction": "column",
+                       "style": {"gap": "0px", "minHeight": "0px",
+                                 "padding": body_pad}},
+             "children": children},
+        ],
+    }
 
 
-def _pane_head(name, text):
+def _cap(name, text, size="12px"):
     return {"type": "ia.display.label", "meta": {"name": name},
             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
             "props": {"text": text,
-                      "style": {"fontSize": "11px", "fontWeight": 600,
-                                "letterSpacing": "0.06em",
-                                "textTransform": "uppercase",
+                      "style": {"fontSize": size,
                                 "color": "var(--label--disabled)",
-                                "padding": "8px 10px 6px"}}}
+                                "whiteSpace": "nowrap"}}}
 
 
-def _theme_admin_strip():
-    """Make a theme, copy one, delete one you made.
+def _spacer(name="gap"):
+    return {"type": "ia.container.flex", "meta": {"name": name},
+            "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+            "props": {}}
 
-    Sits under the toolbar rather than in it: these change WHICH themes exist,
-    which is a different kind of action from editing the one you have open, and
-    putting them in the same row as Save invites the wrong click.
-    """
-    def cap(text):
-        return {"type": "ia.display.label", "meta": {"name": "cap"},
-                "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                "props": {"text": text,
-                          "style": {"fontSize": "12px",
-                                    "color": "var(--label--disabled)"}}}
+
+def _theme_bar():
+    """Everything that acts on a WHOLE theme, in one labelled row."""
     return {
-        "type": "ia.container.flex", "meta": {"name": "admin"},
+        "type": "ia.container.flex", "meta": {"name": "themebar"},
         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
         "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
-                  "style": {"gap": "8px", "rowGap": "8px",
-                            "padding": "8px 10px",
-                            "borderRadius": "3px",
+                  "style": {"gap": "9px", "rowGap": "8px",
+                            "padding": "10px 12px", "borderRadius": "4px",
                             "backgroundColor": "var(--container)",
                             "borderStyle": "solid", "borderWidth": "1px",
                             "borderColor": "var(--border)"}},
         "children": [
-            cap("New theme"),
-            {"type": "ia.input.text-field", "meta": {"name": "new_name"},
-             "position": {"grow": 0, "shrink": 0, "basis": "180px"},
-             # deferUpdates false so a button beside it cannot read a stale
-             # value however fast the click follows the last keystroke.
-             "props": {"deferUpdates": False,
-                       "placeholder": "ocean-dark",
-                       "style": {"height": "30px",
-                                 "fontFamily": "'DejaVu Sans Mono', "
-                                               "'Liberation Mono', Consolas, "
-                                               "monospace"}},
-             "propConfig": {"props.text": {"binding": {
-                 "type": "property",
-                 "config": {"path": "view.custom.new_name",
-                            "bidirectional": True}}}}},
-            cap("built on"),
-            {"type": "ia.input.dropdown", "meta": {"name": "new_base"},
-             "position": {"grow": 0, "shrink": 0, "basis": "140px"},
-             "props": {"allowClearing": False, "showSearch": False,
-                       "style": {"height": "30px"}},
+            _cap("cap", "Editing theme"),
+            {"type": "ia.input.dropdown", "meta": {"name": "theme"},
+             "position": {"grow": 0, "shrink": 0, "basis": "225px"},
+             "props": {"allowClearing": False, "showSearch": True,
+                       "style": {"height": "32px"}},
              "propConfig": {
-                 "props.options": {"binding": _expr("1", EDITOR_BASE_OPTIONS)},
+                 "props.options": {"binding": _expr("1", EDITOR_THEME_OPTIONS)},
+                 # bidirectional lives INSIDE config or the dropdown never
+                 # writes the selection back, silently.
                  "props.value": {"binding": {
                      "type": "property",
-                     "config": {"path": "view.custom.new_base",
+                     "config": {"path": "view.custom.theme",
                                 "bidirectional": True}}}}},
-            _button("btn_new", "Create", EDITOR_NEW, primary=True),
-            _button("btn_copy", "Copy open theme to it", EDITOR_COPY),
-            {"type": "ia.container.flex", "meta": {"name": "gap"},
-             "position": {"grow": 1, "shrink": 1, "basis": "0px"},
-             "props": {}},
+            # The badge is the answer to "am I allowed to break this?", which
+            # is the first thing anyone wants to know on this page.
+            {"type": "ia.display.label", "meta": {"name": "kind"},
+             "position": {"grow": 0, "shrink": 1, "basis": "auto"},
+             "props": {"style": {"fontSize": "12px",
+                                 "color": "var(--label--disabled)"}},
+             "propConfig": {"props.text": {"binding": _prop(
+                 "view.custom.key", EDITOR_KIND_LABEL)}}},
+            _spacer(),
+            _button("btn_new", "New theme...", EDITOR_START_NEW),
+            _button("btn_copy", "Copy this one...", EDITOR_START_COPY),
             _only_when(_button("btn_delete", "Delete this theme",
                                EDITOR_DELETE), IS_USER_THEME, layout=True),
         ],
     }
 
 
-def _only_when(node, expression, layout=False):
-    """Hide a component, and with layout=True take its SPACE back too.
+def _make_panel():
+    """The name/base row, shown only while making a theme.
 
-    meta.visible alone only adds component-meta-hidden, which stops a component
-    being seen and leaves it in the flex layout. Binding display fixes that,
-    but most components ignore style.display on their own root -- measured on
-    8.3.8, a table stayed 297px tall and a label stayed 34px with the binding
-    applied and no error. A flex container honours it, so layout=True wraps
-    whatever it is given rather than trusting the component to obey.
+    Hidden until asked for. Always on show it is three controls and two buttons
+    that most visits never touch, sitting between the theme you picked and the
+    file you came to edit.
     """
-    visible = {"binding": {"type": "expr", "config": {"expression": expression}}}
-    if not layout:
-        node.setdefault("propConfig", {})["meta.visible"] = visible
-        return node
-    grows = node.get("position", {}).get("grow", 0)
     return {
-        "type": "ia.container.flex",
-        "meta": {"name": node["meta"]["name"] + "_wrap"},
-        "position": {"grow": grows, "shrink": 1,
-                     "basis": "0px" if grows else "auto"},
-        "props": {"direction": "column", "style": {}},
-        "propConfig": {
-            "meta.visible": visible,
-            "props.style.display": {"binding": {"type": "expr", "config": {
-                "expression": "if(%s, 'flex', 'none')" % expression}}},
-        },
-        "children": [node],
+        "type": "ia.container.flex", "meta": {"name": "make"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "column",
+                  "style": {"gap": "7px", "padding": "11px 12px",
+                            "borderRadius": "4px",
+                            "backgroundColor": "var(--containerNested)",
+                            "borderStyle": "solid", "borderWidth": "1px",
+                            "borderColor": "var(--callToAction)"}},
+        "children": [
+            {"type": "ia.display.label", "meta": {"name": "hint"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"style": {"fontSize": "12.5px", "lineHeight": "1.5",
+                                 "color": "var(--label)"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "expr", "config": {"expression":
+                     "if({view.custom.making} = 'copy', "
+                     "'Copies the theme you have open, files and all, under a "
+                     "new name. Yours to edit; Install still puts ours back "
+                     "without touching it.', "
+                     "'Starts a theme that renders exactly like the stock one "
+                     "you build it on, so you can change a line at a time and "
+                     "see what it did.')"}}}}},
+            {"type": "ia.container.flex", "meta": {"name": "row"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"direction": "row", "alignItems": "center",
+                       "wrap": "wrap", "style": {"gap": "9px",
+                                                 "rowGap": "8px"}},
+             "children": [
+                 _cap("cap", "Call it"),
+                 {"type": "ia.input.text-field", "meta": {"name": "new_name"},
+                  "position": {"grow": 0, "shrink": 0, "basis": "190px"},
+                  # deferUpdates false so the button beside it cannot read a
+                  # stale value however fast the click follows the keystroke.
+                  "props": {"deferUpdates": False,
+                            "placeholder": "ocean-dark",
+                            "style": {"height": "32px",
+                                      "fontFamily": "'DejaVu Sans Mono', "
+                                                    "'Liberation Mono', "
+                                                    "Consolas, monospace"}},
+                  "propConfig": {"props.text": {"binding": {
+                      "type": "property",
+                      "config": {"path": "view.custom.new_name",
+                                 "bidirectional": True}}}}},
+                 _only_when(_cap("cap2", "built on"),
+                            "{view.custom.making} = 'new'", layout=True),
+                 _only_when(
+                     {"type": "ia.input.dropdown", "meta": {"name": "new_base"},
+                      "position": {"grow": 0, "shrink": 0, "basis": "150px"},
+                      "props": {"allowClearing": False, "showSearch": False,
+                                "style": {"height": "32px"}},
+                      "propConfig": {
+                          "props.options": {"binding": _expr(
+                              "1", EDITOR_BASE_OPTIONS)},
+                          "props.value": {"binding": {
+                              "type": "property",
+                              "config": {"path": "view.custom.new_base",
+                                         "bidirectional": True}}}}},
+                     "{view.custom.making} = 'new'", layout=True),
+                 _spacer(),
+                 _button("btn_cancel", "Cancel", EDITOR_CANCEL),
+                 _only_when(_button("btn_create", "Create theme", EDITOR_NEW,
+                                    primary=True),
+                            "{view.custom.making} = 'new'", layout=True),
+                 _only_when(_button("btn_docopy", "Copy theme", EDITOR_COPY,
+                                    primary=True),
+                            "{view.custom.making} = 'copy'", layout=True),
+             ]},
+        ],
     }
+
+
+def _editor_pane():
+    """The file you have open, with the buttons that act on THAT FILE.
+
+    Save used to live in a toolbar beside a theme dropdown and a delete. Here
+    it is inside the pane whose contents it writes, which is the same rule the
+    Installer's cards follow.
+    """
+    actions = {
+        "type": "ia.container.flex", "meta": {"name": "fileactions"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
+                  "style": {"gap": "8px", "rowGap": "8px",
+                            "padding": "8px 10px",
+                            "borderBottomStyle": "solid",
+                            "borderBottomWidth": "1px",
+                            "borderBottomColor": "var(--border)"}},
+        "children": [
+            {"type": "ia.display.label", "meta": {"name": "openfile"},
+             "position": {"grow": 0, "shrink": 1, "basis": "auto"},
+             "props": {"style": {
+                 "fontSize": "13px", "fontWeight": 600, "color": "var(--label)",
+                 "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', "
+                               "Consolas, monospace"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "expr", "config": {"expression":
+                     "if({view.custom.file} = '', "
+                     "'-- pick a file on the left --', "
+                     "{view.custom.file})"}}}}},
+            _spacer(),
+            _button("btn_save", "Save", EDITOR_SAVE, primary=True),
+            _button("btn_revert", "Undo my changes", EDITOR_REVERT),
+            _button("btn_scan", "Re-scan", EDITOR_REFRESH),
+        ],
+    }
+    return _pane(
+        "editorpane", "The file",
+        "Saving writes it and runs a config scan, which is what makes the "
+        "gateway use it. Undo my changes puts back what the installer ships "
+        "for this one file.",
+        [actions, _raw_editor()], "0px")
 
 
 def build_editor_view_json(themes, version):
@@ -1884,7 +2063,7 @@ def build_editor_view_json(themes, version):
         "custom": {"theme": "", "file": "variables.css", "key": "",
                    "files": [], "text": "", "status": "", "nudge": 0,
                    "tokens": [], "classes": [], "kind": "",
-                   "new_name": "", "new_base": "dark"},
+                   "making": "", "new_name": "", "new_base": "dark"},
         "propConfig": {
             "custom.theme": {"binding": _expr("1", EDITOR_FIRST_THEME)},
             # One key for everything that depends on the selection, and nudge
@@ -1912,53 +2091,27 @@ def build_editor_view_json(themes, version):
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
                 _nav("Editor"),
-                # Toolbar. One row: what you are editing, then what you can do
-                # to it. No page title -- the tab already says Editor, and a
-                # heading here costs a row of the editor's height.
-                {"type": "ia.container.flex", "meta": {"name": "toolbar"},
+                _label("title", "Editor  ·  v" + version, size="24px",
+                       weight=600),
+                _prose("sub",
+                       "Edits the theme files on THIS gateway, live. It is not "
+                       "a build tool: the ten pre-packaged themes are generated "
+                       "from the repo, so Install on the first page puts them "
+                       "back and your edits to them go with it. Make one of "
+                       "your own and nothing overwrites it.",
+                       size="12.5px", colour="var(--label--disabled)"),
+                _theme_bar(),
+                _only_when(_make_panel(), "{view.custom.making} != ''",
+                           layout=True),
+                # The status line is the page's only feedback and every button
+                # writes to it, so it gets its own row rather than competing
+                # for space in a toolbar.
+                {"type": "ia.display.label", "meta": {"name": "status"},
                  "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                 "props": {"direction": "row", "alignItems": "center",
-                           "style": {"gap": "10px"}},
-                 "children": [
-                     {"type": "ia.input.dropdown", "meta": {"name": "theme"},
-                      "position": {"grow": 0, "shrink": 0, "basis": "230px"},
-                      "props": {"allowClearing": False, "showSearch": False,
-                                "style": {"height": "32px"}},
-                      "propConfig": {
-                          "props.options": {"binding": _expr(
-                              "1", EDITOR_THEME_OPTIONS)},
-                          # bidirectional lives INSIDE config or the dropdown
-                          # never writes the selection back, silently.
-                          "props.value": {"binding": {
-                              "type": "property",
-                              "config": {"path": "view.custom.theme",
-                                         "bidirectional": True}}}}},
-                     {"type": "ia.display.label", "meta": {"name": "open"},
-                      "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                      "props": {"style": {
-                          "fontSize": "13px", "color": "var(--label)",
-                          "fontFamily": "'DejaVu Sans Mono', "
-                                        "'Liberation Mono', Consolas, "
-                                        "monospace"}},
-                      "propConfig": {"props.text": {"binding": {
-                          "type": "property",
-                          "config": {"path": "view.custom.file"}}}}},
-                     {"type": "ia.container.flex", "meta": {"name": "gap"},
-                      "position": {"grow": 1, "shrink": 1, "basis": "0px"},
-                      "props": {}},
-                     {"type": "ia.display.label", "meta": {"name": "status"},
-                      "position": {"grow": 0, "shrink": 1, "basis": "auto"},
-                      "props": {"style": {"fontSize": "12px",
-                                          "color": "var(--label--disabled)",
-                                          "textAlign": "right"}},
-                      "propConfig": {"props.text": {"binding": _prop(
-                          "view.custom.status")}}},
-                     _button("btn_revert", "Revert to shipped", EDITOR_REVERT),
-                     _button("btn_scan", "Scan now", EDITOR_REFRESH),
-                     _button("btn_save", "Save", EDITOR_SAVE, primary=True),
-                 ]},
-
-                _theme_admin_strip(),
+                 "props": {"style": {"fontSize": "12px", "minHeight": "15px",
+                                     "color": "var(--callToAction)"}},
+                 "propConfig": {"props.text": {"binding": _prop(
+                     "view.custom.status")}}},
 
                 # The three panes. This row is the ONE grower on the page.
                 {"type": "ia.container.flex", "meta": {"name": "panes"},
@@ -1966,30 +2119,40 @@ def build_editor_view_json(themes, version):
                  "props": {"direction": "row",
                            "style": {"gap": "10px", "minHeight": "0px"}},
                  "children": [
-                     _panel("rail", [
-                         _pane_head("rail_h", "Files"),
-                         _file_rail(),
-                     ], "210px"),
-                     _panel("editor", [
-                         _raw_editor(),
-                     ], "0px", style={"backgroundColor": "var(--container)"}),
-                     _panel("contract", [
-                         _pane_head("tok_h", "Tokens this theme publishes"),
-                         _contract_tokens(),
-                         _pane_head("cls_h", "Style classes"),
-                         _contract_classes(),
-                     ], "330px"),
+                     _pane("rail", "Files",
+                           "Click one to open it. A dot marks a file that no "
+                           "longer matches what the installer ships.",
+                           [_file_rail()], "215px"),
+                     _editor_pane(),
+                     _pane("contract", "What this theme publishes",
+                           "Read-only. These are the tokens and style classes "
+                           "a project can build against without inheriting "
+                           "anything.",
+                           [_contract_tokens(),
+                            _pane_head("cls_h", "Style classes"),
+                            _contract_classes()], "320px"),
                  ]},
             ],
         },
     }
 
 
+def _pane_head(name, text):
+    return {"type": "ia.display.label", "meta": {"name": name},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"text": text,
+                      "style": {"fontSize": "11px", "fontWeight": 600,
+                                "letterSpacing": "0.06em",
+                                "textTransform": "uppercase",
+                                "color": "var(--label--disabled)",
+                                "padding": "9px 10px 5px",
+                                "borderTopStyle": "solid",
+                                "borderTopWidth": "1px",
+                                "borderTopColor": "var(--border)"}}}
+
+
 def _file_rail():
-    table = _table("files", [
-        _col("name", "File"),
-        _col("state", "Edited", 62, True),
-    ], "view.custom.files")
+    table = _table("files", [_col("name", "File")], "view.custom.files")
     table["props"]["style"] = {}
     table["events"] = {"component": {"onRowClick": {
         "config": {"script": EDITOR_PICK_FILE}, "scope": "G",
@@ -1998,9 +2161,9 @@ def _file_rail():
 
 
 def _contract_tokens():
-    # No 'where' column: it is the widest field in contract() and this pane is
-    # 330px. The token, its colour and its value are what you need while you
-    # are looking at the file that defines them.
+    # No 'where' column: it is the widest field contract() returns and this
+    # pane is 320px. The token, its colour and its value are what is useful
+    # beside the file that defines them.
     table = _table("tokens", [
         _col("token", "Token"),
         _col("swatch", "Colour", 58, True),
@@ -2037,6 +2200,48 @@ def _raw_editor():
             "type": "property",
             "config": {"path": "view.custom.text", "bidirectional": True}}}},
     }
+
+
+def _only_when(node, expression, layout=False):
+    """Hide a component, and with layout=True take its SPACE back too.
+
+    meta.visible alone only adds component-meta-hidden, which stops a component
+    being seen and leaves it in the flex layout. Binding display fixes that,
+    but most components ignore style.display on their own root -- measured on
+    8.3.8, a table stayed 297px tall and a label stayed 34px with the binding
+    applied and no error. A flex container honours it, so layout=True wraps
+    whatever it is given rather than trusting the component to obey.
+    """
+    visible = {"binding": {"type": "expr", "config": {"expression": expression}}}
+    if not layout:
+        node.setdefault("propConfig", {})["meta.visible"] = visible
+        return node
+    # The wrapper INHERITS the child's position and the child then fills it.
+    # position.basis is the MAIN-AXIS size, so a child with basis 150px left
+    # inside a column wrapper is asking for 150px of HEIGHT: the "built on"
+    # dropdown rendered as a tall black box until the position moved out here.
+    outer = dict(node.get("position") or {"grow": 0, "shrink": 0,
+                                          "basis": "auto"})
+    node["position"] = {"grow": 1, "shrink": 1, "basis": "auto"}
+    return {
+        "type": "ia.container.flex",
+        "meta": {"name": node["meta"]["name"] + "_wrap"},
+        "position": outer,
+        # A ROW wrapper, and the child fills it on the cross axis rather than
+        # being given a main-axis size of its own. A column wrapper broke both
+        # ways round: with the child's basis left on it the "built on" dropdown
+        # asked for 150px of HEIGHT and rendered as a tall black box, and with
+        # the child set to grow the wrapper had no intrinsic height and
+        # collapsed to 2px.
+        "props": {"direction": "row", "style": {}},
+        "propConfig": {
+            "meta.visible": visible,
+            "props.style.display": {"binding": {"type": "expr", "config": {
+                "expression": "if(%s, 'flex', 'none')" % expression}}},
+        },
+        "children": [node],
+    }
+
 
 
 def main():
