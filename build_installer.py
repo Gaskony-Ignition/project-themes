@@ -1510,10 +1510,11 @@ def _action_grid(themes, version):
                      "The %d pre-packaged themes" % len(themes),
                      "The ones this project carries. Writes them to this "
                      "gateway as Perspective config resources and runs a scan, "
-                     "so they appear in every project's Theme menu straight "
-                     "away. Safe to re-run: it overwrites the gateway's copies, "
-                     "which is also how you repair them after an Ignition "
-                     "upgrade.",
+                     "so they are in every project's Theme menu with no "
+                     "gateway restart -- a session already open picks them up "
+                     "when it reloads. Safe to re-run: it overwrites the "
+                     "gateway's copies, which is also how you repair them "
+                     "after an Ignition upgrade.",
                      [_act_button("install_all_btn", "Install",
                                   scripts["install"], kind="primary"),
                       _act_button("remove_all_btn", "Remove",
