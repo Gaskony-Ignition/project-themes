@@ -56,7 +56,7 @@
       "style": {
         "height": "100%",
         "overflow": "auto",
-        "padding": "24px",
+        "padding": "14px 18px 16px",
         "gap": "16px",
         "backgroundColor": "var(--containerRoot)"
       }
@@ -154,7 +154,7 @@
                 "borderBottomWidth": "2px",
                 "borderBottomColor": "transparent",
                 "color": "var(--label--disabled)",
-                "fontWeight": 400
+                "fontWeight": 600
               }
             },
             "events": {

@@ -597,6 +597,15 @@ def py_repr(text):
     return repr(text)
 
 
+# One padding for every page root. Nigel, 07/09/2026: the tab strip did not
+# line up when you changed pages -- the Installer's root was padded 24px and
+# Customise's 14/18/16, so the strip that is meant to be the SAME piece of
+# furniture on both started 10px lower and 6px further right on one of them.
+# A shared strip needs a shared origin; two literals in two builders is how
+# they drift.
+PAGE_PADDING = "14px 18px 16px"
+
+
 def build_view_json(themes, version):
     # Property-binding transform scripts and component event scripts in this
     # workspace's Perspective views are stored as the BODY of an
@@ -690,7 +699,7 @@ def build_view_json(themes, version):
                 "style": {
                     "height": "100%",
                     "overflow": "auto",
-                    "padding": "24px",
+                    "padding": PAGE_PADDING,
                     "gap": "16px",
                     "backgroundColor": "var(--containerRoot)",
                 },
@@ -852,7 +861,12 @@ def _nav(active, version):
                                        else "transparent"),
                  "color": ("var(--label)" if current
                            else "var(--label--disabled)"),
-                 "fontWeight": 600 if current else 400}
+                 # The SAME weight either way. Bolding only the active tab
+                 # made each tab change width when it became active, so the
+                 # tabs after it slid sideways every time you changed page --
+                 # a strip that is meant to be one fixed piece of furniture.
+                 # Colour and the accent underline already say which is which.
+                 "fontWeight": 600}
         tab = {"type": "ia.display.label",
                "meta": {"name": "tab_" + (path.strip("/") or "home")},
                "position": {"grow": 0, "shrink": 0, "basis": "auto"},
@@ -2514,7 +2528,7 @@ def build_editor_view_json(themes, version):
         "root": {
             "type": "ia.container.flex", "meta": {"name": "root"},
             "props": {"direction": "column",
-                      "style": {"padding": "14px 18px 16px", "gap": "10px",
+                      "style": {"padding": PAGE_PADDING, "gap": "10px",
                                 "height": "100%", "overflow": "hidden",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [

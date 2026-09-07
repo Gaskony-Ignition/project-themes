@@ -195,7 +195,7 @@
                 "borderBottomWidth": "2px",
                 "borderBottomColor": "transparent",
                 "color": "var(--label--disabled)",
-                "fontWeight": 400
+                "fontWeight": 600
               }
             },
             "events": {
