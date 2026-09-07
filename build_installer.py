@@ -619,73 +619,6 @@ def build_view_json(themes, version):
         "\t\trow['preview'] = PREVIEWS.get(row['id'], '')\n"
         "\treturn rows"
     )
-    install_all_script = (
-        "\timport themepack\n"
-        "\tthemepack.install_all()\n"
-        "\tself.view.custom.tick += 1"
-    )
-    remove_all_script = (
-        "\timport themepack\n"
-        "\tthemepack.uninstall_all()\n"
-        "\tself.view.custom.tick += 1"
-    )
-    update_stock_script = (
-        "\timport themepack\n"
-        "\tthemepack.stock_update_all()\n"
-        "\tself.view.custom.tick += 1"
-    )
-    restore_stock_script = (
-        "\timport themepack\n"
-        "\tthemepack.stock_restore_all()\n"
-        "\tself.view.custom.tick += 1"
-    )
-    # Size is passed HERE, at the call, not as the popup view's own
-    # props.defaultSize (Nigel's spec -- see selector-popup/README.md).
-    #
-    # NOTE ON THE FORM: the originally specified
-    # height='min(460px, 88vh)', width='min(560px, 94vw)' kwargs do not exist
-    # on this Ignition version's system.perspective.openPopup -- confirmed
-    # both live (a Jython reflection probe against
-    # PerspectiveScriptingFunctions.openPopup on module-testing showed no
-    # top-level width/height parameter at all -- unknown kwargs are silently
-    # swallowed, which is exactly what made the CSS-string form look like it
-    # "did nothing" rather than erroring) and against IA's own 8.1/8.3
-    # scripting-function reference (width/height are keys INSIDE the
-    # `position` dict, typed Dictionary[String, Integer] -- pixels only, no
-    # CSS calc()/min()/vw units). The size therefore goes in `position={...}`
-    # -- still entirely at the call site, never `props.defaultSize` -- and
-    # `viewportBound=True` still does the "never bigger than a short
-    # viewport" job the min()/vw forms were reaching for (verified live at
-    # 1440x530: the frame stays full-size and is shifted to sit fully
-    # inside, rather than being shrunk or clipped).
-    #
-    # NOTE ON THE HEIGHT VALUE: 460 (the originally specified figure) left
-    # the swatch grid 17px taller than the space available inside the frame
-    # at EVERY viewport height tried (not a short-viewport-specific problem
-    # -- confirmed by measuring scrollHeight vs clientHeight on the "rows"
-    # container at both 900px and 530px viewports, identical overflow both
-    # times), so the bottom row needed the rows container's own
-    # `overflow: auto` to reach at all. 480 cleared it with the content of the
-    # day (10 custom + 6 stock swatches, two section labels, one hint line)
-    # with zero internal scroll, confirmed the same way.
-    #
-    # The popup has since grown an "Any theme on this gateway" dropdown below
-    # the grid -- a bordered section worth 62px -- and an empty-state line
-    # that only appears when no pack is installed, so the frame is 590,
-    # checked the same way at both viewport heights.
-    open_switcher_script = (
-        "\tsystem.perspective.openPopup(\n"
-        "\t\t'theme-installer-selector',\n"
-        "\t\t'SelectorPopup',\n"
-        "\t\ttitle='Theme switcher',\n"
-        "\t\tmodal=True,\n"
-        "\t\tdraggable=True,\n"
-        "\t\tresizable=False,\n"
-        "\t\toverlayDismiss=True,\n"
-        "\t\tviewportBound=True,\n"
-        "\t\tposition={'width': 560, 'height': 590})"
-    )
-
     root = {
         "custom": {
             "tick": 0,
@@ -724,186 +657,7 @@ def build_view_json(themes, version):
                 # Same nav as the insight pages. Without it those pages are
                 # reachable only by typing the URL, which is not shipping them.
                 _nav("Installer"),
-                {
-                    "type": "ia.container.flex",
-                    "meta": {"name": "header"},
-                    "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                    "props": {
-                        "direction": "column",
-                        "style": {"gap": "4px"},
-                    },
-                    "children": [
-                        {
-                            "type": "ia.display.label",
-                            "meta": {"name": "heading"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": "Theme Installer",
-                                "style": {
-                                    "fontSize": "26px",
-                                    "fontWeight": 600,
-                                    "color": "var(--label)",
-                                },
-                            },
-                        },
-                        {
-                            "type": "ia.display.label",
-                            "meta": {"name": "subtitle"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": (
-                                    "Installs %d curated Perspective gateway "
-                                    "themes as config resources - the stock themes are "
-                                    "never touched by this. Safe to re-run: installing "
-                                    "overwrites the gateway's copies, which repairs the "
-                                    "themes after an Ignition upgrade. Safe to delete "
-                                    "this project afterwards. v%s"
-                                    % (len(themes), version)
-                                ),
-                                "style": {
-                                    "fontSize": "13px",
-                                    "color": "var(--label--disabled)",
-                                },
-                            },
-                        },
-                        {
-                            "type": "ia.display.label",
-                            "meta": {"name": "subtitle_stock"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": (
-                                    "Optional: 'Update stock themes' adds ONLY themed "
-                                    "scrollbars and a colour-scheme declaration to the "
-                                    "four on-disk stock variants - their look does not "
-                                    "change, and 'Restore stock themes' puts them back "
-                                    "exactly. Light and Dark live inside the "
-                                    "Perspective module, so they are never touched."
-                                ),
-                                "style": {
-                                    "fontSize": "13px",
-                                    "color": "var(--label--disabled)",
-                                },
-                            },
-                        },
-                    ],
-                },
-                {
-                    "type": "ia.container.flex",
-                    "meta": {"name": "actions"},
-                    "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                    "children": [
-                        {
-                            "type": "ia.input.button",
-                            "meta": {"name": "install_all_btn"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {"text": "Install custom themes"},
-                            "events": {
-                                "component": {
-                                    "onActionPerformed": {
-                                        "config": {"script": install_all_script},
-                                        "scope": "G",
-                                        "type": "script",
-                                    }
-                                }
-                            },
-                        },
-                        {
-                            "type": "ia.input.button",
-                            "meta": {"name": "remove_all_btn"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": "Remove custom themes",
-                                "style": {
-                                    "backgroundColor": "var(--containerNested)",
-                                    "color": "var(--label)",
-                                },
-                            },
-                            "events": {
-                                "component": {
-                                    "onActionPerformed": {
-                                        "config": {"script": remove_all_script},
-                                        "scope": "G",
-                                        "type": "script",
-                                    }
-                                }
-                            },
-                        },
-                        {
-                            "type": "ia.input.button",
-                            "meta": {"name": "update_stock_btn"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": "Update stock themes",
-                                "style": {
-                                    "backgroundColor": "var(--containerNested)",
-                                    "color": "var(--label)",
-                                },
-                            },
-                            "events": {
-                                "component": {
-                                    "onActionPerformed": {
-                                        "config": {"script": update_stock_script},
-                                        "scope": "G",
-                                        "type": "script",
-                                    }
-                                }
-                            },
-                        },
-                        {
-                            "type": "ia.input.button",
-                            "meta": {"name": "restore_stock_btn"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": "Restore stock themes",
-                                "style": {
-                                    "backgroundColor": "var(--containerNested)",
-                                    "color": "var(--label)",
-                                },
-                            },
-                            "events": {
-                                "component": {
-                                    "onActionPerformed": {
-                                        "config": {"script": restore_stock_script},
-                                        "scope": "G",
-                                        "type": "script",
-                                    }
-                                }
-                            },
-                        },
-                        {
-                            "type": "ia.input.button",
-                            "meta": {"name": "theme_switcher_btn"},
-                            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-                            "props": {
-                                "text": "Theme switcher",
-                                "style": {
-                                    "backgroundColor": "transparent",
-                                    "border": "1px solid var(--border)",
-                                    "color": "var(--label)",
-                                },
-                            },
-                            "events": {
-                                "component": {
-                                    "onActionPerformed": {
-                                        "config": {"script": open_switcher_script},
-                                        "scope": "G",
-                                        "type": "script",
-                                    }
-                                }
-                            },
-                        },
-                        # The dropdown that used to sit here has moved into the
-                        # tab strip, where it is reachable from every page. The
-                        # "Theme switcher" button beside these stays: it opens
-                        # the swatch popup, which is the OTHER copy-me view and
-                        # a different thing to demonstrate.
-                    ],
-                    "props": {
-                        "direction": "row",
-                        "alignItems": "center",
-                        "style": {"gap": "12px"},
-                    },
-                },
+                _action_grid(themes, version),
                 {
                     "type": "ia.display.table",
                     "meta": {"name": "themes_table"},
@@ -1514,6 +1268,231 @@ def _stock_palettes():
     return data["order"], data["labels"], data["palettes"]
 
 
+def _action_scripts():
+    """The button bodies, in one place: the grid builds the buttons now, and
+    the popup note below is the most expensive comment in this file."""
+    install_all_script = (
+        "\timport themepack\n"
+        "\tthemepack.install_all()\n"
+        "\tself.view.custom.tick += 1"
+    )
+    remove_all_script = (
+        "\timport themepack\n"
+        "\tthemepack.uninstall_all()\n"
+        "\tself.view.custom.tick += 1"
+    )
+    update_stock_script = (
+        "\timport themepack\n"
+        "\tthemepack.stock_update_all()\n"
+        "\tself.view.custom.tick += 1"
+    )
+    restore_stock_script = (
+        "\timport themepack\n"
+        "\tthemepack.stock_restore_all()\n"
+        "\tself.view.custom.tick += 1"
+    )
+    # Size is passed HERE, at the call, not as the popup view's own
+    # props.defaultSize (Nigel's spec -- see selector-popup/README.md).
+    #
+    # NOTE ON THE FORM: the originally specified
+    # height='min(460px, 88vh)', width='min(560px, 94vw)' kwargs do not exist
+    # on this Ignition version's system.perspective.openPopup -- confirmed
+    # both live (a Jython reflection probe against
+    # PerspectiveScriptingFunctions.openPopup on module-testing showed no
+    # top-level width/height parameter at all -- unknown kwargs are silently
+    # swallowed, which is exactly what made the CSS-string form look like it
+    # "did nothing" rather than erroring) and against IA's own 8.1/8.3
+    # scripting-function reference (width/height are keys INSIDE the
+    # `position` dict, typed Dictionary[String, Integer] -- pixels only, no
+    # CSS calc()/min()/vw units). The size therefore goes in `position={...}`
+    # -- still entirely at the call site, never `props.defaultSize` -- and
+    # `viewportBound=True` still does the "never bigger than a short
+    # viewport" job the min()/vw forms were reaching for (verified live at
+    # 1440x530: the frame stays full-size and is shifted to sit fully
+    # inside, rather than being shrunk or clipped).
+    #
+    # NOTE ON THE HEIGHT VALUE: 460 (the originally specified figure) left
+    # the swatch grid 17px taller than the space available inside the frame
+    # at EVERY viewport height tried (not a short-viewport-specific problem
+    # -- confirmed by measuring scrollHeight vs clientHeight on the "rows"
+    # container at both 900px and 530px viewports, identical overflow both
+    # times), so the bottom row needed the rows container's own
+    # `overflow: auto` to reach at all. 480 cleared it with the content of the
+    # day (10 custom + 6 stock swatches, two section labels, one hint line)
+    # with zero internal scroll, confirmed the same way.
+    #
+    # The popup has since grown an "Any theme on this gateway" dropdown below
+    # the grid -- a bordered section worth 62px -- and an empty-state line
+    # that only appears when no pack is installed, so the frame is 590,
+    # checked the same way at both viewport heights.
+    open_switcher_script = (
+        "\tsystem.perspective.openPopup(\n"
+        "\t\t'theme-installer-selector',\n"
+        "\t\t'SelectorPopup',\n"
+        "\t\ttitle='Theme switcher',\n"
+        "\t\tmodal=True,\n"
+        "\t\tdraggable=True,\n"
+        "\t\tresizable=False,\n"
+        "\t\toverlayDismiss=True,\n"
+        "\t\tviewportBound=True,\n"
+        "\t\tposition={'width': 560, 'height': 590})"
+    )
+
+    return {"install": install_all_script,
+            "remove": remove_all_script,
+            "update_stock": update_stock_script,
+            "restore_stock": restore_stock_script,
+            "switcher": open_switcher_script}
+
+
+def _action_card(name, title, body, buttons, note=None):
+    """One category: what it is, what it does to the gateway, and its buttons.
+
+    The buttons sit at the BOTTOM of the card and the card is a column, so three
+    cards with different amounts of prose still line their buttons up. Without
+    that the row reads as three unrelated boxes.
+    """
+    children = [
+        {"type": "ia.display.label", "meta": {"name": "title"},
+         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+         "props": {"text": title,
+                   "style": {"fontSize": "15px", "fontWeight": 600,
+                             "color": "var(--label)"}}},
+        {"type": "ia.display.label", "meta": {"name": "body"},
+         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+         "props": {"text": body,
+                   "style": {"fontSize": "12.5px", "lineHeight": "1.5",
+                             "color": "var(--label--disabled)"}}},
+    ]
+    if note:
+        children.append(
+            {"type": "ia.display.label", "meta": {"name": "note"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": note,
+                       "style": {"fontSize": "12px", "lineHeight": "1.5",
+                                 "color": "var(--label--disabled)",
+                                 "fontStyle": "italic"}}})
+    # The spacer is what pushes the buttons down. It is the card's only grower.
+    children.append({"type": "ia.container.flex", "meta": {"name": "gap"},
+                     "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+                     "props": {}})
+    children.append(
+        {"type": "ia.container.flex", "meta": {"name": "buttons"},
+         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+         "props": {"direction": "row", "wrap": "wrap",
+                   "style": {"gap": "8px", "rowGap": "8px"}},
+         "children": buttons})
+    return {
+        "type": "ia.container.flex", "meta": {"name": name},
+        # Equal thirds: same basis, same growth, so the three cards are one
+        # grid rather than three boxes sized by how much text each holds.
+        "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+        "props": {"direction": "column",
+                  "style": {"gap": "7px", "padding": "14px 15px",
+                            "borderRadius": "4px",
+                            "backgroundColor": "var(--container)",
+                            "borderStyle": "solid", "borderWidth": "1px",
+                            "borderColor": "var(--border)",
+                            "minHeight": "0px"}},
+        "children": children,
+    }
+
+
+def _act_button(name, text, script, kind="normal"):
+    style = {"whiteSpace": "nowrap", "height": "32px"}
+    if kind == "primary":
+        pass                                   # the theme's own call-to-action
+    elif kind == "quiet":
+        style.update({"backgroundColor": "transparent",
+                      "border": "1px solid var(--border)",
+                      "color": "var(--label)"})
+    else:
+        style.update({"backgroundColor": "var(--containerNested)",
+                      "color": "var(--label)"})
+    return {"type": "ia.input.button", "meta": {"name": name},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"text": text, "style": style},
+            "events": {"component": {"onActionPerformed": {
+                "config": {"script": script}, "scope": "G", "type": "script"}}}}
+
+
+def _action_grid(themes, version):
+    """The top of the Installer: title, then three cards of related buttons.
+
+    Nigel, 07/09/2026: the two paragraphs sprawling across the page followed by
+    a flat row of five buttons was not organised. The prose was accurate and
+    told you nothing about which button it applied to -- the stock-theme caveat
+    sat above 'Install custom themes', which it has nothing to do with. Grouped
+    into three cards, each explanation is next to the buttons it describes and
+    each card is short enough to read.
+    """
+    scripts = _action_scripts()
+    return {
+        "type": "ia.container.flex", "meta": {"name": "top"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "column", "style": {"gap": "12px"}},
+        "children": [
+            {"type": "ia.display.label", "meta": {"name": "heading"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"text": "Theme Installer  ·  v" + version,
+                       "style": {"fontSize": "24px", "fontWeight": 600,
+                                 "color": "var(--label)"}}},
+            {"type": "ia.container.flex", "meta": {"name": "cards"},
+             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+             "props": {"direction": "row", "alignItems": "stretch",
+                       "wrap": "wrap",
+                       "style": {"gap": "12px", "rowGap": "12px"}},
+             "children": [
+                 _action_card(
+                     "card_custom",
+                     "The %d pre-packaged themes" % len(themes),
+                     "The ones this project carries. Writes them to this "
+                     "gateway as Perspective config resources and runs a scan, "
+                     "so they appear in every project's Theme menu straight "
+                     "away. Safe to re-run: it overwrites the gateway's copies, "
+                     "which is also how you repair them after an Ignition "
+                     "upgrade.",
+                     [_act_button("install_all_btn", "Install",
+                                  scripts["install"], kind="primary"),
+                      _act_button("remove_all_btn", "Remove",
+                                  scripts["remove"])],
+                     # Nigel, 07/09/2026: say PRE-PACKAGED, because a theme
+                     # made in the Editor is not one of them and must not read
+                     # as something Remove would take away. install()/
+                     # uninstall() already refuse any id outside THEMES, so
+                     # this is describing the guard, not promising it.
+                     note="Both buttons only ever touch these ten. A stock "
+                          "theme, or one you make yourself in the Editor, is "
+                          "left alone."),
+                 _action_card(
+                     "card_stock",
+                     "Ignition's own themes",
+                     "Optional, and nothing above needs it. Update adds ONLY "
+                     "themed scrollbars and a colour-scheme declaration to the "
+                     "four on-disk stock variants -- their look does not "
+                     "change. Restore deletes exactly that and puts them back.",
+                     [_act_button("update_stock_btn", "Update",
+                                  scripts["update_stock"]),
+                      _act_button("restore_stock_btn", "Restore",
+                                  scripts["restore_stock"])],
+                     note="Light and Dark live inside the Perspective module, "
+                          "so they are never touched at all."),
+                 _action_card(
+                     "card_try",
+                     "Try one",
+                     "Opens the swatch popup, which repaints this session as "
+                     "you click. The Theme menu at the top right does the same "
+                     "from any page. Both are copy-me views: a project takes "
+                     "whichever it prefers and gets its own Theme button.",
+                     [_act_button("theme_switcher_btn", "Theme switcher",
+                                  scripts["switcher"], kind="quiet")],
+                     note="This project is safe to delete once the themes are "
+                          "installed."),
+             ]},
+        ],
+    }
+
+
 def _gallery_block(themes):
     """The previews as a wall of cards. NOT CURRENTLY USED.
 
@@ -1697,6 +1676,75 @@ EDITOR_REFRESH = (
 )
 
 
+# Managing themes of your own. The Installer's buttons refuse any id outside
+# the ten this project carries -- that is what makes them safe to press -- so a
+# theme somebody makes here needs its own create and delete, and those refuse
+# the packaged and stock ids just as firmly in the other direction.
+EDITOR_BASE_OPTIONS = (
+    "\timport themepack\n"
+    "\treturn [{'value': t, 'label': t} for t in themepack.base_options()]"
+)
+EDITOR_KIND = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn ''\n"
+    "\treturn themepack.theme_kind(theme)"
+)
+EDITOR_NEW = (
+    "\timport themepack\n"
+    "\tname = (self.view.custom.new_name or '').strip()\n"
+    "\ttry:\n"
+    "\t\tthemepack.new_theme(name, self.view.custom.new_base)\n"
+    "\t\tself.view.custom.new_name = ''\n"
+    "\t\tself.view.custom.theme = name\n"
+    "\t\tself.view.custom.file = 'variables.css'\n"
+    "\t\tself.view.custom.status = ('Created %s on %s -- it renders like its "
+    "base until you change it'\n"
+    "\t\t                           % (name, self.view.custom.new_base))\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_COPY = (
+    "\timport themepack\n"
+    "\tname = (self.view.custom.new_name or '').strip()\n"
+    "\tsource = self.view.custom.theme\n"
+    "\ttry:\n"
+    "\t\tthemepack.copy_theme(source, name)\n"
+    "\t\tself.view.custom.new_name = ''\n"
+    "\t\tself.view.custom.theme = name\n"
+    "\t\tself.view.custom.status = 'Copied %s to %s' % (source, name)\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_DELETE = (
+    "\timport themepack\n"
+    "\ttheme = self.view.custom.theme\n"
+    "\ttry:\n"
+    "\t\tif themepack.delete_theme(theme):\n"
+    "\t\t\tself.view.custom.status = 'Deleted %s' % theme\n"
+    "\t\telse:\n"
+    "\t\t\tself.view.custom.status = 'There was no %s to delete' % theme\n"
+    "\t\t# Land on another theme rather than on an empty picker: the\n"
+    "\t\t# dropdown's default only evaluates once, so clearing it leaves\n"
+    "\t\t# 'Select...' and an editor with nothing in it.\n"
+    "\t\trows = themepack.list_themes()\n"
+    "\t\tmine = [r['id'] for r in rows if r['ours']]\n"
+    "\t\tself.view.custom.theme = (mine or [r['id'] for r in rows] or [''])[0]\n"
+    "\t\tself.view.custom.file = 'variables.css'\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+# Delete is offered ONLY for a theme made here. A packaged theme's lifecycle
+# belongs to the Installer's Remove button, and a stock one is never ours to
+# remove -- delete_theme() refuses both, and hiding the button means nobody
+# has to press it to find that out.
+IS_USER_THEME = "{view.custom.kind} = 'user'"
+
+
 def _button(name, text, script, primary=False):
     return {
         "type": "ia.input.button", "meta": {"name": name},
@@ -1739,12 +1787,104 @@ def _pane_head(name, text):
                                 "padding": "8px 10px 6px"}}}
 
 
+def _theme_admin_strip():
+    """Make a theme, copy one, delete one you made.
+
+    Sits under the toolbar rather than in it: these change WHICH themes exist,
+    which is a different kind of action from editing the one you have open, and
+    putting them in the same row as Save invites the wrong click.
+    """
+    def cap(text):
+        return {"type": "ia.display.label", "meta": {"name": "cap"},
+                "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                "props": {"text": text,
+                          "style": {"fontSize": "12px",
+                                    "color": "var(--label--disabled)"}}}
+    return {
+        "type": "ia.container.flex", "meta": {"name": "admin"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
+                  "style": {"gap": "8px", "rowGap": "8px",
+                            "padding": "8px 10px",
+                            "borderRadius": "3px",
+                            "backgroundColor": "var(--container)",
+                            "borderStyle": "solid", "borderWidth": "1px",
+                            "borderColor": "var(--border)"}},
+        "children": [
+            cap("New theme"),
+            {"type": "ia.input.text-field", "meta": {"name": "new_name"},
+             "position": {"grow": 0, "shrink": 0, "basis": "180px"},
+             # deferUpdates false so a button beside it cannot read a stale
+             # value however fast the click follows the last keystroke.
+             "props": {"deferUpdates": False,
+                       "placeholder": "ocean-dark",
+                       "style": {"height": "30px",
+                                 "fontFamily": "'DejaVu Sans Mono', "
+                                               "'Liberation Mono', Consolas, "
+                                               "monospace"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "property",
+                 "config": {"path": "view.custom.new_name",
+                            "bidirectional": True}}}}},
+            cap("built on"),
+            {"type": "ia.input.dropdown", "meta": {"name": "new_base"},
+             "position": {"grow": 0, "shrink": 0, "basis": "140px"},
+             "props": {"allowClearing": False, "showSearch": False,
+                       "style": {"height": "30px"}},
+             "propConfig": {
+                 "props.options": {"binding": _expr("1", EDITOR_BASE_OPTIONS)},
+                 "props.value": {"binding": {
+                     "type": "property",
+                     "config": {"path": "view.custom.new_base",
+                                "bidirectional": True}}}}},
+            _button("btn_new", "Create", EDITOR_NEW, primary=True),
+            _button("btn_copy", "Copy open theme to it", EDITOR_COPY),
+            {"type": "ia.container.flex", "meta": {"name": "gap"},
+             "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+             "props": {}},
+            _only_when(_button("btn_delete", "Delete this theme",
+                               EDITOR_DELETE), IS_USER_THEME, layout=True),
+        ],
+    }
+
+
+def _only_when(node, expression, layout=False):
+    """Hide a component, and with layout=True take its SPACE back too.
+
+    meta.visible alone only adds component-meta-hidden, which stops a component
+    being seen and leaves it in the flex layout. Binding display fixes that,
+    but most components ignore style.display on their own root -- measured on
+    8.3.8, a table stayed 297px tall and a label stayed 34px with the binding
+    applied and no error. A flex container honours it, so layout=True wraps
+    whatever it is given rather than trusting the component to obey.
+    """
+    visible = {"binding": {"type": "expr", "config": {"expression": expression}}}
+    if not layout:
+        node.setdefault("propConfig", {})["meta.visible"] = visible
+        return node
+    grows = node.get("position", {}).get("grow", 0)
+    return {
+        "type": "ia.container.flex",
+        "meta": {"name": node["meta"]["name"] + "_wrap"},
+        "position": {"grow": grows, "shrink": 1,
+                     "basis": "0px" if grows else "auto"},
+        "props": {"direction": "column", "style": {}},
+        "propConfig": {
+            "meta.visible": visible,
+            "props.style.display": {"binding": {"type": "expr", "config": {
+                "expression": "if(%s, 'flex', 'none')" % expression}}},
+        },
+        "children": [node],
+    }
+
+
 def build_editor_view_json(themes, version):
     """Page: the theme files on this gateway, and what they publish."""
     return {
         "custom": {"theme": "", "file": "variables.css", "key": "",
                    "files": [], "text": "", "status": "", "nudge": 0,
-                   "tokens": [], "classes": []},
+                   "tokens": [], "classes": [], "kind": "",
+                   "new_name": "", "new_base": "dark"},
         "propConfig": {
             "custom.theme": {"binding": _expr("1", EDITOR_FIRST_THEME)},
             # One key for everything that depends on the selection, and nudge
@@ -1761,6 +1901,7 @@ def build_editor_view_json(themes, version):
                                                EDITOR_TOKENS)},
             "custom.classes": {"binding": _prop("view.custom.key",
                                                 EDITOR_CLASSES)},
+            "custom.kind": {"binding": _prop("view.custom.key", EDITOR_KIND)},
         },
         "params": {},
         "root": {
@@ -1817,6 +1958,8 @@ def build_editor_view_json(themes, version):
                      _button("btn_save", "Save", EDITOR_SAVE, primary=True),
                  ]},
 
+                _theme_admin_strip(),
+
                 # The three panes. This row is the ONE grower on the page.
                 {"type": "ia.container.flex", "meta": {"name": "panes"},
                  "position": {"grow": 1, "shrink": 1, "basis": "0px"},
@@ -1845,7 +1988,7 @@ def build_editor_view_json(themes, version):
 def _file_rail():
     table = _table("files", [
         _col("name", "File"),
-        _col("state", "Changed", 66, True),
+        _col("state", "Edited", 62, True),
     ], "view.custom.files")
     table["props"]["style"] = {}
     table["events"] = {"component": {"onRowClick": {

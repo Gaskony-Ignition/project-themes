@@ -79,12 +79,18 @@ live in your own session, with no reload and no picker to build — the
 
 The project is two pages, linked from each header:
 
-* **Installer** — the buttons and a status table covering all 16 themes on the
-  gateway, each row carrying a thumbnail of the same imaginary plant page drawn
-  in that theme's own colours. Seeing what you are about to install belongs on
-  the page that installs it, in the row that says whether it is installed.
+* **Installer** — three cards of related buttons, each with the explanation of
+  what it does to the gateway beside it (the ten pre-packaged themes; Ignition's
+  own; try one), then a status table covering all 16 themes with a thumbnail in
+  every row of the same imaginary plant page drawn in that theme's colours.
+  Seeing what you are about to install belongs on the page that installs it, in
+  the row that says whether it is installed.
 * **Editor** — the theme files on this gateway. Files down the left, the one
   you picked filling the middle, and a toolbar that saves, reverts and scans.
+  Themes of your own are made and removed here too: name one, pick a stock base
+  or copy the theme you have open, and Delete appears only for themes made this
+  way — the ten pre-packaged ones belong to the Installer's Remove button and
+  Ignition's own are never deleted at all.
   Down the right, what the theme publishes: its `--st-*` tokens with their live
   values and its `st/...` style classes — the contract a project builds
   against, read while you edit rather than on a page of its own.

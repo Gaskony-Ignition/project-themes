@@ -165,7 +165,7 @@
       {
         "type": "ia.container.flex",
         "meta": {
-          "name": "header"
+          "name": "top"
         },
         "position": {
           "grow": 0,
@@ -175,7 +175,7 @@
         "props": {
           "direction": "column",
           "style": {
-            "gap": "4px"
+            "gap": "12px"
           }
         },
         "children": [
@@ -190,18 +190,18 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Theme Installer",
+              "text": "Theme Installer  \u00b7  v1.11.0",
               "style": {
-                "fontSize": "26px",
+                "fontSize": "24px",
                 "fontWeight": 600,
                 "color": "var(--label)"
               }
             }
           },
           {
-            "type": "ia.display.label",
+            "type": "ia.container.flex",
             "meta": {
-              "name": "subtitle"
+              "name": "cards"
             },
             "position": {
               "grow": 0,
@@ -209,194 +209,523 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Installs 10 curated Perspective gateway themes as config resources - the stock themes are never touched by this. Safe to re-run: installing overwrites the gateway's copies, which repairs the themes after an Ignition upgrade. Safe to delete this project afterwards. v1.10.0",
+              "direction": "row",
+              "alignItems": "stretch",
+              "wrap": "wrap",
               "style": {
-                "fontSize": "13px",
-                "color": "var(--label--disabled)"
+                "gap": "12px",
+                "rowGap": "12px"
               }
-            }
-          },
-          {
-            "type": "ia.display.label",
-            "meta": {
-              "name": "subtitle_stock"
             },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Optional: 'Update stock themes' adds ONLY themed scrollbars and a colour-scheme declaration to the four on-disk stock variants - their look does not change, and 'Restore stock themes' puts them back exactly. Light and Dark live inside the Perspective module, so they are never touched.",
-              "style": {
-                "fontSize": "13px",
-                "color": "var(--label--disabled)"
+            "children": [
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "card_custom"
+                },
+                "position": {
+                  "grow": 1,
+                  "shrink": 1,
+                  "basis": "0px"
+                },
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "gap": "7px",
+                    "padding": "14px 15px",
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "minHeight": "0px"
+                  }
+                },
+                "children": [
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "title"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "The 10 pre-packaged themes",
+                      "style": {
+                        "fontSize": "15px",
+                        "fontWeight": 600,
+                        "color": "var(--label)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "body"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "The ones this project carries. Writes them to this gateway as Perspective config resources and runs a scan, so they appear in every project's Theme menu straight away. Safe to re-run: it overwrites the gateway's copies, which is also how you repair them after an Ignition upgrade.",
+                      "style": {
+                        "fontSize": "12.5px",
+                        "lineHeight": "1.5",
+                        "color": "var(--label--disabled)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "note"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Both buttons only ever touch these ten. A stock theme, or one you make yourself in the Editor, is left alone.",
+                      "style": {
+                        "fontSize": "12px",
+                        "lineHeight": "1.5",
+                        "color": "var(--label--disabled)",
+                        "fontStyle": "italic"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "gap"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 1,
+                      "basis": "0px"
+                    },
+                    "props": {}
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "buttons"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "direction": "row",
+                      "wrap": "wrap",
+                      "style": {
+                        "gap": "8px",
+                        "rowGap": "8px"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "install_all_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Install",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\timport themepack\n\tthemepack.install_all()\n\tself.view.custom.tick += 1"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "remove_all_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Remove",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px",
+                            "backgroundColor": "var(--containerNested)",
+                            "color": "var(--label)"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\timport themepack\n\tthemepack.uninstall_all()\n\tself.view.custom.tick += 1"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "card_stock"
+                },
+                "position": {
+                  "grow": 1,
+                  "shrink": 1,
+                  "basis": "0px"
+                },
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "gap": "7px",
+                    "padding": "14px 15px",
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "minHeight": "0px"
+                  }
+                },
+                "children": [
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "title"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Ignition's own themes",
+                      "style": {
+                        "fontSize": "15px",
+                        "fontWeight": 600,
+                        "color": "var(--label)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "body"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Optional, and nothing above needs it. Update adds ONLY themed scrollbars and a colour-scheme declaration to the four on-disk stock variants -- their look does not change. Restore deletes exactly that and puts them back.",
+                      "style": {
+                        "fontSize": "12.5px",
+                        "lineHeight": "1.5",
+                        "color": "var(--label--disabled)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "note"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Light and Dark live inside the Perspective module, so they are never touched at all.",
+                      "style": {
+                        "fontSize": "12px",
+                        "lineHeight": "1.5",
+                        "color": "var(--label--disabled)",
+                        "fontStyle": "italic"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "gap"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 1,
+                      "basis": "0px"
+                    },
+                    "props": {}
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "buttons"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "direction": "row",
+                      "wrap": "wrap",
+                      "style": {
+                        "gap": "8px",
+                        "rowGap": "8px"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "update_stock_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Update",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px",
+                            "backgroundColor": "var(--containerNested)",
+                            "color": "var(--label)"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\timport themepack\n\tthemepack.stock_update_all()\n\tself.view.custom.tick += 1"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "restore_stock_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Restore",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px",
+                            "backgroundColor": "var(--containerNested)",
+                            "color": "var(--label)"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\timport themepack\n\tthemepack.stock_restore_all()\n\tself.view.custom.tick += 1"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "ia.container.flex",
+                "meta": {
+                  "name": "card_try"
+                },
+                "position": {
+                  "grow": 1,
+                  "shrink": 1,
+                  "basis": "0px"
+                },
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "gap": "7px",
+                    "padding": "14px 15px",
+                    "borderRadius": "4px",
+                    "backgroundColor": "var(--container)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)",
+                    "minHeight": "0px"
+                  }
+                },
+                "children": [
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "title"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Try one",
+                      "style": {
+                        "fontSize": "15px",
+                        "fontWeight": 600,
+                        "color": "var(--label)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "body"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "Opens the swatch popup, which repaints this session as you click. The Theme menu at the top right does the same from any page. Both are copy-me views: a project takes whichever it prefers and gets its own Theme button.",
+                      "style": {
+                        "fontSize": "12.5px",
+                        "lineHeight": "1.5",
+                        "color": "var(--label--disabled)"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.display.label",
+                    "meta": {
+                      "name": "note"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "text": "This project is safe to delete once the themes are installed.",
+                      "style": {
+                        "fontSize": "12px",
+                        "lineHeight": "1.5",
+                        "color": "var(--label--disabled)",
+                        "fontStyle": "italic"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "gap"
+                    },
+                    "position": {
+                      "grow": 1,
+                      "shrink": 1,
+                      "basis": "0px"
+                    },
+                    "props": {}
+                  },
+                  {
+                    "type": "ia.container.flex",
+                    "meta": {
+                      "name": "buttons"
+                    },
+                    "position": {
+                      "grow": 0,
+                      "shrink": 0,
+                      "basis": "auto"
+                    },
+                    "props": {
+                      "direction": "row",
+                      "wrap": "wrap",
+                      "style": {
+                        "gap": "8px",
+                        "rowGap": "8px"
+                      }
+                    },
+                    "children": [
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "theme_switcher_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Theme switcher",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px",
+                            "backgroundColor": "transparent",
+                            "border": "1px solid var(--border)",
+                            "color": "var(--label)"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 590})"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
-            }
+            ]
           }
         ]
-      },
-      {
-        "type": "ia.container.flex",
-        "meta": {
-          "name": "actions"
-        },
-        "position": {
-          "grow": 0,
-          "shrink": 0,
-          "basis": "auto"
-        },
-        "children": [
-          {
-            "type": "ia.input.button",
-            "meta": {
-              "name": "install_all_btn"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Install custom themes"
-            },
-            "events": {
-              "component": {
-                "onActionPerformed": {
-                  "config": {
-                    "script": "\timport themepack\n\tthemepack.install_all()\n\tself.view.custom.tick += 1"
-                  },
-                  "scope": "G",
-                  "type": "script"
-                }
-              }
-            }
-          },
-          {
-            "type": "ia.input.button",
-            "meta": {
-              "name": "remove_all_btn"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Remove custom themes",
-              "style": {
-                "backgroundColor": "var(--containerNested)",
-                "color": "var(--label)"
-              }
-            },
-            "events": {
-              "component": {
-                "onActionPerformed": {
-                  "config": {
-                    "script": "\timport themepack\n\tthemepack.uninstall_all()\n\tself.view.custom.tick += 1"
-                  },
-                  "scope": "G",
-                  "type": "script"
-                }
-              }
-            }
-          },
-          {
-            "type": "ia.input.button",
-            "meta": {
-              "name": "update_stock_btn"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Update stock themes",
-              "style": {
-                "backgroundColor": "var(--containerNested)",
-                "color": "var(--label)"
-              }
-            },
-            "events": {
-              "component": {
-                "onActionPerformed": {
-                  "config": {
-                    "script": "\timport themepack\n\tthemepack.stock_update_all()\n\tself.view.custom.tick += 1"
-                  },
-                  "scope": "G",
-                  "type": "script"
-                }
-              }
-            }
-          },
-          {
-            "type": "ia.input.button",
-            "meta": {
-              "name": "restore_stock_btn"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Restore stock themes",
-              "style": {
-                "backgroundColor": "var(--containerNested)",
-                "color": "var(--label)"
-              }
-            },
-            "events": {
-              "component": {
-                "onActionPerformed": {
-                  "config": {
-                    "script": "\timport themepack\n\tthemepack.stock_restore_all()\n\tself.view.custom.tick += 1"
-                  },
-                  "scope": "G",
-                  "type": "script"
-                }
-              }
-            }
-          },
-          {
-            "type": "ia.input.button",
-            "meta": {
-              "name": "theme_switcher_btn"
-            },
-            "position": {
-              "grow": 0,
-              "shrink": 0,
-              "basis": "auto"
-            },
-            "props": {
-              "text": "Theme switcher",
-              "style": {
-                "backgroundColor": "transparent",
-                "border": "1px solid var(--border)",
-                "color": "var(--label)"
-              }
-            },
-            "events": {
-              "component": {
-                "onActionPerformed": {
-                  "config": {
-                    "script": "\tsystem.perspective.openPopup(\n\t\t'theme-installer-selector',\n\t\t'SelectorPopup',\n\t\ttitle='Theme switcher',\n\t\tmodal=True,\n\t\tdraggable=True,\n\t\tresizable=False,\n\t\toverlayDismiss=True,\n\t\tviewportBound=True,\n\t\tposition={'width': 560, 'height': 590})"
-                  },
-                  "scope": "G",
-                  "type": "script"
-                }
-              }
-            }
-          }
-        ],
-        "props": {
-          "direction": "row",
-          "alignItems": "center",
-          "style": {
-            "gap": "12px"
-          }
-        }
       },
       {
         "type": "ia.display.table",

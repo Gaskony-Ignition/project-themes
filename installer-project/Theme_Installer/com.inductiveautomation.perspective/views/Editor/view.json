@@ -8,7 +8,10 @@
     "status": "",
     "nudge": 0,
     "tokens": [],
-    "classes": []
+    "classes": [],
+    "kind": "",
+    "new_name": "",
+    "new_base": "dark"
   },
   "propConfig": {
     "custom.theme": {
@@ -85,6 +88,20 @@
           {
             "type": "script",
             "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.contract_classes(theme)\n\texcept Exception:\n\t\treturn []"
+          }
+        ]
+      }
+    },
+    "custom.kind": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\treturn themepack.theme_kind(theme)"
           }
         ]
       }
@@ -453,6 +470,287 @@
       {
         "type": "ia.container.flex",
         "meta": {
+          "name": "admin"
+        },
+        "position": {
+          "grow": 0,
+          "shrink": 0,
+          "basis": "auto"
+        },
+        "props": {
+          "direction": "row",
+          "alignItems": "center",
+          "wrap": "wrap",
+          "style": {
+            "gap": "8px",
+            "rowGap": "8px",
+            "padding": "8px 10px",
+            "borderRadius": "3px",
+            "backgroundColor": "var(--container)",
+            "borderStyle": "solid",
+            "borderWidth": "1px",
+            "borderColor": "var(--border)"
+          }
+        },
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "cap"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "New theme",
+              "style": {
+                "fontSize": "12px",
+                "color": "var(--label--disabled)"
+              }
+            }
+          },
+          {
+            "type": "ia.input.text-field",
+            "meta": {
+              "name": "new_name"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "180px"
+            },
+            "props": {
+              "deferUpdates": false,
+              "placeholder": "ocean-dark",
+              "style": {
+                "height": "30px",
+                "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
+              }
+            },
+            "propConfig": {
+              "props.text": {
+                "binding": {
+                  "type": "property",
+                  "config": {
+                    "path": "view.custom.new_name",
+                    "bidirectional": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "cap"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "built on",
+              "style": {
+                "fontSize": "12px",
+                "color": "var(--label--disabled)"
+              }
+            }
+          },
+          {
+            "type": "ia.input.dropdown",
+            "meta": {
+              "name": "new_base"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "140px"
+            },
+            "props": {
+              "allowClearing": false,
+              "showSearch": false,
+              "style": {
+                "height": "30px"
+              }
+            },
+            "propConfig": {
+              "props.options": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "1"
+                  },
+                  "transforms": [
+                    {
+                      "type": "script",
+                      "code": "\timport themepack\n\treturn [{'value': t, 'label': t} for t in themepack.base_options()]"
+                    }
+                  ]
+                }
+              },
+              "props.value": {
+                "binding": {
+                  "type": "property",
+                  "config": {
+                    "path": "view.custom.new_base",
+                    "bidirectional": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "btn_new"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Create",
+              "style": {
+                "height": "32px",
+                "whiteSpace": "nowrap"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\ttry:\n\t\tthemepack.new_theme(name, self.view.custom.new_base)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.status = ('Created %s on %s -- it renders like its base until you change it'\n\t\t                           % (name, self.view.custom.new_base))\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.input.button",
+            "meta": {
+              "name": "btn_copy"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 0,
+              "basis": "auto"
+            },
+            "props": {
+              "text": "Copy open theme to it",
+              "style": {
+                "height": "32px",
+                "whiteSpace": "nowrap",
+                "backgroundColor": "var(--containerBackground)",
+                "color": "var(--label)",
+                "borderStyle": "solid",
+                "borderWidth": "1px",
+                "borderColor": "var(--border)"
+              }
+            },
+            "events": {
+              "component": {
+                "onActionPerformed": {
+                  "config": {
+                    "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\tsource = self.view.custom.theme\n\ttry:\n\t\tthemepack.copy_theme(source, name)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.status = 'Copied %s to %s' % (source, name)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                }
+              }
+            }
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "gap"
+            },
+            "position": {
+              "grow": 1,
+              "shrink": 1,
+              "basis": "0px"
+            },
+            "props": {}
+          },
+          {
+            "type": "ia.container.flex",
+            "meta": {
+              "name": "btn_delete_wrap"
+            },
+            "position": {
+              "grow": 0,
+              "shrink": 1,
+              "basis": "auto"
+            },
+            "props": {
+              "direction": "column",
+              "style": {}
+            },
+            "propConfig": {
+              "meta.visible": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.kind} = 'user'"
+                  }
+                }
+              },
+              "props.style.display": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "if({view.custom.kind} = 'user', 'flex', 'none')"
+                  }
+                }
+              }
+            },
+            "children": [
+              {
+                "type": "ia.input.button",
+                "meta": {
+                  "name": "btn_delete"
+                },
+                "position": {
+                  "grow": 0,
+                  "shrink": 0,
+                  "basis": "auto"
+                },
+                "props": {
+                  "text": "Delete this theme",
+                  "style": {
+                    "height": "32px",
+                    "whiteSpace": "nowrap",
+                    "backgroundColor": "var(--containerBackground)",
+                    "color": "var(--label)",
+                    "borderStyle": "solid",
+                    "borderWidth": "1px",
+                    "borderColor": "var(--border)"
+                  }
+                },
+                "events": {
+                  "component": {
+                    "onActionPerformed": {
+                      "config": {
+                        "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\ttry:\n\t\tif themepack.delete_theme(theme):\n\t\t\tself.view.custom.status = 'Deleted %s' % theme\n\t\telse:\n\t\t\tself.view.custom.status = 'There was no %s to delete' % theme\n\t\t# Land on another theme rather than on an empty picker: the\n\t\t# dropdown's default only evaluates once, so clearing it leaves\n\t\t# 'Select...' and an editor with nothing in it.\n\t\trows = themepack.list_themes()\n\t\tmine = [r['id'] for r in rows if r['ours']]\n\t\tself.view.custom.theme = (mine or [r['id'] for r in rows] or [''])[0]\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                      },
+                      "scope": "G",
+                      "type": "script"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
           "name": "panes"
         },
         "position": {
@@ -539,9 +837,9 @@
                     {
                       "field": "state",
                       "header": {
-                        "title": "Changed"
+                        "title": "Edited"
                       },
-                      "width": 66,
+                      "width": 62,
                       "strictWidth": true
                     }
                   ],

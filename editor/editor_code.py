@@ -519,3 +519,185 @@ def compare_options(theme=None):
     ordered = ([base] if base and base in ids else [])
     ordered += [i for i in ids if i != base and i != theme]
     return ordered
+
+
+# ---------------------------------------------------------------------------
+# USER THEMES -- create and delete a theme of your own.
+#
+# Nigel, 07/09/2026: there needs to be the ability to manage user customised
+# themes from the editor page. The Installer's buttons deliberately refuse any
+# id outside the ten this project carries, which is what makes them safe to
+# press; so a theme somebody makes here needs its own create and delete, and
+# those must refuse the packaged and stock ids just as firmly in the other
+# direction.
+#
+# Three kinds of theme, and the kind decides what may be done to it:
+#   packaged  one of ours -- edit it, revert it, but the Installer owns its
+#             lifecycle. Delete belongs on the Installer's Remove button.
+#   stock     Ignition's own. Editable (that is a gateway operator's business)
+#             but never created or deleted by us.
+#   user      made here. The only kind this section will delete.
+# ---------------------------------------------------------------------------
+
+# A theme id becomes a directory name and a URL segment. Anything outside this
+# is refused rather than sanitised -- a sanitiser that turns "../x" into "x"
+# has silently created a theme somewhere the caller did not ask for.
+EDITOR_ID_RE = re.compile(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$')
+
+
+def theme_kind(name):
+    """'packaged' | 'stock' | 'user' | 'missing'."""
+    if name in THEMES:
+        return "packaged"
+    if name in STOCK_BUILTIN or name in STOCK_UPDATABLE:
+        return "stock"
+    if os.path.isdir(os.path.join(_themes_root(), name)):
+        return "user"
+    return "missing"
+
+
+def new_theme(name, based_on="dark", description=""):
+    """Create a theme of your own, built on a stock base like ours are.
+
+    It starts as the thinnest theme that is actually a theme: an index.css that
+    imports the base and then this theme's own variables.css and globals.css,
+    both present and empty-but-for-a-comment. That is deliberate -- a new theme
+    that renders identically to its base is one you can then change a line at a
+    time and see what each line did. A generated palette would be someone
+    else's design decisions to unpick first.
+    """
+    if not name or not EDITOR_ID_RE.match(name):
+        raise ValueError(
+            "'%s' is not a usable theme id. Lower-case letters and digits, "
+            "words joined by single hyphens -- for example 'ocean-dark'."
+            % name)
+    kind = theme_kind(name)
+    if kind == "packaged":
+        raise ValueError("'%s' is one of this project's own themes -- pick "
+                         "another name" % name)
+    if kind == "stock":
+        raise ValueError("'%s' is one of Ignition's themes -- pick another "
+                         "name" % name)
+    if kind == "user":
+        raise ValueError("'%s' already exists on this gateway" % name)
+
+    bases = list(STOCK_BUILTIN) + list(STOCK_UPDATABLE)
+    if based_on not in bases:
+        raise ValueError("Build on one of: %s" % ", ".join(bases))
+
+    theme_dir = _editor_resolve(name)
+    os.makedirs(theme_dir)
+    dark = STOCK_DARK.get(based_on, True)
+    files = {
+        "config.json": json.dumps(
+            {"entrypoint": "index.css", "isPrivate": False}, indent=2) + "\n",
+        "index.css": ('@import "../%s/index.css";\n'
+                      '@import "./variables.css";\n'
+                      '@import "./globals.css";\n' % based_on),
+        # color-scheme is not optional and not decoration: without it Chrome's
+        # auto dark mode repaints SVG fills client-side and charts come out
+        # white on a dark page, with every server-side check reading correct.
+        "variables.css": (
+            "/* %s -- your own theme, built on %s.\n"
+            " * Re-point Ignition's own variable names here and every stock\n"
+            " * component follows. Start from the Compare column on one of\n"
+            " * the packaged themes to see which names are worth setting. */\n"
+            ":root {\n"
+            "  color-scheme: %s;\n"
+            "}\n" % (name, based_on, "dark" if dark else "light")),
+        "globals.css": (
+            "/* %s -- rules with no stock equivalent: scrollbars, component\n"
+            " * chrome, the --st-* tokens and the st/... class contract.\n"
+            " * Empty is fine; the base theme is still underneath. */\n"
+            % name),
+    }
+    for filename, content in files.items():
+        _write(os.path.join(theme_dir, filename), content)
+    doc = {"scope": "G", "version": 1, "restricted": False,
+           "overridable": True, "attributes": {},
+           "files": sorted(files)}
+    if description:
+        doc["description"] = description
+    else:
+        doc["description"] = "%s -- created in the Theme Installer's editor" % name
+    _write(os.path.join(theme_dir, "resource.json"), json.dumps(doc, indent=2))
+    _rescan()
+    return {"id": name, "based_on": based_on, "dark": dark}
+
+
+def delete_theme(name):
+    """Delete a theme made here. Refuses ours and Ignition's.
+
+    Deletes the config resource AND the directory. system.config.delete on its
+    own leaves the files, which the next scan reads straight back in -- the
+    theme reappears and looks like the delete silently failed.
+    """
+    kind = theme_kind(name)
+    if kind == "packaged":
+        raise ValueError(
+            "'%s' is one of this project's themes -- use Remove on the "
+            "Installer page, which is the button that owns them" % name)
+    if kind == "stock":
+        raise ValueError("'%s' is one of Ignition's own themes and is never "
+                         "deleted" % name)
+    if kind == "missing":
+        return False
+
+    theme_dir = _editor_resolve(name)
+    try:
+        res = system.config.getResource(
+            moduleId="com.inductiveautomation.perspective",
+            typeId="themes", name=name)
+        system.config.delete(
+            moduleId="com.inductiveautomation.perspective",
+            typeId="themes", name=name,
+            signature=res.getSignature(), actor="theme-editor")
+    except (Exception, Throwable), e:
+        pass          # not registered; the directory removal below is the work
+    if os.path.isdir(theme_dir):
+        for entry in os.listdir(theme_dir):
+            path = os.path.join(theme_dir, entry)
+            if os.path.isfile(path):
+                os.remove(path)
+        os.rmdir(theme_dir)
+    _rescan()
+    return True
+
+
+def copy_theme(source, name):
+    """Start a new theme from an existing one rather than from a bare base.
+
+    The obvious way to make 'our nord-dark, but the accent is company red', and
+    the reason the packaged themes stay safe to overwrite: copy first, edit the
+    copy, and Install can still put ours back without touching yours.
+    """
+    if theme_kind(source) == "missing":
+        raise ValueError("There is no theme '%s' on this gateway" % source)
+    new_theme(name, based_on=base_of(source) or "dark",
+              description="%s -- copied from %s" % (name, source))
+    src_dir = _editor_resolve(source)
+    dst_dir = _editor_resolve(name)
+    copied = []
+    for entry in sorted(os.listdir(src_dir)):
+        if entry in EDITOR_PROTECTED or entry == "config.json":
+            continue
+        if not _editor_is_text(entry):
+            continue
+        text = _read(os.path.join(src_dir, entry))
+        if entry == "index.css":
+            # The copy must import ITS OWN siblings, not the source's. Left
+            # alone this reads "../<base>/index.css" plus "./variables.css",
+            # which is already relative to the new directory -- but a source
+            # that imports anything else by relative path would silently keep
+            # pointing at the original.
+            text = text.replace('"./', '"./')
+        _write(os.path.join(dst_dir, entry), text)
+        copied.append(entry)
+    _stock_rewrite_manifest(dst_dir)
+    _rescan()
+    return {"id": name, "copied_from": source, "files": copied}
+
+
+def base_options():
+    """The stock themes a new theme can be built on."""
+    return list(STOCK_BUILTIN) + list(STOCK_UPDATABLE)
