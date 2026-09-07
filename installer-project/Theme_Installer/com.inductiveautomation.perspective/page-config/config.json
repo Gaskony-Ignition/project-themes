@@ -4,21 +4,9 @@
       "title": "Theme Installer",
       "viewPath": "Installer"
     },
-    "/themes": {
-      "title": "The themes",
-      "viewPath": "Themes"
-    },
-    "/how": {
-      "title": "How it works",
-      "viewPath": "How"
-    },
     "/editor": {
       "title": "Editor",
       "viewPath": "Editor"
-    },
-    "/contract": {
-      "title": "The contract",
-      "viewPath": "Contract"
     }
   }
 }

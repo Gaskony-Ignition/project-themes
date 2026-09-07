@@ -77,37 +77,24 @@ call, with no scan needed.
 live in your own session, with no reload and no picker to build — the
 **Theme switcher** popup of swatches, and the **Theme** dropdown beside it.
 
-The project carries four more pages, linked from each header. None is needed
-to install anything; they exist so the themes are not a black box on someone
-else's gateway. The first two are for anyone, the last two for people building
-on them:
+The project is two pages, linked from each header:
 
-* **The themes** — twelve miniature plant screens, each drawn in one theme's
-  own colours: Ignition's light and dark at the top, then the ten this project
-  installs. It answers "what is this?" without a sentence being read.
-* **How it works** — Ignition draws every screen from a palette of named
-  colours; a theme re-points those names. One before/after pair and three
-  steps (install, pick, change your mind).
-* **Editor** — edits the theme files **on this gateway**. `variables.css` is
-  a form: every token as a row with a swatch, grouped by what it affects, with
-  the value of the theme it is built on beside it — click a row, change the
-  value, Save. The other files get a plain text box. Every save writes the file
-  (staged, then renamed), rewrites the resource manifest and runs a config
-  scan, which is what makes the gateway notice. It is not a build tool: the ten
-  themes are generated from `packs/`, so Install puts back what shipped and an
-  edit made here goes. "Revert to shipped" does that for one file on purpose.
-* **For builders** — the `--st-*` tokens and `st/...` classes a project can
-  use without inheriting anything. See "The style-class contract" below.
+* **Installer** — the buttons, a status table for all 16 themes on the gateway,
+  and the previews: twelve miniature plant screens, each drawn in one theme's
+  own colours. Seeing what you are about to install belongs on the page that
+  installs it.
+* **Editor** — the theme files on this gateway. Files down the left, the one
+  you picked filling the middle, and a toolbar that saves, reverts and scans.
+  Down the right, what the theme publishes: its `--st-*` tokens with their live
+  values and its `st/...` style classes — the contract a project builds
+  against, read while you edit rather than on a page of its own.
 
-The two preview pages are drawn from the theme files the installer already
-embeds, so they show exactly what pressing Install produces, with no gateway
-round-trip. The two measurement pages read the gateway live: they fetch the
-resolved stylesheet the browser is really being served
-(`/data/perspective/themes/<id>.css`, which is also how the stock base is
-read, since `light` and `dark` live inside the Perspective module rather than
-on disk) and measure it. No figure on either page is written down at build
-time, so neither can drift from what is installed — and a theme edited on the
-gateway shows its edits.
+The previews are drawn from the theme files the installer already embeds, so
+they show exactly what pressing Install produces with no gateway round-trip.
+The Editor reads the gateway live: the files it edits are the ones on disk, and
+the token and class lists come from the resolved stylesheet the browser is
+really being served (`/data/perspective/themes/<id>.css`), so the page cannot
+advertise a token the installed theme does not actually ship.
 
 #### Updating the stock themes (optional)
 
@@ -454,7 +441,7 @@ props). Doubling the class — `.psc-st\/x\/y.psc-st\/x\/y`, specificity 0-2-0 �
 beats IA's 0-1-0 component rules and still loses to inline, which is exactly
 how a real style class behaves.
 
-The installer's "For builders" page lists every token and class a project can
+The installer's Editor page lists every token and class a project can
 use, read from the gateway live.
 
 ## Building from source
