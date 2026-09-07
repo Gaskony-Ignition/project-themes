@@ -1741,23 +1741,6 @@ EDITOR_TEXT = (
     "\texcept Exception, e:\n"
     "\t\treturn str(e)"
 )
-EDITOR_TOKENS = (
-    "\timport themepack\n"
-    "\ttheme = (value + '|').split('|')[0]\n"
-    "\tif not theme:\n"
-    "\t\treturn []\n"
-    "\ttry:\n"
-    "\t\trows = themepack.editor_contract(theme)\n"
-    "\texcept Exception:\n"
-    "\t\trows = []\n"
-    "\t# A pane with a header and no body reads as broken. A theme\n"
-    "\t# started from scratch publishes nothing, which is true and\n"
-    "\t# worth saying in the pane that would otherwise be blank.\n"
-    "\tif not rows:\n"
-    "\t\treturn [{'token': 'None yet -- these come from a copy of "
-    "one of ours', 'swatch': '', 'value': ''}]\n"
-    "\treturn rows"
-)
 EDITOR_CLASSES = (
     "\timport themepack\n"
     "\ttheme = (value + '|').split('|')[0]\n"
@@ -1877,6 +1860,7 @@ EDITOR_TOKEN_ROWS = (
     "\t\tgroup = r['group']\n"
     "\t\tout.append({'group': group if group != last else '',\n"
     "\t\t            'name': r['name'],\n"
+    "\t\t            'what': r.get('what', ''),\n"
     "\t\t            'swatch': r['swatch'],\n"
     "\t\t            'value': r['value']})\n"
     "\t\tlast = group\n"
@@ -2398,7 +2382,13 @@ def _colour_pane():
         # last column hit dead space and silently did nothing. The Token
         # column takes the slack.
         _col("group", "Affects", 150, True),
-        _col("name", "Token"),
+        _col("name", "Token", 210, True),
+        # The slack column, and the one that answers "what IS this". A
+        # read-only pane next door listed the same --st-* names with their
+        # resolved values, which was the token list again (Nigel, 07/09/2026);
+        # its sentence is the part that was not a duplicate, so it moved in
+        # here, where it is beside the value you are about to change.
+        _col("what", "What it does"),
         _col("swatch", "Colour", 58, True),
         _col("value", "Value", 130, True),
     ], "view.custom.tokens")
@@ -2456,12 +2446,19 @@ def _colour_pane():
                     primary=True),
         ],
     }
-    return _pane(
+    pane = _pane(
         "colours", "This theme's values",
         "Mostly colours, and a few sizes, grouped by what they affect. Click "
         "one, change it, Save -- each save writes the file and runs the scan "
         "that makes the gateway use it.",
         [table, _only_when(strip, IS_EDITABLE, layout=True)], "0px")
+    # The grower again, now that there are five columns and the widest is a
+    # sentence. The empty space Nigel saw was one column taking a whole row's
+    # slack with nothing to put in it; the fix is something worth reading in
+    # that space, not a narrower table.
+    pane["position"] = {"grow": 1, "shrink": 1, "basis": "0px"}
+    pane["props"]["style"]["minWidth"] = "560px"
+    return pane
 
 
 def _raw_pane():
@@ -2505,7 +2502,7 @@ def build_editor_view_json(themes, version):
     return {
         "custom": {"theme": "", "file": "variables.css", "key": "",
                    "text": "", "status": "", "nudge": 0, "kind": "",
-                   "tokens": [], "classes": [], "publishes": [],
+                   "tokens": [], "classes": [],
                    "sel_name": "", "sel_value": "",
                    "raw": False, "making": "", "new_name": "",
                    "new_base": "dark"},
@@ -2524,11 +2521,6 @@ def build_editor_view_json(themes, version):
             "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
             "custom.classes": {"binding": _prop("view.custom.key",
                                                 EDITOR_CLASSES)},
-            # Its own prop. Bound to custom.tokens it showed the COLOUR list
-            # under the "what this theme publishes" heading -- two different
-            # questions answered with one answer.
-            "custom.publishes": {"binding": _prop("view.custom.key",
-                                                  EDITOR_TOKENS)},
         },
         "params": {},
         "root": {
@@ -2568,20 +2560,20 @@ def build_editor_view_json(themes, version):
                  "children": [
                      _only_when(_colour_pane(), SHOW_TOKENS, layout=True),
                      _only_when(_raw_pane(), SHOW_RAW, layout=True),
-                     # A locked theme still shows what it publishes: reading a
-                     # theme is exactly what you do before deciding to copy it.
-                     {"type": "ia.container.flex", "meta": {"name": "side"},
-                      "position": {"grow": 0, "shrink": 1, "basis": "352px"},
+                     {"type": "ia.container.flex", "meta": {"name": "previewcol"},
+                      "position": {"grow": 0, "shrink": 0, "basis": "352px"},
                       "props": {"direction": "column",
-                                # Scrolls as a COLUMN when the window is too
-                                # short for both panes. Without this the
-                                # shortfall came out of the panes themselves
-                                # and the lists went to nothing.
-                                "style": {"gap": "10px", "minHeight": "0px",
-                                          "overflow": "auto"}},
+                                "style": {"gap": "10px", "minHeight": "0px"}},
                       "children": [
                           _preview_pane(),
-                          _contract_pane(),
+                          # The classes live HERE, not under the token table.
+                          # They are single short strings, so they read fine
+                          # in a 352px rail -- and stacking them under the
+                          # preview is what fills the 380px of dead space the
+                          # preview left below itself. The token table, which
+                          # is three columns, keeps the wide middle.
+                          _only_when(_classes_pane(),
+                                     "{view.custom.kind} != ''", layout=True),
                       ]},
                  ]},
                 # The escape hatch is a toggle, not a tab: most visits change a
@@ -2637,42 +2629,14 @@ def _file_rail():
     return table
 
 
-def _contract_pane():
-    """The read-only contract, with a floor.
-
-    Its own minHeight as well as its tables': a flex child at grow 1 basis 0
-    shrinks below its contents unless told not to, so on a short window this
-    pane was the one that gave, and it gave everything.
-    """
-    pane = _pane("contract", "What this theme publishes",
-                 "Read-only. The tokens and style classes a project can "
-                 "build against.",
-                 [_contract_tokens(),
-                  _pane_head("cls_h", "Style classes"),
-                  _contract_classes()], "0px")
-    pane["props"]["style"]["minHeight"] = "324px"
+def _classes_pane():
+    """The st/... class list, in the narrow column under the preview."""
+    pane = _pane("classes_pane", "Style classes",
+                 "Read-only. Every st/... class this theme ships.",
+                 [_contract_classes()], "0px")
+    pane["position"] = {"grow": 1, "shrink": 1, "basis": "0px"}
+    pane["props"]["style"]["minHeight"] = "152px"
     return pane
-
-
-def _contract_tokens():
-    # No 'where' column: it is the widest field contract() returns and this
-    # pane is 320px. The token, its colour and its value are what is useful
-    # beside the file that defines them.
-    # NOT "tokens" -- the Colours pane already owns that name, and two
-    # components with one meta.name in a single view is a name collision, not
-    # a tidiness question.
-    table = _table("publishes", [
-        _col("token", "Token"),
-        _col("swatch", "Colour", 58, True),
-        _col("value", "Value", 96, True),
-    ], "view.custom.publishes")
-    # A floor of three rows: 30px of header plus 3 x 30. Sharing the leftover
-    # height between two tables and a section header left each showing a
-    # header and nothing else, which is a table that costs space and answers
-    # no question. 116 was the arithmetic done carelessly -- it forgot the
-    # header and bought two rows.
-    table["props"]["style"] = {"minHeight": "122px"}
-    return table
 
 
 def _contract_classes():

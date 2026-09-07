@@ -9,7 +9,6 @@
     "kind": "",
     "tokens": [],
     "classes": [],
-    "publishes": [],
     "sel_name": "",
     "sel_value": "",
     "raw": false,
@@ -63,7 +62,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.all_tokens(theme)\n\texcept Exception:\n\t\treturn []\n\tout = []\n\tlast = None\n\tfor r in rows:\n\t\tgroup = r['group']\n\t\tout.append({'group': group if group != last else '',\n\t\t            'name': r['name'],\n\t\t            'swatch': r['swatch'],\n\t\t            'value': r['value']})\n\t\tlast = group\n\treturn out"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.all_tokens(theme)\n\texcept Exception:\n\t\treturn []\n\tout = []\n\tlast = None\n\tfor r in rows:\n\t\tgroup = r['group']\n\t\tout.append({'group': group if group != last else '',\n\t\t            'name': r['name'],\n\t\t            'what': r.get('what', ''),\n\t\t            'swatch': r['swatch'],\n\t\t            'value': r['value']})\n\t\tlast = group\n\treturn out"
           }
         ]
       }
@@ -92,20 +91,6 @@
           {
             "type": "script",
             "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.editor_classes(theme)\n\texcept Exception:\n\t\trows = []\n\tif not rows:\n\t\treturn [{'klass': 'None yet -- these come from a copy of one of ours'}]\n\treturn rows"
-          }
-        ]
-      }
-    },
-    "custom.publishes": {
-      "binding": {
-        "type": "property",
-        "config": {
-          "path": "view.custom.key"
-        },
-        "transforms": [
-          {
-            "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.editor_contract(theme)\n\texcept Exception:\n\t\trows = []\n\t# A pane with a header and no body reads as broken. A theme\n\t# started from scratch publishes nothing, which is true and\n\t# worth saying in the pane that would otherwise be blank.\n\tif not rows:\n\t\treturn [{'token': 'None yet -- these come from a copy of one of ours', 'swatch': '', 'value': ''}]\n\treturn rows"
           }
         ]
       }
@@ -1249,7 +1234,8 @@
                     "borderStyle": "solid",
                     "borderWidth": "1px",
                     "borderColor": "var(--border)",
-                    "overflow": "hidden"
+                    "overflow": "hidden",
+                    "minWidth": "560px"
                   }
                 },
                 "children": [
@@ -1363,6 +1349,14 @@
                               "field": "name",
                               "header": {
                                 "title": "Token"
+                              },
+                              "width": 210,
+                              "strictWidth": true
+                            },
+                            {
+                              "field": "what",
+                              "header": {
+                                "title": "What it does"
                               }
                             },
                             {
@@ -1935,19 +1929,18 @@
           {
             "type": "ia.container.flex",
             "meta": {
-              "name": "side"
+              "name": "previewcol"
             },
             "position": {
               "grow": 0,
-              "shrink": 1,
+              "shrink": 0,
               "basis": "352px"
             },
             "props": {
               "direction": "column",
               "style": {
                 "gap": "10px",
-                "minHeight": "0px",
-                "overflow": "auto"
+                "minHeight": "0px"
               }
             },
             "children": [
@@ -2157,7 +2150,7 @@
               {
                 "type": "ia.container.flex",
                 "meta": {
-                  "name": "contract"
+                  "name": "classes_pane_wrap"
                 },
                 "position": {
                   "grow": 1,
@@ -2165,159 +2158,56 @@
                   "basis": "0px"
                 },
                 "props": {
-                  "direction": "column",
-                  "style": {
-                    "gap": "0px",
-                    "minHeight": "324px",
-                    "borderRadius": "4px",
-                    "backgroundColor": "var(--container)",
-                    "borderStyle": "solid",
-                    "borderWidth": "1px",
-                    "borderColor": "var(--border)",
-                    "overflow": "hidden"
+                  "direction": "row",
+                  "style": {}
+                },
+                "propConfig": {
+                  "meta.visible": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "{view.custom.kind} != ''"
+                      }
+                    }
+                  },
+                  "props.style.display": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "if({view.custom.kind} != '', 'flex', 'none')"
+                      }
+                    }
                   }
                 },
                 "children": [
                   {
                     "type": "ia.container.flex",
                     "meta": {
-                      "name": "head"
+                      "name": "classes_pane"
                     },
                     "position": {
-                      "grow": 0,
-                      "shrink": 0,
+                      "grow": 1,
+                      "shrink": 1,
                       "basis": "auto"
                     },
                     "props": {
                       "direction": "column",
                       "style": {
-                        "gap": "3px",
-                        "padding": "9px 11px 8px",
-                        "borderBottomStyle": "solid",
-                        "borderBottomWidth": "1px",
-                        "borderBottomColor": "var(--border)"
-                      }
-                    },
-                    "children": [
-                      {
-                        "type": "ia.display.label",
-                        "meta": {
-                          "name": "h"
-                        },
-                        "position": {
-                          "grow": 0,
-                          "shrink": 0,
-                          "basis": "auto"
-                        },
-                        "props": {
-                          "text": "What this theme publishes",
-                          "style": {
-                            "fontSize": "11px",
-                            "fontWeight": 600,
-                            "letterSpacing": "0.06em",
-                            "textTransform": "uppercase",
-                            "color": "var(--label)"
-                          }
-                        }
-                      },
-                      {
-                        "type": "ia.display.label",
-                        "meta": {
-                          "name": "hint"
-                        },
-                        "position": {
-                          "grow": 0,
-                          "shrink": 0,
-                          "basis": "auto"
-                        },
-                        "props": {
-                          "text": "Read-only. The tokens and style classes a project can build against.",
-                          "style": {
-                            "fontSize": "11.5px",
-                            "lineHeight": "1.45",
-                            "color": "var(--label--disabled)"
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "ia.container.flex",
-                    "meta": {
-                      "name": "body"
-                    },
-                    "position": {
-                      "grow": 1,
-                      "shrink": 1,
-                      "basis": "0px"
-                    },
-                    "props": {
-                      "direction": "column",
-                      "style": {
                         "gap": "0px",
-                        "minHeight": "0px",
-                        "padding": "0px"
+                        "minHeight": "152px",
+                        "borderRadius": "4px",
+                        "backgroundColor": "var(--container)",
+                        "borderStyle": "solid",
+                        "borderWidth": "1px",
+                        "borderColor": "var(--border)",
+                        "overflow": "hidden"
                       }
                     },
                     "children": [
                       {
-                        "type": "ia.display.table",
+                        "type": "ia.container.flex",
                         "meta": {
-                          "name": "publishes"
-                        },
-                        "position": {
-                          "grow": 1,
-                          "shrink": 1,
-                          "basis": "0px"
-                        },
-                        "props": {
-                          "pager": {
-                            "top": false,
-                            "bottom": false
-                          },
-                          "columns": [
-                            {
-                              "field": "token",
-                              "header": {
-                                "title": "Token"
-                              }
-                            },
-                            {
-                              "field": "swatch",
-                              "header": {
-                                "title": "Colour"
-                              },
-                              "width": 58,
-                              "strictWidth": true
-                            },
-                            {
-                              "field": "value",
-                              "header": {
-                                "title": "Value"
-                              },
-                              "width": 96,
-                              "strictWidth": true
-                            }
-                          ],
-                          "style": {
-                            "minHeight": "122px"
-                          }
-                        },
-                        "propConfig": {
-                          "props.data": {
-                            "binding": {
-                              "type": "property",
-                              "config": {
-                                "path": "view.custom.publishes"
-                              }
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "type": "ia.display.label",
-                        "meta": {
-                          "name": "cls_h"
+                          "name": "head"
                         },
                         "position": {
                           "grow": 0,
@@ -2325,24 +2215,62 @@
                           "basis": "auto"
                         },
                         "props": {
-                          "text": "Style classes",
+                          "direction": "column",
                           "style": {
-                            "fontSize": "11px",
-                            "fontWeight": 600,
-                            "letterSpacing": "0.06em",
-                            "textTransform": "uppercase",
-                            "color": "var(--label--disabled)",
-                            "padding": "9px 10px 5px",
-                            "borderTopStyle": "solid",
-                            "borderTopWidth": "1px",
-                            "borderTopColor": "var(--border)"
+                            "gap": "3px",
+                            "padding": "9px 11px 8px",
+                            "borderBottomStyle": "solid",
+                            "borderBottomWidth": "1px",
+                            "borderBottomColor": "var(--border)"
                           }
-                        }
+                        },
+                        "children": [
+                          {
+                            "type": "ia.display.label",
+                            "meta": {
+                              "name": "h"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "Style classes",
+                              "style": {
+                                "fontSize": "11px",
+                                "fontWeight": 600,
+                                "letterSpacing": "0.06em",
+                                "textTransform": "uppercase",
+                                "color": "var(--label)"
+                              }
+                            }
+                          },
+                          {
+                            "type": "ia.display.label",
+                            "meta": {
+                              "name": "hint"
+                            },
+                            "position": {
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "auto"
+                            },
+                            "props": {
+                              "text": "Read-only. Every st/... class this theme ships.",
+                              "style": {
+                                "fontSize": "11.5px",
+                                "lineHeight": "1.45",
+                                "color": "var(--label--disabled)"
+                              }
+                            }
+                          }
+                        ]
                       },
                       {
-                        "type": "ia.display.table",
+                        "type": "ia.container.flex",
                         "meta": {
-                          "name": "classes"
+                          "name": "body"
                         },
                         "position": {
                           "grow": 1,
@@ -2350,32 +2278,53 @@
                           "basis": "0px"
                         },
                         "props": {
-                          "pager": {
-                            "top": false,
-                            "bottom": false
-                          },
-                          "columns": [
-                            {
-                              "field": "klass",
-                              "header": {
-                                "title": "Class"
-                              }
-                            }
-                          ],
+                          "direction": "column",
                           "style": {
-                            "minHeight": "122px"
+                            "gap": "0px",
+                            "minHeight": "0px",
+                            "padding": "0px"
                           }
                         },
-                        "propConfig": {
-                          "props.data": {
-                            "binding": {
-                              "type": "property",
-                              "config": {
-                                "path": "view.custom.classes"
+                        "children": [
+                          {
+                            "type": "ia.display.table",
+                            "meta": {
+                              "name": "classes"
+                            },
+                            "position": {
+                              "grow": 1,
+                              "shrink": 1,
+                              "basis": "0px"
+                            },
+                            "props": {
+                              "pager": {
+                                "top": false,
+                                "bottom": false
+                              },
+                              "columns": [
+                                {
+                                  "field": "klass",
+                                  "header": {
+                                    "title": "Class"
+                                  }
+                                }
+                              ],
+                              "style": {
+                                "minHeight": "122px"
+                              }
+                            },
+                            "propConfig": {
+                              "props.data": {
+                                "binding": {
+                                  "type": "property",
+                                  "config": {
+                                    "path": "view.custom.classes"
+                                  }
+                                }
                               }
                             }
                           }
-                        }
+                        ]
                       }
                     ]
                   }

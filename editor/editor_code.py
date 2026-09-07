@@ -1006,9 +1006,18 @@ def all_tokens(theme):
             found = tokens(theme, filename)
         except (Exception, Throwable), e:
             continue                     # a theme need not have both files
+        try:
+            why = _reasons(theme)
+        except (Exception, Throwable), e:
+            why = {}
         for row in found:
             row = dict(row)
             row["file"] = filename
+            # What the value is FOR, in a sentence. It used to live in a
+            # read-only pane beside this one, listing the same --st-* names
+            # again with their resolved values -- the names were the
+            # duplication and this was the only part of it worth keeping.
+            row["what"] = plain(row["name"], why.get(row["name"], ""))
             # The --st-* tokens have their OWN grouping. Run through GROUPS
             # (which classifies Ignition's variable names) they all land in
             # "Everything else", which is the least useful thing a grouped
