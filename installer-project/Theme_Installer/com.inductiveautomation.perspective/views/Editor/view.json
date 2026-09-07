@@ -91,7 +91,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.editor_classes(theme)\n\texcept Exception:\n\t\treturn []"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.editor_classes(theme)\n\texcept Exception:\n\t\trows = []\n\tif not rows:\n\t\treturn [{'klass': 'None yet -- these come from a copy of one of ours'}]\n\treturn rows"
           }
         ]
       }
@@ -105,7 +105,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.editor_contract(theme)\n\texcept Exception:\n\t\treturn []"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.editor_contract(theme)\n\texcept Exception:\n\t\trows = []\n\t# A pane with a header and no body reads as broken. A theme\n\t# started from scratch publishes nothing, which is true and\n\t# worth saying in the pane that would otherwise be blank.\n\tif not rows:\n\t\treturn [{'token': 'None yet -- these come from a copy of one of ours', 'swatch': '', 'value': ''}]\n\treturn rows"
           }
         ]
       }

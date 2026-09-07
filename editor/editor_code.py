@@ -590,15 +590,54 @@ def user_base_of(name):
     return "dark" if re.search(r'@import\s+"\.\./dark/', text) else "light"
 
 
+def _seed_variables(name, based_on, dark):
+    """The starter variables.css: every variable the base declares, at the
+    value it already has, grouped by what it affects.
+
+    Read from the SERVED base stylesheet, because light and dark live inside
+    the Perspective module and have no files to copy. If that read fails the
+    file is still written, just without the list -- a theme with no starter
+    values is worth less than one with them, but a create that fails outright
+    is worth nothing.
+    """
+    head = ("/* %s -- your own theme, built on %s.\n"
+            " * Every line below is what %s already says. Change one and only\n"
+            " * that one changes; delete one and the base decides it again. */\n"
+            % (name, based_on, based_on))
+    body = ":root {\n  color-scheme: %s;\n" % ("dark" if dark else "light")
+    try:
+        values = _vars_of(theme_css(based_on))
+    except (Exception, Throwable), e:
+        values = {}
+    rows = [(group_of(var, GROUPS), var, values[var]) for var in values]
+    order = dict((label, i) for i, (label, _) in enumerate(GROUPS))
+    rows.sort(key=lambda r: (order.get(r[0], len(order)), r[1]))
+    last = None
+    for group, var, value in rows:
+        if group != last:
+            body += "\n  /* %s */\n" % group
+            last = group
+        body += "  %s: %s;\n" % (var, value)
+    return head + body + "}\n"
+
+
 def new_theme(name, based_on="dark", description=""):
     """Create a theme of your own, built on a stock base like ours are.
 
-    It starts as the thinnest theme that is actually a theme: an index.css that
-    imports the base and then this theme's own variables.css and globals.css,
-    both present and empty-but-for-a-comment. That is deliberate -- a new theme
-    that renders identically to its base is one you can then change a line at a
-    time and see what each line did. A generated palette would be someone
-    else's design decisions to unpick first.
+    variables.css is seeded with the base's OWN values -- every variable it
+    declares, at the value it already has. The theme therefore renders
+    identically to the base, which is the point, but the page has a list to
+    show and every line is yours to change.
+
+    It used to be written empty-but-for-a-comment, on the reasoning that a
+    theme identical to its base is one you can change a line at a time. That
+    reasoning was right and the file was wrong: this page's whole proposition
+    is a list of values you click, so New theme handed you a 550px void and a
+    Save button with nothing to save. Empty is only defensible in a file
+    editor, which this stopped being.
+
+    globals.css stays empty. Its content is rules and classes, not values, and
+    nothing on this page edits those except the Advanced text box.
     """
     if not name or not EDITOR_ID_RE.match(name):
         raise ValueError(
@@ -631,14 +670,7 @@ def new_theme(name, based_on="dark", description=""):
         # color-scheme is not optional and not decoration: without it Chrome's
         # auto dark mode repaints SVG fills client-side and charts come out
         # white on a dark page, with every server-side check reading correct.
-        "variables.css": (
-            "/* %s -- your own theme, built on %s.\n"
-            " * Re-point Ignition's own variable names here and every stock\n"
-            " * component follows. Start from the Compare column on one of\n"
-            " * the packaged themes to see which names are worth setting. */\n"
-            ":root {\n"
-            "  color-scheme: %s;\n"
-            "}\n" % (name, based_on, "dark" if dark else "light")),
+        "variables.css": _seed_variables(name, based_on, dark),
         "globals.css": (
             "/* %s -- rules with no stock equivalent: scrollbars, component\n"
             " * chrome, the --st-* tokens and the st/... class contract.\n"
