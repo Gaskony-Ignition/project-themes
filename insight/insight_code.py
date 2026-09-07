@@ -114,9 +114,21 @@ def is_colour(value):
 
 
 def swatch(value):
+    """A colour chip for a table cell.
+
+    Inset and rounded, not a full-bleed cell: three white values in a row
+    painted edge to edge merge into one white block, and a column that reads
+    as one block for three different tokens is not showing you three colours.
+    The border keeps a white or near-black chip visible against the surface
+    it sits on.
+    """
     if not is_colour(value):
         return {"value": "", "style": {}}
-    return {"value": "", "style": {"backgroundColor": value.strip()}}
+    return {"value": "", "style": {
+        "backgroundColor": value.strip(),
+        "margin": "5px 8px", "borderRadius": "3px",
+        "borderStyle": "solid", "borderWidth": "1px",
+        "borderColor": "var(--border)"}}
 
 
 LIMIT = 150

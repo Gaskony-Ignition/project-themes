@@ -2069,7 +2069,7 @@ def _button(name, text, script, primary=False):
 # scopes in one strip, which is most of why it read as unusable.
 # ---------------------------------------------------------------------------
 
-def _pane(name, title, hint, children, basis, body_pad="0px"):
+def _pane(name, title, hint, children, basis, body_pad="0px", hug=False):
     """A bordered column with a heading and one line of explanation.
 
     The hint is not decoration. Every pane on this page needed a sentence: a
@@ -2090,10 +2090,15 @@ def _pane(name, title, hint, children, basis, body_pad="0px"):
                                "style": {"fontSize": "11.5px",
                                          "lineHeight": "1.45",
                                          "color": "var(--label--disabled)"}}})
+    # hug: the pane is as tall as what is in it. A pane given a fixed height
+    # is a guess that goes wrong the moment its own caption wraps one more
+    # line -- which is how the preview came to have a scrollbar in a box that
+    # holds one 96px picture.
     return {
         "type": "ia.container.flex", "meta": {"name": name},
-        "position": {"grow": 1 if basis == "0px" else 0, "shrink": 1,
-                     "basis": basis},
+        "position": {"grow": 0 if hug else (1 if basis == "0px" else 0),
+                     "shrink": 0 if hug else 1,
+                     "basis": "auto" if hug else basis},
         "props": {"direction": "column",
                   "style": {"gap": "0px", "minHeight": "0px",
                             "borderRadius": "4px",
@@ -2111,7 +2116,11 @@ def _pane(name, title, hint, children, basis, body_pad="0px"):
                                  "borderBottomColor": "var(--border)"}},
              "children": head},
             {"type": "ia.container.flex", "meta": {"name": "body"},
-             "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+             # A hugging pane's body must be auto too: at basis 0px there is
+             # nothing to give the contents height and the pane renders as a
+             # header over an empty box.
+             "position": ({"grow": 0, "shrink": 0, "basis": "auto"} if hug
+                          else {"grow": 1, "shrink": 1, "basis": "0px"}),
              "props": {"direction": "column",
                        "style": {"gap": "0px", "minHeight": "0px",
                                  "padding": body_pad}},
@@ -2343,9 +2352,9 @@ def _preview_pane():
     """
     return _pane(
         "preview", "Preview",
-        "The same imaginary plant page, in this theme's own colours. It "
-        "repaints on every save -- it reads the files, not the gateway's "
-        "cached copy. Refresh is for a change made somewhere else.",
+        # Three sentences in a 352px column is five lines of caption above a
+        # 96px picture. One sentence; Refresh explains itself.
+        "This theme's own colours. Repaints on every save.",
         [{"type": "ia.display.label", "meta": {"name": "shot"},
           "position": {"grow": 0, "shrink": 0, "basis": "auto"},
           "props": {"text": "",
@@ -2362,13 +2371,10 @@ def _preview_pane():
           "props": {"direction": "row",
                     "style": {"padding": "0 10px 10px", "gap": "8px"}},
           "children": [_button("btn_refresh", "Refresh", EDITOR_REFRESH)]}],
-        # An EXPLICIT height. A pane at basis "auto" has grow 0 and its body
-        # has basis 0px, so there is nothing to give the picture height and
-        # the pane rendered as a header with an empty box under it.
-        # 262px, not 228: the caption grew a line when it started
-        # explaining the Refresh button, and pushed that button out of the
-        # pane it was explaining.
-        "262px")
+        # No height at all now: hug=True sizes it to the picture and the
+        # button, so it cannot scroll and cannot leave a gap, whatever the
+        # caption does at whatever width.
+        "auto", hug=True)
 
 
 def _colour_pane():
@@ -2567,15 +2573,15 @@ def build_editor_view_json(themes, version):
                      {"type": "ia.container.flex", "meta": {"name": "side"},
                       "position": {"grow": 0, "shrink": 1, "basis": "352px"},
                       "props": {"direction": "column",
-                                "style": {"gap": "10px", "minHeight": "0px"}},
+                                # Scrolls as a COLUMN when the window is too
+                                # short for both panes. Without this the
+                                # shortfall came out of the panes themselves
+                                # and the lists went to nothing.
+                                "style": {"gap": "10px", "minHeight": "0px",
+                                          "overflow": "auto"}},
                       "children": [
                           _preview_pane(),
-                          _pane("contract", "What this theme publishes",
-                                "Read-only. The tokens and style classes a "
-                                "project can build against.",
-                                [_contract_tokens(),
-                                 _pane_head("cls_h", "Style classes"),
-                                 _contract_classes()], "0px"),
+                          _contract_pane(),
                       ]},
                  ]},
                 # The escape hatch is a toggle, not a tab: most visits change a
@@ -2631,6 +2637,23 @@ def _file_rail():
     return table
 
 
+def _contract_pane():
+    """The read-only contract, with a floor.
+
+    Its own minHeight as well as its tables': a flex child at grow 1 basis 0
+    shrinks below its contents unless told not to, so on a short window this
+    pane was the one that gave, and it gave everything.
+    """
+    pane = _pane("contract", "What this theme publishes",
+                 "Read-only. The tokens and style classes a project can "
+                 "build against.",
+                 [_contract_tokens(),
+                  _pane_head("cls_h", "Style classes"),
+                  _contract_classes()], "0px")
+    pane["props"]["style"]["minHeight"] = "324px"
+    return pane
+
+
 def _contract_tokens():
     # No 'where' column: it is the widest field contract() returns and this
     # pane is 320px. The token, its colour and its value are what is useful
@@ -2643,13 +2666,18 @@ def _contract_tokens():
         _col("swatch", "Colour", 58, True),
         _col("value", "Value", 96, True),
     ], "view.custom.publishes")
-    table["props"]["style"] = {}
+    # A floor of three rows: 30px of header plus 3 x 30. Sharing the leftover
+    # height between two tables and a section header left each showing a
+    # header and nothing else, which is a table that costs space and answers
+    # no question. 116 was the arithmetic done carelessly -- it forgot the
+    # header and bought two rows.
+    table["props"]["style"] = {"minHeight": "122px"}
     return table
 
 
 def _contract_classes():
     table = _table("classes", [_col("klass", "Class")], "view.custom.classes")
-    table["props"]["style"] = {}
+    table["props"]["style"] = {"minHeight": "122px"}
     return table
 
 
