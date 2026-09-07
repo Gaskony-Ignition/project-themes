@@ -91,7 +91,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.contract_classes(theme)\n\texcept Exception:\n\t\treturn []"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.editor_classes(theme)\n\texcept Exception:\n\t\treturn []"
           }
         ]
       }
@@ -105,7 +105,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.contract(theme)\n\texcept Exception:\n\t\treturn []"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.editor_contract(theme)\n\texcept Exception:\n\t\treturn []"
           }
         ]
       }
@@ -254,7 +254,7 @@
           "basis": "auto"
         },
         "props": {
-          "text": "Customise  \u00b7  v1.13.0",
+          "text": "Customise  \u00b7  v1.14.0",
           "style": {
             "fontSize": "24px",
             "color": "var(--label)",
@@ -349,12 +349,12 @@
                 "binding": {
                   "type": "expr",
                   "config": {
-                    "expression": "1"
+                    "expression": "{view.custom.nudge}"
                   },
                   "transforms": [
                     {
                       "type": "script",
-                      "code": "\timport themepack\n\trows = themepack.list_themes()\n\treturn [{'value': r['id'],\n\t         'label': r['id'] + ('' if r['ours'] else '  (not ours)')}\n\t        for r in rows]"
+                      "code": "\timport themepack\n\t# Say what each one IS. The label was '(not ours)', which is true\n\t# of a theme you just made and reads as a disclaimer about it.\n\tsuffix = {'user': '  (yours)', 'stock': \"  (Ignition's)\"}\n\tout = []\n\tfor r in themepack.list_themes():\n\t\tkind = themepack.theme_kind(r['id'])\n\t\tout.append({'value': r['id'],\n\t                    'label': r['id'] + suffix.get(kind, '')})\n\treturn out"
                     }
                   ]
                 }
@@ -396,7 +396,7 @@
                   "transforms": [
                     {
                       "type": "script",
-                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\tkind = themepack.theme_kind(theme)\n\tbase = themepack.base_of(theme)\n\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n\t# point: the separator here arrived on the page as mojibake.\n\twords = {\n\t\t'packaged': 'One of the ten pre-packaged themes, built on %s. Install on the first page puts it back.',\n\t\t'stock': \"One of Ignition's own, built on %s. Editing it changes every project using it.\",\n\t\t'user': 'Yours, built on %s. Nothing on the Installer page overwrites it.',\n\t}\n\ttext = words.get(kind, kind)\n\tif '%s' in text:\n\t\ttext = text % (base or 'a stock theme')\n\treturn text"
+                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\tkind = themepack.theme_kind(theme)\n\t# base_of() answers from the built-in tables, so for a theme made\n\t# here it falls through to 'light' -- and called every copy of a\n\t# dark theme light.\n\tbase = (themepack.user_base_of(theme) if kind == 'user'\n\t        else themepack.base_of(theme))\n\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n\t# point: the separator here arrived on the page as mojibake.\n\twords = {\n\t\t'packaged': '%s is one of the ten pre-packaged themes, built on %s. Install on the first page puts it back.',\n\t\t'stock': \"%s is one of Ignition's own, built on %s. Editing it changes every project using it.\",\n\t\t'user': '%s is yours, built on %s. Nothing on the Installer page overwrites it.',\n\t}\n\t# The NAME leads. The badge used to describe the theme without\n\t# ever saying which one, so after a create -- when the picker\n\t# was the only thing naming it -- the page named it nowhere.\n\ttext = words.get(kind, kind)\n\tif '%s' in text:\n\t\ttext = text % (theme, base or 'a stock theme')\n\treturn text"
                     }
                   ]
                 }
@@ -939,7 +939,7 @@
                           "component": {
                             "onActionPerformed": {
                               "config": {
-                                "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\ttry:\n\t\tthemepack.new_theme(name, self.view.custom.new_base)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.making = ''\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.status = ('Created %s on %s -- it renders like its base until you change it'\n\t\t                           % (name, self.view.custom.new_base))\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\ttry:\n\t\tthemepack.new_theme(name, self.view.custom.new_base)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.making = ''\n\t\t# nudge FIRST: it is what re-reads the theme list, and a\n\t\t# selection the options do not contain yet shows as blank.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.status = ('Created %s on %s -- it renders like its base until you change it'\n\t\t                           % (name, self.view.custom.new_base))\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
                               },
                               "scope": "G",
                               "type": "script"
@@ -1003,7 +1003,7 @@
                           "component": {
                             "onActionPerformed": {
                               "config": {
-                                "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\tsource = self.view.custom.theme\n\ttry:\n\t\tthemepack.copy_theme(source, name)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.making = ''\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.status = 'Copied %s to %s' % (source, name)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\tsource = self.view.custom.theme\n\ttry:\n\t\tthemepack.copy_theme(source, name)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.making = ''\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.status = ('Copied %s to %s -- you are now editing the copy' % (source, name))\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
                               },
                               "scope": "G",
                               "type": "script"
@@ -1953,7 +1953,7 @@
                 "position": {
                   "grow": 0,
                   "shrink": 1,
-                  "basis": "228px"
+                  "basis": "262px"
                 },
                 "props": {
                   "direction": "column",
@@ -2022,7 +2022,7 @@
                           "basis": "auto"
                         },
                         "props": {
-                          "text": "The same imaginary plant page, painted from the stylesheet this gateway is actually serving. If it looks behind after a save, Refresh -- the scan and the served copy can lag a moment.",
+                          "text": "The same imaginary plant page, in this theme's own colours. It repaints on every save -- it reads the files, not the gateway's cached copy. Refresh is for a change made somewhere else.",
                           "style": {
                             "fontSize": "11.5px",
                             "lineHeight": "1.45",
@@ -2437,7 +2437,7 @@
                   "basis": "auto"
                 },
                 "props": {
-                  "text": "Advanced: edit the files directly",
+                  "text": "",
                   "style": {
                     "height": "32px",
                     "whiteSpace": "nowrap",
@@ -2458,6 +2458,16 @@
                       "type": "script"
                     }
                   }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "if({view.custom.raw}, 'Back to the colour list', 'Advanced: edit the files directly')"
+                      }
+                    }
+                  }
                 }
               },
               {
@@ -2466,16 +2476,26 @@
                   "name": "rawhint"
                 },
                 "position": {
-                  "grow": 0,
-                  "shrink": 0,
+                  "grow": 1,
+                  "shrink": 1,
                   "basis": "auto"
                 },
                 "props": {
-                  "text": "Colours are easier to change in the list above; this is for structural edits.",
+                  "text": "",
                   "style": {
                     "fontSize": "12px",
                     "color": "var(--label--disabled)",
-                    "whiteSpace": "nowrap"
+                    "whiteSpace": "normal"
+                  }
+                },
+                "propConfig": {
+                  "props.text": {
+                    "binding": {
+                      "type": "expr",
+                      "config": {
+                        "expression": "if({view.custom.raw}, 'You are editing the file itself. Colours are easier to change in the list.', 'Colours are easier to change in the list above; this is for structural edits.')"
+                      }
+                    }
                   }
                 }
               }

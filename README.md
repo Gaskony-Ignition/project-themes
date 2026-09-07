@@ -81,25 +81,28 @@ The project is two pages, linked from each header:
 
 * **Installer** — three cards of related buttons, each with the explanation of
   what it does to the gateway beside it (the ten pre-packaged themes; Ignition's
-  own; try one), then a status table covering all 16 themes with a thumbnail in
-  every row of the same imaginary plant page drawn in that theme's colours.
-  Seeing what you are about to install belongs on the page that installs it, in
-  the row that says whether it is installed.
+  own; try one), then a status table covering the ten, Ignition's six, and any
+  theme made on the Customise page, with a thumbnail in every row of the same
+  imaginary plant page drawn in that theme's colours. Seeing what you are about
+  to install belongs on the page that installs it, in the row that says whether
+  it is installed.
 * **Customise** — make a theme of your own. The ten are generated from
   `packs/` and Install overwrites them, so they are read-only here and the page
   offers a copy instead; a copy is yours and nothing overwrites it. Its values
   are listed grouped by what they affect — click one, change it, Save — beside
-  a live preview painted from the stylesheet the gateway is actually serving,
-  and the tokens and style classes the theme publishes. Raw file editing is
-  behind an "Advanced" toggle for structural changes.
+  a live preview in the theme's own colours that repaints on every save, and
+  the tokens and style classes the theme publishes. Raw file editing is behind
+  an "Advanced" toggle for structural changes.
 
 The thumbnails are SVGs generated at build time from the theme files the
 installer already embeds, so a row's picture and the files Install writes cannot
 drift apart, and drawing them needs no gateway round-trip.
-The Editor reads the gateway live: the files it edits are the ones on disk, and
+Customise reads the gateway live: the files it edits are the ones on disk, and
 the token and class lists come from the resolved stylesheet the browser is
-really being served (`/data/perspective/themes/<id>.css`), so the page cannot
-advertise a token the installed theme does not actually ship.
+really being served (`/data/perspective/themes/<id>.css`) with the theme's own
+files laid over the top — so the page cannot advertise a token the installed
+theme does not ship, and a theme made a second ago, which the gateway is not
+serving yet, still reads correctly.
 
 #### Updating the stock themes (optional)
 

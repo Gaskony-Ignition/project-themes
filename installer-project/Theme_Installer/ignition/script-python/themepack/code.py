@@ -7,7 +7,7 @@ build_installer.py from out/ -- DO NOT EDIT
 BY HAND. Regenerate with:
     python3 build_installer.py
 
-Version 1.13.0. Gateway scope only -- install()/install_all() write
+Version 1.14.0. Gateway scope only -- install()/install_all() write
 files under <dataDir>/config/resources/core/
 com.inductiveautomation.perspective/themes/<id>/ and request a
 config scan; uninstall()/uninstall_all() go through
@@ -459,6 +459,16 @@ def status():
             "kind": "stock",
             "stock": stock_state(name),
         })
+    # Themes somebody made on the Customise page. Neither list
+    # knew about them, so creating one put it on no page at all.
+    for name in user_themes():
+        out.append({
+            "id": name,
+            "label": name,
+            "dark": user_base_of(name) == "dark",
+            "kind": "user",
+            "installed": name in installed,
+        })
     return out
 
 # ---------------------------------------------------------------------------
@@ -844,9 +854,16 @@ def _readable(selector):
     return re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', name).lower()
 
 
-def contract(theme_id):
-    """The --st-* tokens a project can rely on, with their live values."""
-    css = theme_css(theme_id)
+def contract(theme_id, css=None):
+    """The --st-* tokens a project can rely on, with their live values.
+
+    `css` overrides where they are read from. The Customise page passes a
+    stylesheet with the theme's own files appended, because a theme copied a
+    second ago is not being served yet and the pane was empty for exactly the
+    theme somebody had just made.
+    """
+    if css is None:
+        css = theme_css(theme_id)
     ours = _vars_of(css)
     users = _token_users(css)
     why = _reasons(theme_id)
@@ -876,16 +893,21 @@ def contract(theme_id):
     return rows
 
 
-def contract_classes(theme_id):
+def contract_classes(theme_id, css=None):
     """Every st/... class this theme publishes, and what each one sets.
 
     Read out of the theme's own globals.css rather than a list kept beside it,
     so the page cannot claim a class the theme does not actually ship.
+
+    `css` overrides the source. Without it this answered from THEMES alone, so
+    a theme made on the Customise page -- which carries the same 69 classes it
+    was copied from -- was reported as publishing none.
     """
-    theme = THEMES.get(theme_id)
-    if not theme:
-        return []
-    css = theme["files"].get("globals.css", "")
+    if css is None:
+        theme = THEMES.get(theme_id)
+        if not theme:
+            return []
+        css = theme["files"].get("globals.css", "")
     rows = []
     for match in re.finditer(
             r'^\.psc-st\\/([A-Za-z0-9/\\_-]+?)\.psc-st\\/[A-Za-z0-9/\\_-]+?\s*\{([^}]*)\}',
@@ -1638,6 +1660,40 @@ def theme_kind(name):
     return "missing"
 
 
+def user_themes():
+    """Every theme on disk that is neither ours nor Ignition's, id-sorted.
+
+    The Installer's status table lists the ten and the six; a theme somebody
+    made here belonged to neither list and so appeared on neither page --
+    you could create one and then not find it anywhere but the dropdown that
+    made it.
+    """
+    out = []
+    root = _themes_root()
+    if not os.path.isdir(root):
+        return out
+    for name in sorted(os.listdir(root)):
+        if not os.path.isdir(os.path.join(root, name)):
+            continue
+        if theme_kind(name) == "user":
+            out.append(name)
+    return out
+
+
+def user_base_of(name):
+    """'dark' or 'light' for a theme made here, read off its index.css.
+
+    base_of() answers from THEMES and STOCK_DARK, so for a theme in neither it
+    falls through to 'light' -- which labelled every copy of a dark theme
+    Light in the status table.
+    """
+    try:
+        text = read_file(name, "index.css")["text"]
+    except (Exception, Throwable), e:
+        return "light"
+    return "dark" if re.search(r'@import\s+"\.\./dark/', text) else "light"
+
+
 def new_theme(name, based_on="dark", description=""):
     """Create a theme of your own, built on a stock base like ours are.
 
@@ -1819,12 +1875,34 @@ def base_options():
 # table have to be the same picture or neither can be trusted.
 # ---------------------------------------------------------------------------
 
+def _editor_declared(theme):
+    """Every custom property the theme's OWN files declare, read off disk.
+
+    The point is the timing. theme_css() fetches what the gateway is serving,
+    which is the only way to see the base theme -- light and dark live inside
+    the Perspective module, not on disk -- but it is a copy the gateway
+    rebuilds after a scan, and a save beats the rebuild often enough that the
+    preview showed the previous colour and looked broken. The files are
+    authoritative the instant write_file() returns, so they go over the top.
+    """
+    values = {}
+    for filename in EDITOR_COLOUR_FILES:
+        try:
+            values.update(_vars_of(read_file(theme, filename)["text"]))
+        except (Exception, Throwable), e:
+            continue                     # a theme need not have both files
+    return values
+
+
 def live_palette(theme):
     """The dozen colours a preview is painted with, resolved from the LIVE
     stylesheet. var() chains are followed; anything still unresolved is
     dropped rather than drawn, because a var() reference painted literally
     renders in the VIEWING page's colours and quietly shows the wrong thing."""
     values = _vars_of(theme_css(theme))
+    # Served copy for the inherited base, this theme's own files for anything
+    # it sets itself -- so a save shows immediately instead of a scan later.
+    values.update(_editor_declared(theme))
 
     def resolve(value, hops=0):
         while value and value.startswith("var(") and hops < 6:
@@ -1914,6 +1992,42 @@ def live_preview_uri(theme, width=340, height=102):
 # that invites you to edit one is inviting work that disappears at the next
 # install, so the customiser offers a COPY instead and the ten stay read-only.
 # ---------------------------------------------------------------------------
+
+def editor_css(theme):
+    """What the browser WILL get: the served stylesheet with this theme's own
+    files appended, so the last save counts even before the scan does.
+
+    Appended, not substituted: the base theme lives inside the Perspective
+    module and is only ever visible through the served copy. _vars_of takes
+    the last definition, which is the same rule the browser applies, so the
+    disk copy wins where both say something.
+    """
+    parts = []
+    try:
+        parts.append(theme_css(theme))
+    except (Exception, Throwable), e:
+        pass
+    for filename in EDITOR_COLOUR_FILES:
+        try:
+            parts.append(read_file(theme, filename)["text"])
+        except (Exception, Throwable), e:
+            continue
+    return "\n".join(parts)
+
+
+def editor_contract(theme):
+    """contract(), answered for a theme that may be seconds old."""
+    return contract(theme, editor_css(theme))
+
+
+def editor_classes(theme):
+    """contract_classes(), read from the theme's own globals.css on disk."""
+    try:
+        css = read_file(theme, "globals.css")["text"]
+    except (Exception, Throwable), e:
+        return contract_classes(theme)
+    return contract_classes(theme, css)
+
 
 def is_editable(theme):
     """Only a theme made here may be changed from here."""

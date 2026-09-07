@@ -381,9 +381,16 @@ def _readable(selector):
     return re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', name).lower()
 
 
-def contract(theme_id):
-    """The --st-* tokens a project can rely on, with their live values."""
-    css = theme_css(theme_id)
+def contract(theme_id, css=None):
+    """The --st-* tokens a project can rely on, with their live values.
+
+    `css` overrides where they are read from. The Customise page passes a
+    stylesheet with the theme's own files appended, because a theme copied a
+    second ago is not being served yet and the pane was empty for exactly the
+    theme somebody had just made.
+    """
+    if css is None:
+        css = theme_css(theme_id)
     ours = _vars_of(css)
     users = _token_users(css)
     why = _reasons(theme_id)
@@ -413,16 +420,21 @@ def contract(theme_id):
     return rows
 
 
-def contract_classes(theme_id):
+def contract_classes(theme_id, css=None):
     """Every st/... class this theme publishes, and what each one sets.
 
     Read out of the theme's own globals.css rather than a list kept beside it,
     so the page cannot claim a class the theme does not actually ship.
+
+    `css` overrides the source. Without it this answered from THEMES alone, so
+    a theme made on the Customise page -- which carries the same 69 classes it
+    was copied from -- was reported as publishing none.
     """
-    theme = THEMES.get(theme_id)
-    if not theme:
-        return []
-    css = theme["files"].get("globals.css", "")
+    if css is None:
+        theme = THEMES.get(theme_id)
+        if not theme:
+            return []
+        css = theme["files"].get("globals.css", "")
     rows = []
     for match in re.finditer(
             r'^\.psc-st\\/([A-Za-z0-9/\\_-]+?)\.psc-st\\/[A-Za-z0-9/\\_-]+?\s*\{([^}]*)\}',

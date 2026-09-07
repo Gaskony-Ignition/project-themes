@@ -557,6 +557,16 @@ def build_themepack_code(themes, version):
     lines.append('            "kind": "stock",')
     lines.append('            "stock": stock_state(name),')
     lines.append('        })')
+    lines.append('    # Themes somebody made on the Customise page. Neither list')
+    lines.append('    # knew about them, so creating one put it on no page at all.')
+    lines.append('    for name in user_themes():')
+    lines.append('        out.append({')
+    lines.append('            "id": name,')
+    lines.append('            "label": name,')
+    lines.append('            "dark": user_base_of(name) == "dark",')
+    lines.append('            "kind": "user",')
+    lines.append('            "installed": name in installed,')
+    lines.append('        })')
     lines.append('    return out')
     lines.append('')
 
@@ -602,6 +612,8 @@ def build_view_json(themes, version):
     status_transform_code = (
         "\timport themepack\n"
         "\tPREVIEWS = " + previews_literal + "\n"
+        "\tCELL_STYLE = " + json.dumps(PREVIEW_CELL_STYLE,
+                                      sort_keys=True) + "\n"
         "\trows = themepack.status()\n"
         "\tSTOCK_STATE = {\n"
         "\t\t'stock': 'Stock - not modified',\n"
@@ -610,19 +622,37 @@ def build_view_json(themes, version):
         "\t\t'missing': 'Not on this gateway',\n"
         "\t}\n"
         "\tfor row in rows:\n"
+        "\t\tkind = row.get('kind')\n"
         "\t\trow['mode'] = 'Dark' if row['dark'] else 'Light'\n"
-        "\t\trow['set'] = 'Custom' if row.get('kind') == 'custom' else 'Stock'\n"
-        "\t\tif row.get('kind') == 'custom':\n"
+        "\t\trow['set'] = {'custom': 'Ours', 'user': 'Yours'}.get(kind, 'Stock')\n"
+        "\t\tif kind == 'custom':\n"
         "\t\t\trow['state'] = 'Installed' if row['installed'] else 'Not installed'\n"
+        "\t\telif kind == 'user':\n"
+        "\t\t\trow['state'] = 'Made here -- edit or delete it on Customise'\n"
         "\t\telse:\n"
         "\t\t\trow['state'] = STOCK_STATE.get(row.get('stock'), '?')\n"
         "\t\trow['preview'] = PREVIEWS.get(row['id'], '')\n"
+        "\t\tif kind == 'user':\n"
+        "\t\t\t# No baked thumbnail -- these did not exist when the\n"
+        "\t\t\t# project was built. Draw it from what the gateway is\n"
+        "\t\t\t# serving now, the same picture Customise previews.\n"
+        "\t\t\ttry:\n"
+        "\t\t\t\tstyle = dict(CELL_STYLE)\n"
+        "\t\t\t\tstyle['backgroundImage'] = 'url(%s)' % (\n"
+        "\t\t\t\t\tthemepack.live_preview_uri(row['id'], 148, 38))\n"
+        "\t\t\t\trow['preview'] = {'value': '', 'style': style}\n"
+        "\t\t\texcept Exception:\n"
+        "\t\t\t\trow['preview'] = ''\n"
         "\treturn rows"
     )
     root = {
         "custom": {
             "tick": 0,
             "themes": [],
+            # A table gets an explicit height or it renders as a header with
+            # nothing under it, and the row count is no longer a constant now
+            # that anyone can make a theme.
+            "tblheight": "740px",
         },
         "params": {},
         "props": {
@@ -636,6 +666,18 @@ def build_view_json(themes, version):
                     "transforms": [
                         {"type": "script", "code": status_transform_code}
                     ],
+                }
+            },
+            "custom.tblheight": {
+                "binding": {
+                    "type": "property",
+                    "config": {"path": "view.custom.themes"},
+                    "transforms": [{"type": "script", "code": (
+                        "\t# 38px a row -- the thumbnail sets it -- plus a\n"
+                        "\t# 30px header and 2px of slack. Measured off\n"
+                        "\t# the live table, not chosen: at 44 the box\n"
+                        "\t# ran 104px past its own last row.\n"
+                        "\treturn '%dpx' % (34 + 38 * len(value or []))")}],
                 }
             }
         },
@@ -671,7 +713,10 @@ def build_view_json(themes, version):
                     # height and the table measures it from content) plus a
                     # 32px header. Not grow 1: this page scrolls, and a grow-1
                     # item in an overflowing column collapses to nothing.
-                    "position": {"grow": 0, "shrink": 0, "basis": "740px"},
+                    "position": {"grow": 0, "shrink": 0, "basis": "680px"},
+                    # position.basis is bindable, and it has to be: a fixed
+                    # 740px was 16 rows exactly, so the first theme somebody
+                    # made was a row you had to scroll a table to reach.
                     "props": {
                         "data": [],
                         "pager": {"top": False, "bottom": False},
@@ -715,7 +760,13 @@ def build_view_json(themes, version):
                                 "type": "property",
                                 "config": {"path": "view.custom.themes"},
                             }
-                        }
+                        },
+                        "position.basis": {
+                            "binding": {
+                                "type": "property",
+                                "config": {"path": "view.custom.tblheight"},
+                            }
+                        },
                     },
                 },
             ],
@@ -1112,6 +1163,19 @@ def preview_data_uri(pal):
         preview_svg(pal).encode("utf-8")).decode("ascii")
 
 
+# One style for a thumbnail cell, shared by the ten baked at build time and by
+# a user theme's picture drawn at request time -- two copies of these numbers
+# is two rows of different heights in one table.
+# The height fits INSIDE the 44px row the thumbnail itself creates, so the
+# image is never cut by the row divider.
+PREVIEW_CELL_STYLE = {
+    "backgroundRepeat": "no-repeat",
+    "backgroundPosition": "center",
+    "backgroundSize": "contain",
+    "height": "38px", "width": "148px",
+}
+
+
 def preview_cell_map(themes):
     """{theme id: custom cell} for every theme the status table can list --
     ours from out/, Ignition's own from the captured stock palettes."""
@@ -1121,16 +1185,12 @@ def preview_cell_map(themes):
         cells[theme_id] = palettes[theme_id]
     for theme in themes:
         cells[theme["id"]] = theme_palette(theme)
-    return dict((k, {"value": "",
-                     "style": {"backgroundImage": "url(%s)" % preview_data_uri(v),
-                               "backgroundRepeat": "no-repeat",
-                               "backgroundPosition": "center",
-                               "backgroundSize": "contain",
-                               # Fits INSIDE the 44px row the thumbnail itself
-                               # creates, so the image is never cut by the row
-                               # divider.
-                               "height": "38px", "width": "148px"}})
-                for k, v in cells.items())
+    def cell(pal):
+        style = dict(PREVIEW_CELL_STYLE)
+        style["backgroundImage"] = "url(%s)" % preview_data_uri(pal)
+        return {"value": "", "style": style}
+
+    return dict((k, cell(v)) for k, v in cells.items())
 
 
 def _flex(name, children=None, direction="column", grow=0, basis="auto", style=None):
@@ -1538,6 +1598,26 @@ def _gallery_block(themes):
     }
 
 
+def _bound_button(name, script, expression, primary=False):
+    """A button whose label is an expression -- for a toggle, where the label
+    is the only thing saying which state you are in."""
+    node = _button(name, "", script, primary=primary)
+    node["propConfig"] = {"props.text": {"binding": {
+        "type": "expr", "config": {"expression": expression}}}}
+    return node
+
+
+def _bound_cap(name, expression, size="12px"):
+    node = _cap(name, "", size=size)
+    # It wraps: a caption that changes with the mode is not one length, and
+    # nowrap turns the longer of the two into a line running off the page.
+    node["position"] = {"grow": 1, "shrink": 1, "basis": "auto"}
+    node["props"]["style"]["whiteSpace"] = "normal"
+    node["propConfig"] = {"props.text": {"binding": {
+        "type": "expr", "config": {"expression": expression}}}}
+    return node
+
+
 # ---------------------------------------------------------------------------
 # THE EDITOR
 #
@@ -1562,10 +1642,15 @@ def _gallery_block(themes):
 
 EDITOR_THEME_OPTIONS = (
     "\timport themepack\n"
-    "\trows = themepack.list_themes()\n"
-    "\treturn [{'value': r['id'],\n"
-    "\t         'label': r['id'] + ('' if r['ours'] else '  (not ours)')}\n"
-    "\t        for r in rows]"
+    "\t# Say what each one IS. The label was '(not ours)', which is true\n"
+    "\t# of a theme you just made and reads as a disclaimer about it.\n"
+    "\tsuffix = {'user': '  (yours)', 'stock': \"  (Ignition's)\"}\n"
+    "\tout = []\n"
+    "\tfor r in themepack.list_themes():\n"
+    "\t\tkind = themepack.theme_kind(r['id'])\n"
+    "\t\tout.append({'value': r['id'],\n"
+    "\t                    'label': r['id'] + suffix.get(kind, '')})\n"
+    "\treturn out"
 )
 EDITOR_FIRST_THEME = (
     "\timport themepack\n"
@@ -1633,7 +1718,7 @@ EDITOR_TOKENS = (
     "\tif not theme:\n"
     "\t\treturn []\n"
     "\ttry:\n"
-    "\t\treturn themepack.contract(theme)\n"
+    "\t\treturn themepack.editor_contract(theme)\n"
     "\texcept Exception:\n"
     "\t\treturn []"
 )
@@ -1643,7 +1728,7 @@ EDITOR_CLASSES = (
     "\tif not theme:\n"
     "\t\treturn []\n"
     "\ttry:\n"
-    "\t\treturn themepack.contract_classes(theme)\n"
+    "\t\treturn themepack.editor_classes(theme)\n"
     "\texcept Exception:\n"
     "\t\treturn []"
 )
@@ -1807,21 +1892,28 @@ EDITOR_KIND_LABEL = (
     "\tif not theme:\n"
     "\t\treturn ''\n"
     "\tkind = themepack.theme_kind(theme)\n"
-    "\tbase = themepack.base_of(theme)\n"
+    "\t# base_of() answers from the built-in tables, so for a theme made\n"
+    "\t# here it falls through to 'light' -- and called every copy of a\n"
+    "\t# dark theme light.\n"
+    "\tbase = (themepack.user_base_of(theme) if kind == 'user'\n"
+    "\t        else themepack.base_of(theme))\n"
     "\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n"
     "\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n"
     "\t# point: the separator here arrived on the page as mojibake.\n"
     "\twords = {\n"
-    "\t\t'packaged': 'One of the ten pre-packaged themes, built on %s. "
-    "Install on the first page puts it back.',\n"
-    "\t\t'stock': \"One of Ignition's own, built on %s. Editing it changes "
-    "every project using it.\",\n"
-    "\t\t'user': 'Yours, built on %s. Nothing on the Installer page "
-    "overwrites it.',\n"
+    "\t\t'packaged': '%s is one of the ten pre-packaged themes, built "
+    "on %s. Install on the first page puts it back.',\n"
+    "\t\t'stock': \"%s is one of Ignition's own, built on %s. Editing "
+    "it changes every project using it.\",\n"
+    "\t\t'user': '%s is yours, built on %s. Nothing on the Installer "
+    "page overwrites it.',\n"
     "\t}\n"
+    "\t# The NAME leads. The badge used to describe the theme without\n"
+    "\t# ever saying which one, so after a create -- when the picker\n"
+    "\t# was the only thing naming it -- the page named it nowhere.\n"
     "\ttext = words.get(kind, kind)\n"
     "\tif '%s' in text:\n"
-    "\t\ttext = text % (base or 'a stock theme')\n"
+    "\t\ttext = text % (theme, base or 'a stock theme')\n"
     "\treturn text"
 )
 EDITOR_START_NEW = (
@@ -1846,12 +1938,14 @@ EDITOR_NEW = (
     "\t\tthemepack.new_theme(name, self.view.custom.new_base)\n"
     "\t\tself.view.custom.new_name = ''\n"
     "\t\tself.view.custom.making = ''\n"
+    "\t\t# nudge FIRST: it is what re-reads the theme list, and a\n"
+    "\t\t# selection the options do not contain yet shows as blank.\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\t\tself.view.custom.theme = name\n"
     "\t\tself.view.custom.file = 'variables.css'\n"
     "\t\tself.view.custom.status = ('Created %s on %s -- it renders like its "
     "base until you change it'\n"
     "\t\t                           % (name, self.view.custom.new_base))\n"
-    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\texcept Exception, e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
@@ -1863,9 +1957,11 @@ EDITOR_COPY = (
     "\t\tthemepack.copy_theme(source, name)\n"
     "\t\tself.view.custom.new_name = ''\n"
     "\t\tself.view.custom.making = ''\n"
-    "\t\tself.view.custom.theme = name\n"
-    "\t\tself.view.custom.status = 'Copied %s to %s' % (source, name)\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\t\tself.view.custom.theme = name\n"
+    "\t\tself.view.custom.file = 'variables.css'\n"
+    "\t\tself.view.custom.status = ('Copied %s to %s -- you are now "
+    "editing the copy' % (source, name))\n"
     "\texcept Exception, e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
@@ -2017,7 +2113,13 @@ def _theme_bar():
              "props": {"allowClearing": False, "showSearch": True,
                        "style": {"height": "32px"}},
              "propConfig": {
-                 "props.options": {"binding": _expr("1", EDITOR_THEME_OPTIONS)},
+                 # NOT expr "1". A constant expression evaluates once, so a
+                 # theme you had just made was absent from the list its own
+                 # Create had selected -- the picker went blank and the page
+                 # stopped saying which theme you were editing. nudge is
+                 # bumped by every create, copy and delete.
+                 "props.options": {"binding": _expr("{view.custom.nudge}",
+                                                    EDITOR_THEME_OPTIONS)},
                  # bidirectional lives INSIDE config or the dropdown never
                  # writes the selection back, silently.
                  "props.value": {"binding": {
@@ -2201,9 +2303,9 @@ def _preview_pane():
     """
     return _pane(
         "preview", "Preview",
-        "The same imaginary plant page, painted from the stylesheet this "
-        "gateway is actually serving. If it looks behind after a save, "
-        "Refresh -- the scan and the served copy can lag a moment.",
+        "The same imaginary plant page, in this theme's own colours. It "
+        "repaints on every save -- it reads the files, not the gateway's "
+        "cached copy. Refresh is for a change made somewhere else.",
         [{"type": "ia.display.label", "meta": {"name": "shot"},
           "position": {"grow": 0, "shrink": 0, "basis": "auto"},
           "props": {"text": "",
@@ -2223,7 +2325,10 @@ def _preview_pane():
         # An EXPLICIT height. A pane at basis "auto" has grow 0 and its body
         # has basis 0px, so there is nothing to give the picture height and
         # the pane rendered as a header with an empty box under it.
-        "228px")
+        # 262px, not 228: the caption grew a line when it started
+        # explaining the Refresh button, and pushed that button out of the
+        # pane it was explaining.
+        "262px")
 
 
 def _colour_pane():
@@ -2443,11 +2548,20 @@ def build_editor_view_json(themes, version):
                      "props": {"direction": "row", "alignItems": "center",
                                "style": {"gap": "10px"}},
                      "children": [
-                         _button("btn_raw", "Advanced: edit the files directly",
-                                 EDITOR_TOGGLE_RAW),
-                         _cap("rawhint",
-                              "Colours are easier to change in the list above; "
-                              "this is for structural edits."),
+                         # Its own label is the only thing telling you which
+                         # mode you are in and which way the button goes.
+                         _bound_button(
+                             "btn_raw", EDITOR_TOGGLE_RAW,
+                             "if({view.custom.raw}, "
+                             "'Back to the colour list', "
+                             "'Advanced: edit the files directly')"),
+                         _bound_cap(
+                             "rawhint",
+                             "if({view.custom.raw}, "
+                             "'You are editing the file itself. Colours are "
+                             "easier to change in the list.', "
+                             "'Colours are easier to change in the list "
+                             "above; this is for structural edits.')"),
                      ]},
                     IS_EDITABLE, layout=True),
             ],
