@@ -1928,6 +1928,28 @@ EDITOR_START_WARNING = (
     "\t\treturn ''"
 )
 
+EDITOR_SWATCHES = (
+    "\timport themepack\n"
+    "\ttheme = (value + '|||').split('|')[0]\n"
+    "\tif not theme:\n"
+    "\t\treturn []\n"
+    "\ttry:\n"
+    "\t\treturn themepack.swatches(theme)\n"
+    "\texcept Exception:\n"
+    "\t\treturn []"
+)
+
+
+def _pick_swatch(index):
+    """Filling sel_value IS the click: the hex field is bidirectional to it,
+    and the confirmation chip repaints from the same property, so the colour
+    lands in the box and is shown back before anything is saved."""
+    return ("\tcolours = self.view.custom.swatches or []\n"
+            "\tif len(colours) > %d and colours[%d]:\n"
+            "\t\tself.view.custom.sel_value = colours[%d]\n"
+            "\t\tself.view.custom.status = ''" % (index, index, index))
+
+
 EDITOR_PICK_TOKEN = (
     "\tdata = event.value or {}\n"
     "\tself.view.custom.sel_name = data.get('name', '')\n"
@@ -2439,6 +2461,40 @@ def _preview_pane():
         "auto", hug=True)
 
 
+SWATCH_COUNT = 16
+
+
+def _swatch_chip(index):
+    """One clickable colour from the theme's own palette.
+
+    Perspective cannot generate components from a list, so the row is a fixed
+    number of chips at fixed indexes and themepack.swatches() pads its answer
+    to match. A chip with nothing behind it takes its space back rather than
+    leaving a hole in the row.
+    """
+    path = "view.custom.swatches[%d]" % index
+    chip = {
+        "type": "ia.display.label", "meta": {"name": "sw%d" % index},
+        # basis, not a style width: _only_when(layout=True) moves this to the
+        # wrapper, where it is the main-axis size the chip actually gets.
+        "position": {"grow": 0, "shrink": 0, "basis": "22px"},
+        "props": {"text": "", "style": {
+            "width": "100%", "height": "22px", "borderRadius": "3px",
+            "borderStyle": "solid", "borderWidth": "1px",
+            "borderColor": "var(--border)", "cursor": "pointer"}},
+        "propConfig": {
+            "props.style.backgroundColor": {"binding": _prop(path)},
+            "meta.tooltip.text": {"binding": _prop(path)}},
+        # DOM event, not component: onClick under events.component is
+        # accepted, saved and never fires -- the same trap the page tabs hit.
+        "events": {"dom": {"onClick": {
+            "config": {"script": _pick_swatch(index)},
+            "scope": "G", "type": "script"}}},
+    }
+    chip["meta"]["tooltip"] = {"enabled": True, "text": ""}
+    return _only_when(chip, "{%s} != ''" % path, layout=True)
+
+
 def _colour_pane():
     """The colours, and the one you picked with a field to change it.
 
@@ -2477,11 +2533,11 @@ def _colour_pane():
     strip = {
         "type": "ia.container.flex", "meta": {"name": "edit"},
         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        # The border moved out to the block below, so the strip and the
+        # swatches under it read as one thing rather than two.
         "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
                   "style": {"gap": "9px", "rowGap": "8px",
-                            "padding": "9px 10px",
-                            "borderTopStyle": "solid", "borderTopWidth": "1px",
-                            "borderTopColor": "var(--border)"}},
+                            "padding": "9px 10px 0px"}},
         "children": [
             {"type": "ia.display.label", "meta": {"name": "sel"},
              "position": {"grow": 0, "shrink": 1, "basis": "auto"},
@@ -2544,6 +2600,30 @@ def _colour_pane():
                     primary=True),
         ],
     }
+    # The colours the theme already holds, one click each. Perspective has no
+    # colour picker to reach for -- its form declares a color-picker control
+    # with no factory behind it, so a form using one is a Component Error --
+    # and a palette of what the theme already uses is the better offer anyway:
+    # those are the colours somebody chose to sit together, where a free
+    # picker's whole range mostly is not.
+    palette = {
+        "type": "ia.container.flex", "meta": {"name": "palette"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center", "wrap": "wrap",
+                  "style": {"gap": "6px", "rowGap": "6px",
+                            "padding": "8px 10px 9px"}},
+        "children": ([_cap("palcap", "Already in this theme")]
+                     + [_swatch_chip(i) for i in range(SWATCH_COUNT)]),
+    }
+    editblock = {
+        "type": "ia.container.flex", "meta": {"name": "editblock"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "column",
+                  "style": {"borderTopStyle": "solid",
+                            "borderTopWidth": "1px",
+                            "borderTopColor": "var(--border)"}},
+        "children": [strip, palette],
+    }
     # The search box. 150 values is ten screens, and every visit is after ONE
     # of them; scrolling for it was the friction, not the editing.
     find = {
@@ -2573,7 +2653,7 @@ def _colour_pane():
         "Mostly colours, and a few sizes, grouped by what they affect. Click "
         "one, change it, Save -- each save writes the file and runs the scan "
         "that makes the gateway use it.",
-        [find, table, _only_when(strip, IS_EDITABLE, layout=True)], "0px")
+        [find, table, _only_when(editblock, IS_EDITABLE, layout=True)], "0px")
     # The grower again, now that there are five columns and the widest is a
     # sentence. The empty space Nigel saw was one column taking a whole row's
     # slack with nothing to put in it; the fix is something worth reading in
@@ -2625,7 +2705,7 @@ def build_editor_view_json(themes, version):
         "custom": {"theme": "", "file": "variables.css", "key": "",
                    "filter": "",
                    "text": "", "status": "", "nudge": 0, "kind": "",
-                   "tokens": [], "about": "",
+                   "tokens": [], "about": "", "swatches": [],
                    "sel_name": "", "sel_value": "", "sel_ok": "",
                    "warn": "", "startwarn": "",
                    "undo_name": "", "undo_value": "",
@@ -2644,6 +2724,10 @@ def build_editor_view_json(themes, version):
             "custom.kind": {"binding": _prop("view.custom.key", EDITOR_KIND)},
             "custom.tokens": {"binding": _prop("view.custom.key",
                                                EDITOR_TOKEN_ROWS)},
+            # Off the same key as everything else, so a save re-reads the
+            # palette too: change a colour and the chip for the old one goes.
+            "custom.swatches": {"binding": _prop("view.custom.key",
+                                                 EDITOR_SWATCHES)},
             "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
             "custom.about": {"binding": _prop("view.custom.key",
                                               EDITOR_ABOUT)},

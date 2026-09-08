@@ -866,11 +866,12 @@ def _editor_declared(theme):
     return values
 
 
-def live_palette(theme):
-    """The dozen colours a preview is painted with, resolved from the LIVE
-    stylesheet. var() chains are followed; anything still unresolved is
-    dropped rather than drawn, because a var() reference painted literally
-    renders in the VIEWING page's colours and quietly shows the wrong thing."""
+def _colour_resolver(theme):
+    """The theme's values, and a function that follows var() chains through
+    them. Anything still unresolved comes back empty rather than literal: a
+    var() reference painted as-is renders in the VIEWING page's colours and
+    quietly shows the wrong thing.
+    """
     values = _vars_of(theme_css(theme))
     # Served copy for the inherited base, this theme's own files for anything
     # it sets itself -- so a save shows immediately instead of a scan later.
@@ -884,6 +885,14 @@ def live_palette(theme):
             value = (values.get(found.group(1)) or "").strip()
             hops += 1
         return "" if (value or "").startswith("var(") else (value or "")
+
+    return values, resolve
+
+
+def live_palette(theme):
+    """The dozen colours a preview is painted with, resolved from the LIVE
+    stylesheet."""
+    values, resolve = _colour_resolver(theme)
 
     def pick(*names):
         for name in names:
@@ -1171,6 +1180,42 @@ def looks_like_colour(value):
     if re.match(r'^(rgb|rgba|hsl|hsla|var|color-mix|linear-gradient)\s*\(', text):
         return True
     return text.lower() in EDITOR_COLOUR_WORDS
+
+
+# How many chips the page draws. Fixed, because Perspective cannot generate
+# components from a list -- the page binds a fixed row at fixed indexes, so
+# this list is always padded to exactly this length.
+EDITOR_SWATCH_COUNT = 16
+
+EDITOR_NOT_A_SWATCH = set(
+    "transparent currentcolor inherit initial unset".split())
+
+
+def swatches(theme, limit=EDITOR_SWATCH_COUNT):
+    """The colours this theme already uses, most-used first, padded to a fixed
+    length.
+
+    Perspective ships no colour picker: ia.input.form declares a color-picker
+    control type with no factory behind it, so a form using one renders as a
+    single Component Error (measured on 8.3.8). This and the hex field beside
+    it are therefore the whole of colour entry -- and picking from what the
+    theme already contains is the better half of it anyway, since those are
+    the colours that were chosen to sit together.
+    """
+    values, resolve = _colour_resolver(theme)
+    counts = {}
+    for name in values:
+        value = resolve((values.get(name) or "").strip()).strip().lower()
+        if value in EDITOR_NOT_A_SWATCH or not looks_like_colour(value):
+            continue
+        if value.startswith("linear-gradient"):
+            continue                     # a chip cannot show one honestly
+        counts[value] = counts.get(value, 0) + 1
+    # Most-used first: those are the theme's structural colours, and the tail
+    # is one-off accents. Name as the tie-break so the row does not reshuffle
+    # between visits.
+    found = sorted(counts.keys(), key=lambda c: (-counts[c], c))[:limit]
+    return found + [""] * (limit - len(found))
 
 
 def value_problem(name, old, new):

@@ -10,6 +10,7 @@
     "kind": "",
     "tokens": [],
     "about": "",
+    "swatches": [],
     "sel_name": "",
     "sel_value": "",
     "sel_ok": "",
@@ -69,6 +70,20 @@
           {
             "type": "script",
             "code": "\timport themepack\n\tbits = (value + '|||').split('|')\n\ttheme = bits[0]\n\t# The filter rides in the key, so typing re-reads the list. 150\n\t# values is ten screens of scrolling to reach one token.\n\tneedle = bits[3].strip().lower()\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.all_tokens(theme)\n\texcept Exception:\n\t\treturn []\n\tif needle:\n\t\trows = [r for r in rows\n\t\t        if needle in r['name'].lower()\n\t\t        or needle in (r.get('what') or '').lower()\n\t\t        or needle in (r.get('group') or '').lower()\n\t\t        or needle in (r['value'] or '').lower()]\n\tout = []\n\tlast = None\n\tfor r in rows:\n\t\tgroup = r['group']\n\t\tout.append({'group': group if group != last else '',\n\t\t            'name': r['name'],\n\t\t            'what': r.get('what', ''),\n\t\t            'swatch': r['swatch'],\n\t\t            'value': r['value']})\n\t\tlast = group\n\treturn out"
+          }
+        ]
+      }
+    },
+    "custom.swatches": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.key"
+        },
+        "transforms": [
+          {
+            "type": "script",
+            "code": "\timport themepack\n\ttheme = (value + '|||').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.swatches(theme)\n\texcept Exception:\n\t\treturn []"
           }
         ]
       }
@@ -194,7 +209,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Theme Installer  1.15.1",
+              "text": "Theme Installer  1.16.0",
               "style": {
                 "fontSize": "13.5px",
                 "fontWeight": 600,
@@ -1393,7 +1408,7 @@
                       {
                         "type": "ia.container.flex",
                         "meta": {
-                          "name": "edit_wrap"
+                          "name": "editblock_wrap"
                         },
                         "position": {
                           "grow": 0,
@@ -1426,7 +1441,7 @@
                           {
                             "type": "ia.container.flex",
                             "meta": {
-                              "name": "edit"
+                              "name": "editblock"
                             },
                             "position": {
                               "grow": 1,
@@ -1434,13 +1449,8 @@
                               "basis": "auto"
                             },
                             "props": {
-                              "direction": "row",
-                              "alignItems": "center",
-                              "wrap": "wrap",
+                              "direction": "column",
                               "style": {
-                                "gap": "9px",
-                                "rowGap": "8px",
-                                "padding": "9px 10px",
                                 "borderTopStyle": "solid",
                                 "borderTopWidth": "1px",
                                 "borderTopColor": "var(--border)"
@@ -1448,236 +1458,43 @@
                             },
                             "children": [
                               {
-                                "type": "ia.display.label",
-                                "meta": {
-                                  "name": "sel"
-                                },
-                                "position": {
-                                  "grow": 0,
-                                  "shrink": 1,
-                                  "basis": "auto"
-                                },
-                                "props": {
-                                  "style": {
-                                    "fontSize": "12.5px",
-                                    "fontWeight": 600,
-                                    "color": "var(--label)",
-                                    "minWidth": "180px",
-                                    "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
-                                  }
-                                },
-                                "propConfig": {
-                                  "props.text": {
-                                    "binding": {
-                                      "type": "expr",
-                                      "config": {
-                                        "expression": "if({view.custom.sel_name} = '', '-- pick a value above --', {view.custom.sel_name})"
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              {
-                                "type": "ia.input.text-field",
-                                "meta": {
-                                  "name": "val"
-                                },
-                                "position": {
-                                  "grow": 0,
-                                  "shrink": 0,
-                                  "basis": "170px"
-                                },
-                                "props": {
-                                  "deferUpdates": false,
-                                  "placeholder": "#3b4252",
-                                  "style": {
-                                    "height": "32px",
-                                    "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
-                                  }
-                                },
-                                "propConfig": {
-                                  "props.text": {
-                                    "binding": {
-                                      "type": "property",
-                                      "config": {
-                                        "path": "view.custom.sel_value",
-                                        "bidirectional": true
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              {
-                                "type": "ia.display.label",
-                                "meta": {
-                                  "name": "chip"
-                                },
-                                "position": {
-                                  "grow": 0,
-                                  "shrink": 0,
-                                  "basis": "auto"
-                                },
-                                "props": {
-                                  "text": "",
-                                  "style": {
-                                    "width": "32px",
-                                    "height": "32px",
-                                    "borderRadius": "3px",
-                                    "borderStyle": "solid",
-                                    "borderWidth": "1px",
-                                    "borderColor": "var(--border)"
-                                  }
-                                },
-                                "propConfig": {
-                                  "props.style.backgroundColor": {
-                                    "binding": {
-                                      "type": "property",
-                                      "config": {
-                                        "path": "view.custom.sel_ok"
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              {
                                 "type": "ia.container.flex",
                                 "meta": {
-                                  "name": "warn_wrap"
+                                  "name": "edit"
                                 },
                                 "position": {
-                                  "grow": 1,
-                                  "shrink": 1,
-                                  "basis": "0px"
+                                  "grow": 0,
+                                  "shrink": 0,
+                                  "basis": "auto"
                                 },
                                 "props": {
                                   "direction": "row",
-                                  "style": {}
-                                },
-                                "propConfig": {
-                                  "meta.visible": {
-                                    "binding": {
-                                      "type": "expr",
-                                      "config": {
-                                        "expression": "{view.custom.warn} != ''"
-                                      }
-                                    }
-                                  },
-                                  "props.style.display": {
-                                    "binding": {
-                                      "type": "expr",
-                                      "config": {
-                                        "expression": "if({view.custom.warn} != '', 'flex', 'none')"
-                                      }
-                                    }
+                                  "alignItems": "center",
+                                  "wrap": "wrap",
+                                  "style": {
+                                    "gap": "9px",
+                                    "rowGap": "8px",
+                                    "padding": "9px 10px 0px"
                                   }
                                 },
                                 "children": [
                                   {
                                     "type": "ia.display.label",
                                     "meta": {
-                                      "name": "warn"
+                                      "name": "sel"
                                     },
                                     "position": {
-                                      "grow": 1,
+                                      "grow": 0,
                                       "shrink": 1,
                                       "basis": "auto"
                                     },
                                     "props": {
                                       "style": {
-                                        "fontSize": "12px",
-                                        "lineHeight": "1.4",
-                                        "color": "var(--callToAction)"
-                                      }
-                                    },
-                                    "propConfig": {
-                                      "props.text": {
-                                        "binding": {
-                                          "type": "property",
-                                          "config": {
-                                            "path": "view.custom.warn"
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                ]
-                              },
-                              {
-                                "type": "ia.container.flex",
-                                "meta": {
-                                  "name": "gap"
-                                },
-                                "position": {
-                                  "grow": 1,
-                                  "shrink": 1,
-                                  "basis": "0px"
-                                },
-                                "props": {}
-                              },
-                              {
-                                "type": "ia.container.flex",
-                                "meta": {
-                                  "name": "btn_undo_wrap"
-                                },
-                                "position": {
-                                  "grow": 0,
-                                  "shrink": 0,
-                                  "basis": "auto"
-                                },
-                                "props": {
-                                  "direction": "row",
-                                  "style": {}
-                                },
-                                "propConfig": {
-                                  "meta.visible": {
-                                    "binding": {
-                                      "type": "expr",
-                                      "config": {
-                                        "expression": "{view.custom.undo_name} != ''"
-                                      }
-                                    }
-                                  },
-                                  "props.style.display": {
-                                    "binding": {
-                                      "type": "expr",
-                                      "config": {
-                                        "expression": "if({view.custom.undo_name} != '', 'flex', 'none')"
-                                      }
-                                    }
-                                  }
-                                },
-                                "children": [
-                                  {
-                                    "type": "ia.input.button",
-                                    "meta": {
-                                      "name": "btn_undo"
-                                    },
-                                    "position": {
-                                      "grow": 1,
-                                      "shrink": 1,
-                                      "basis": "auto"
-                                    },
-                                    "props": {
-                                      "text": "",
-                                      "style": {
-                                        "height": "32px",
-                                        "whiteSpace": "nowrap",
-                                        "backgroundColor": "var(--containerBackground)",
+                                        "fontSize": "12.5px",
+                                        "fontWeight": 600,
                                         "color": "var(--label)",
-                                        "borderStyle": "solid",
-                                        "borderWidth": "1px",
-                                        "borderColor": "var(--border)"
-                                      }
-                                    },
-                                    "events": {
-                                      "component": {
-                                        "onActionPerformed": {
-                                          "config": {
-                                            "script": "\timport themepack\n\tname = self.view.custom.undo_name\n\twas = self.view.custom.undo_value\n\tif not name:\n\t\treturn\n\ttry:\n\t\tthemepack.set_any_token(self.view.custom.theme, name, was)\n\t\tself.view.custom.status = 'Put %s back to %s' % (name, was)\n\t\tself.view.custom.sel_name = name\n\t\tself.view.custom.sel_value = was\n\t\t# One level, and it is spent. Two Undos in a row putting the\n\t\t# same value back twice would be a button that lies.\n\t\tself.view.custom.undo_name = ''\n\t\tself.view.custom.undo_value = ''\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
-                                          },
-                                          "scope": "G",
-                                          "type": "script"
-                                        }
+                                        "minWidth": "180px",
+                                        "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
                                       }
                                     },
                                     "propConfig": {
@@ -1685,8 +1502,253 @@
                                         "binding": {
                                           "type": "expr",
                                           "config": {
-                                            "expression": "'Undo ' + {view.custom.undo_name}"
+                                            "expression": "if({view.custom.sel_name} = '', '-- pick a value above --', {view.custom.sel_name})"
                                           }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.input.text-field",
+                                    "meta": {
+                                      "name": "val"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "170px"
+                                    },
+                                    "props": {
+                                      "deferUpdates": false,
+                                      "placeholder": "#3b4252",
+                                      "style": {
+                                        "height": "32px",
+                                        "fontFamily": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
+                                      }
+                                    },
+                                    "propConfig": {
+                                      "props.text": {
+                                        "binding": {
+                                          "type": "property",
+                                          "config": {
+                                            "path": "view.custom.sel_value",
+                                            "bidirectional": true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.display.label",
+                                    "meta": {
+                                      "name": "chip"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "",
+                                      "style": {
+                                        "width": "32px",
+                                        "height": "32px",
+                                        "borderRadius": "3px",
+                                        "borderStyle": "solid",
+                                        "borderWidth": "1px",
+                                        "borderColor": "var(--border)"
+                                      }
+                                    },
+                                    "propConfig": {
+                                      "props.style.backgroundColor": {
+                                        "binding": {
+                                          "type": "property",
+                                          "config": {
+                                            "path": "view.custom.sel_ok"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "warn_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 1,
+                                      "shrink": 1,
+                                      "basis": "0px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.warn} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.warn} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "warn"
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "style": {
+                                            "fontSize": "12px",
+                                            "lineHeight": "1.4",
+                                            "color": "var(--callToAction)"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.warn"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "gap"
+                                    },
+                                    "position": {
+                                      "grow": 1,
+                                      "shrink": 1,
+                                      "basis": "0px"
+                                    },
+                                    "props": {}
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "btn_undo_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.undo_name} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.undo_name} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.input.button",
+                                        "meta": {
+                                          "name": "btn_undo"
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "height": "32px",
+                                            "whiteSpace": "nowrap",
+                                            "backgroundColor": "var(--containerBackground)",
+                                            "color": "var(--label)",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)"
+                                          }
+                                        },
+                                        "events": {
+                                          "component": {
+                                            "onActionPerformed": {
+                                              "config": {
+                                                "script": "\timport themepack\n\tname = self.view.custom.undo_name\n\twas = self.view.custom.undo_value\n\tif not name:\n\t\treturn\n\ttry:\n\t\tthemepack.set_any_token(self.view.custom.theme, name, was)\n\t\tself.view.custom.status = 'Put %s back to %s' % (name, was)\n\t\tself.view.custom.sel_name = name\n\t\tself.view.custom.sel_value = was\n\t\t# One level, and it is spent. Two Undos in a row putting the\n\t\t# same value back twice would be a button that lies.\n\t\tself.view.custom.undo_name = ''\n\t\tself.view.custom.undo_value = ''\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.text": {
+                                            "binding": {
+                                              "type": "expr",
+                                              "config": {
+                                                "expression": "'Undo ' + {view.custom.undo_name}"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.input.button",
+                                    "meta": {
+                                      "name": "btn_save_token"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "Save",
+                                      "style": {
+                                        "height": "32px",
+                                        "whiteSpace": "nowrap"
+                                      }
+                                    },
+                                    "events": {
+                                      "component": {
+                                        "onActionPerformed": {
+                                          "config": {
+                                            "script": "\timport themepack\n\tname = self.view.custom.sel_name\n\tif not name:\n\t\tself.view.custom.status = 'Pick a value in the list first'\n\t\treturn\n\tvalue = self.view.custom.sel_value\n\ttry:\n\t\t# set_any_token finds the file: --st-* live in globals.css and\n\t\t# Ignition's own names in variables.css, and the page never showed\n\t\t# the user which is which. It also refuses a value that would\n\t\t# stop the token working, which is why this can fail loudly.\n\t\tresult = themepack.set_any_token(self.view.custom.theme,\n\t\t                                 name, value)\n\t\t# Remember what it replaced. Nobody remembers the hex they\n\t\t# overwrote, and there was no way back from a wrong save.\n\t\tself.view.custom.undo_name = name\n\t\tself.view.custom.undo_value = result.get('was', '')\n\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n\t\t# equally true of a save that wrote back what was already there.\n\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                          },
+                                          "scope": "G",
+                                          "type": "script"
                                         }
                                       }
                                     }
@@ -1694,9 +1756,9 @@
                                 ]
                               },
                               {
-                                "type": "ia.input.button",
+                                "type": "ia.container.flex",
                                 "meta": {
-                                  "name": "btn_save_token"
+                                  "name": "palette"
                                 },
                                 "position": {
                                   "grow": 0,
@@ -1704,23 +1766,1492 @@
                                   "basis": "auto"
                                 },
                                 "props": {
-                                  "text": "Save",
+                                  "direction": "row",
+                                  "alignItems": "center",
+                                  "wrap": "wrap",
                                   "style": {
-                                    "height": "32px",
-                                    "whiteSpace": "nowrap"
+                                    "gap": "6px",
+                                    "rowGap": "6px",
+                                    "padding": "8px 10px 9px"
                                   }
                                 },
-                                "events": {
-                                  "component": {
-                                    "onActionPerformed": {
-                                      "config": {
-                                        "script": "\timport themepack\n\tname = self.view.custom.sel_name\n\tif not name:\n\t\tself.view.custom.status = 'Pick a value in the list first'\n\t\treturn\n\tvalue = self.view.custom.sel_value\n\ttry:\n\t\t# set_any_token finds the file: --st-* live in globals.css and\n\t\t# Ignition's own names in variables.css, and the page never showed\n\t\t# the user which is which. It also refuses a value that would\n\t\t# stop the token working, which is why this can fail loudly.\n\t\tresult = themepack.set_any_token(self.view.custom.theme,\n\t\t                                 name, value)\n\t\t# Remember what it replaced. Nobody remembers the hex they\n\t\t# overwrote, and there was no way back from a wrong save.\n\t\tself.view.custom.undo_name = name\n\t\tself.view.custom.undo_value = result.get('was', '')\n\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n\t\t# equally true of a save that wrote back what was already there.\n\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
-                                      },
-                                      "scope": "G",
-                                      "type": "script"
+                                "children": [
+                                  {
+                                    "type": "ia.display.label",
+                                    "meta": {
+                                      "name": "palcap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "auto"
+                                    },
+                                    "props": {
+                                      "text": "Already in this theme",
+                                      "style": {
+                                        "fontSize": "12px",
+                                        "color": "var(--label--disabled)",
+                                        "whiteSpace": "nowrap"
+                                      }
                                     }
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw0_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[0]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[0]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw0",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[0]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[0]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 0 and colours[0]:\n\t\tself.view.custom.sel_value = colours[0]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw1_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[1]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[1]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw1",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[1]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[1]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 1 and colours[1]:\n\t\tself.view.custom.sel_value = colours[1]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw2_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[2]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[2]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw2",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[2]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[2]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 2 and colours[2]:\n\t\tself.view.custom.sel_value = colours[2]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw3_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[3]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[3]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw3",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[3]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[3]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 3 and colours[3]:\n\t\tself.view.custom.sel_value = colours[3]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw4_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[4]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[4]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw4",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[4]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[4]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 4 and colours[4]:\n\t\tself.view.custom.sel_value = colours[4]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw5_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[5]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[5]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw5",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[5]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[5]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 5 and colours[5]:\n\t\tself.view.custom.sel_value = colours[5]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw6_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[6]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[6]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw6",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[6]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[6]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 6 and colours[6]:\n\t\tself.view.custom.sel_value = colours[6]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw7_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[7]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[7]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw7",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[7]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[7]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 7 and colours[7]:\n\t\tself.view.custom.sel_value = colours[7]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw8_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[8]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[8]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw8",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[8]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[8]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 8 and colours[8]:\n\t\tself.view.custom.sel_value = colours[8]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw9_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[9]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[9]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw9",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[9]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[9]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 9 and colours[9]:\n\t\tself.view.custom.sel_value = colours[9]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw10_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[10]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[10]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw10",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[10]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[10]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 10 and colours[10]:\n\t\tself.view.custom.sel_value = colours[10]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw11_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[11]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[11]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw11",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[11]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[11]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 11 and colours[11]:\n\t\tself.view.custom.sel_value = colours[11]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw12_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[12]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[12]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw12",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[12]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[12]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 12 and colours[12]:\n\t\tself.view.custom.sel_value = colours[12]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw13_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[13]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[13]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw13",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[13]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[13]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 13 and colours[13]:\n\t\tself.view.custom.sel_value = colours[13]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw14_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[14]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[14]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw14",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[14]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[14]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 14 and colours[14]:\n\t\tself.view.custom.sel_value = colours[14]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "ia.container.flex",
+                                    "meta": {
+                                      "name": "sw15_wrap"
+                                    },
+                                    "position": {
+                                      "grow": 0,
+                                      "shrink": 0,
+                                      "basis": "22px"
+                                    },
+                                    "props": {
+                                      "direction": "row",
+                                      "style": {}
+                                    },
+                                    "propConfig": {
+                                      "meta.visible": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "{view.custom.swatches[15]} != ''"
+                                          }
+                                        }
+                                      },
+                                      "props.style.display": {
+                                        "binding": {
+                                          "type": "expr",
+                                          "config": {
+                                            "expression": "if({view.custom.swatches[15]} != '', 'flex', 'none')"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "ia.display.label",
+                                        "meta": {
+                                          "name": "sw15",
+                                          "tooltip": {
+                                            "enabled": true,
+                                            "text": ""
+                                          }
+                                        },
+                                        "position": {
+                                          "grow": 1,
+                                          "shrink": 1,
+                                          "basis": "auto"
+                                        },
+                                        "props": {
+                                          "text": "",
+                                          "style": {
+                                            "width": "100%",
+                                            "height": "22px",
+                                            "borderRadius": "3px",
+                                            "borderStyle": "solid",
+                                            "borderWidth": "1px",
+                                            "borderColor": "var(--border)",
+                                            "cursor": "pointer"
+                                          }
+                                        },
+                                        "propConfig": {
+                                          "props.style.backgroundColor": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[15]"
+                                              }
+                                            }
+                                          },
+                                          "meta.tooltip.text": {
+                                            "binding": {
+                                              "type": "property",
+                                              "config": {
+                                                "path": "view.custom.swatches[15]"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "events": {
+                                          "dom": {
+                                            "onClick": {
+                                              "config": {
+                                                "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 15 and colours[15]:\n\t\tself.view.custom.sel_value = colours[15]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
                                   }
-                                }
+                                ]
                               }
                             ]
                           }
