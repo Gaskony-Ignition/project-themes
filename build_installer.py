@@ -1573,7 +1573,8 @@ def _action_grid(themes):
                      # uninstall() already refuse any id outside THEMES, so
                      # this is describing the guard, not promising it.
                      note="Both buttons only ever touch these ten. A stock "
-                          "theme, or one you make yourself in the Editor, is "
+                          "theme, or one you make yourself on the Customise "
+                          "page, is "
                           "left alone."),
                  _action_card(
                      "card_stock",

@@ -29,15 +29,15 @@ If you can import a Perspective project but would rather not touch the gateway's
 
 1. Gateway web UI → **Config → Projects → Import**, pick `Theme_Installer-<VERSION>.zip`.
 2. Open `<gateway>/data/perspective/client/Theme_Installer`.
-3. Click **Install all themes**. It writes the files AND runs the config scan itself — no separate "Scan File System" step, nothing else to do.
+3. Click **Install**. It writes the files AND runs the config scan itself — no separate "Scan File System" step, nothing else to do.
 4. The page's table updates itself: the Status column flips to "Installed" for all 10 rows once the scan lands (a couple of seconds). Cross-check with step 3 below if you want the `curl` version too.
 5. Optional: delete the `Theme_Installer` project afterwards. It is parent-free and self-contained — removing it does not touch the themes it already wrote, because those are gateway config resources, not project resources.
 
-Re-running **Install custom themes** overwrites whatever is on the gateway with the embedded copies — so importing a newer release of the installer and pressing the button again is the repair path if an Ignition upgrade (or anything else) ever damages the installed themes. Installing the custom themes never touches a stock theme, and the table says so per row.
+Re-running **Install** overwrites whatever is on the gateway with the embedded copies — so importing a newer release of the installer and pressing the button again is the repair path if an Ignition upgrade (or anything else) ever damages the installed themes. Installing the custom themes never touches a stock theme, and the table says so per row.
 
-**Updating the stock themes (optional)**: the stock themes ship no scrollbar styling and no `color-scheme` declaration. **Update stock themes** adds exactly those two things to the four on-disk stock variants (`light-cool`, `light-warm`, `dark-cool`, `dark-warm`) — their look does not change — and **Restore stock themes** puts them back exactly. `light` and `dark` live inside the Perspective module (no files on disk), so they are never touched; pick `light-cool`/`dark-cool` to get the additions. An Ignition upgrade may replace the variants' files; press **Update stock themes** again afterwards.
+**Updating the stock themes (optional)**: the stock themes ship no scrollbar styling and no `color-scheme` declaration. **Update** adds exactly those two things to the four on-disk stock variants (`light-cool`, `light-warm`, `dark-cool`, `dark-warm`) — their look does not change — and **Restore** puts them back exactly. `light` and `dark` live inside the Perspective module (no files on disk), so they are never touched; pick `light-cool`/`dark-cool` to get the additions. An Ignition upgrade may replace the variants' files; press **Update** again afterwards.
 
-**Uninstalling**: open the same page and click **Remove custom themes** — goes through `system.config.delete()`, which removes the resource AND its files in one call, no scan needed.
+**Uninstalling**: open the same page and click **Remove** — goes through `system.config.delete()`, which removes the resource AND its files in one call, no scan needed.
 
 **Trying them on**: once installed, the same page gives you two ways to switch, live in your own session, with no reload and no picker to build. **Theme switcher** opens a popup of swatches — every theme as a button in its own colours. The **Theme** dropdown beside that button is the other one, listing the same themes in a control small enough to sit in a header.
 

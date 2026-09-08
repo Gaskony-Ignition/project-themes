@@ -95,7 +95,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Theme Installer  1.16.4",
+              "text": "Theme Installer  1.16.5",
               "style": {
                 "fontSize": "13.5px",
                 "fontWeight": 600,
@@ -324,7 +324,7 @@
                       "basis": "auto"
                     },
                     "props": {
-                      "text": "Both buttons only ever touch these ten. A stock theme, or one you make yourself in the Editor, is left alone.",
+                      "text": "Both buttons only ever touch these ten. A stock theme, or one you make yourself on the Customise page, is left alone.",
                       "style": {
                         "fontSize": "12px",
                         "lineHeight": "1.5",
