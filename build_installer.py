@@ -1843,13 +1843,23 @@ EDITOR_PREVIEW = (
 # declares -- you can only change what is written here.
 EDITOR_TOKEN_ROWS = (
     "\timport themepack\n"
-    "\ttheme = (value + '|').split('|')[0]\n"
+    "\tbits = (value + '|||').split('|')\n"
+    "\ttheme = bits[0]\n"
+    "\t# The filter rides in the key, so typing re-reads the list. 150\n"
+    "\t# values is ten screens of scrolling to reach one token.\n"
+    "\tneedle = bits[3].strip().lower()\n"
     "\tif not theme:\n"
     "\t\treturn []\n"
     "\ttry:\n"
     "\t\trows = themepack.all_tokens(theme)\n"
     "\texcept Exception:\n"
     "\t\treturn []\n"
+    "\tif needle:\n"
+    "\t\trows = [r for r in rows\n"
+    "\t\t        if needle in r['name'].lower()\n"
+    "\t\t        or needle in (r.get('what') or '').lower()\n"
+    "\t\t        or needle in (r.get('group') or '').lower()\n"
+    "\t\t        or needle in (r['value'] or '').lower()]\n"
     "\tout = []\n"
     "\tlast = None\n"
     "\tfor r in rows:\n"
@@ -1862,6 +1872,62 @@ EDITOR_TOKEN_ROWS = (
     "\t\tlast = group\n"
     "\treturn out"
 )
+EDITOR_SEL_OK = (
+    "\timport themepack\n"
+    "\t# The colour to paint the chip, or nothing. Never the raw value:\n"
+    "\t# CSS ignores what it cannot parse, so an invalid one left the\n"
+    "\t# chip showing the PREVIOUS colour and reading as success.\n"
+    "\treturn value if themepack.looks_like_colour(value) else ''"
+)
+EDITOR_WARN = (
+    "\timport themepack\n"
+    "\tname, new = (value + '|').split('|')[:2]\n"
+    "\tif not name or not new:\n"
+    "\t\treturn ''\n"
+    "\ttheme = self.view.custom.theme\n"
+    "\ttry:\n"
+    "\t\told = ''\n"
+    "\t\tfor row in themepack.all_tokens(theme):\n"
+    "\t\t\tif row['name'] == name:\n"
+    "\t\t\t\told = row['value']\n"
+    "\t\treturn themepack.value_problem(name, old, new)\n"
+    "\texcept Exception:\n"
+    "\t\treturn ''"
+)
+EDITOR_UNDO = (
+    "\timport themepack\n"
+    "\tname = self.view.custom.undo_name\n"
+    "\twas = self.view.custom.undo_value\n"
+    "\tif not name:\n"
+    "\t\treturn\n"
+    "\ttry:\n"
+    "\t\tthemepack.set_any_token(self.view.custom.theme, name, was)\n"
+    "\t\tself.view.custom.status = 'Put %s back to %s' % (name, was)\n"
+    "\t\tself.view.custom.sel_name = name\n"
+    "\t\tself.view.custom.sel_value = was\n"
+    "\t\t# One level, and it is spent. Two Undos in a row putting the\n"
+    "\t\t# same value back twice would be a button that lies.\n"
+    "\t\tself.view.custom.undo_name = ''\n"
+    "\t\tself.view.custom.undo_value = ''\n"
+    "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
+    "\texcept Exception, e:\n"
+    "\t\tself.view.custom.status = str(e)"
+)
+EDITOR_START_OPTIONS = (
+    "\timport themepack\n"
+    "\treturn [{'value': r['id'], 'label': r['label']}\n"
+    "\t        for r in themepack.start_points()]"
+)
+EDITOR_START_WARNING = (
+    "\timport themepack\n"
+    "\tif not value:\n"
+    "\t\treturn ''\n"
+    "\ttry:\n"
+    "\t\treturn themepack.start_warning(value)\n"
+    "\texcept Exception:\n"
+    "\t\treturn ''"
+)
+
 EDITOR_PICK_TOKEN = (
     "\tdata = event.value or {}\n"
     "\tself.view.custom.sel_name = data.get('name', '')\n"
@@ -1878,21 +1944,20 @@ EDITOR_SAVE_TOKEN = (
     "\ttry:\n"
     "\t\t# set_any_token finds the file: --st-* live in globals.css and\n"
     "\t\t# Ignition's own names in variables.css, and the page never showed\n"
-    "\t\t# the user which is which.\n"
-    "\t\tthemepack.set_any_token(self.view.custom.theme, name, value)\n"
+    "\t\t# the user which is which. It also refuses a value that would\n"
+    "\t\t# stop the token working, which is why this can fail loudly.\n"
+    "\t\tresult = themepack.set_any_token(self.view.custom.theme,\n"
+    "\t\t                                 name, value)\n"
+    "\t\t# Remember what it replaced. Nobody remembers the hex they\n"
+    "\t\t# overwrote, and there was no way back from a wrong save.\n"
+    "\t\tself.view.custom.undo_name = name\n"
+    "\t\tself.view.custom.undo_value = result.get('was', '')\n"
     "\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n"
     "\t\t# equally true of a save that wrote back what was already there.\n"
     "\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\texcept Exception, e:\n"
     "\t\tself.view.custom.status = str(e)"
-)
-EDITOR_COPY_THIS = (
-    "\t# The funnel out of a read-only theme: pre-fill a sensible name so the\n"
-    "\t# next click is Copy rather than a naming decision.\n"
-    "\tself.view.custom.making = 'copy'\n"
-    "\tself.view.custom.new_name = 'my-' + (self.view.custom.theme or 'theme')\n"
-    "\tself.view.custom.status = ''"
 )
 EDITOR_TOGGLE_RAW = (
     "\tself.view.custom.raw = not self.view.custom.raw\n"
@@ -1936,16 +2001,18 @@ EDITOR_KIND_LABEL = (
     "\t\ttext = text % (theme, base or 'a stock theme')\n"
     "\treturn text"
 )
+# The banner's button and the bar's button are the same door, deliberately:
+# "Copy this one" and "New theme" looked like alternatives and were not
+# comparable (Nigel, 07/09/2026).
 EDITOR_START_NEW = (
-    "\tself.view.custom.making = 'new'\n"
-    "\tself.view.custom.new_name = ''\n"
+    "\t# One door. It opens pre-set to the theme you are looking at,\n"
+    "\t# which is the answer nine times out of ten.\n"
+    "\tself.view.custom.making = 'make'\n"
+    "\tself.view.custom.new_base = self.view.custom.theme\n"
+    "\tself.view.custom.new_name = 'my-' + (self.view.custom.theme or 'theme')\n"
     "\tself.view.custom.status = ''"
 )
-EDITOR_START_COPY = (
-    "\tself.view.custom.making = 'copy'\n"
-    "\tself.view.custom.new_name = ''\n"
-    "\tself.view.custom.status = ''"
-)
+EDITOR_COPY_THIS = EDITOR_START_NEW
 EDITOR_CANCEL = (
     "\tself.view.custom.making = ''\n"
     "\tself.view.custom.new_name = ''\n"
@@ -1955,7 +2022,10 @@ EDITOR_NEW = (
     "\timport themepack\n"
     "\tname = (self.view.custom.new_name or '').strip()\n"
     "\ttry:\n"
-    "\t\tthemepack.new_theme(name, self.view.custom.new_base)\n"
+    "\t\t# make_theme copies one of ours, or builds on a bare Ignition\n"
+    "\t\t# theme, depending on what was chosen -- one action, because\n"
+    "\t\t# two buttons made them look like comparable alternatives.\n"
+    "\t\tthemepack.make_theme(name, self.view.custom.new_base)\n"
     "\t\tself.view.custom.new_name = ''\n"
     "\t\tself.view.custom.making = ''\n"
     "\t\t# nudge FIRST: it is what re-reads the theme list, and a\n"
@@ -1963,8 +2033,8 @@ EDITOR_NEW = (
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\t\tself.view.custom.theme = name\n"
     "\t\tself.view.custom.file = 'variables.css'\n"
-    "\t\tself.view.custom.status = ('Created %s on %s -- it renders like its "
-    "base until you change it'\n"
+    "\t\tself.view.custom.status = ('Created %s from %s -- it looks exactly "
+    "like it until you change something'\n"
     "\t\t                           % (name, self.view.custom.new_base))\n"
     "\texcept Exception, e:\n"
     "\t\tself.view.custom.status = str(e)"
@@ -2164,8 +2234,11 @@ def _theme_bar():
              "propConfig": {"props.text": {"binding": _prop(
                  "view.custom.key", EDITOR_KIND_LABEL)}}},
             _spacer(),
-            _button("btn_new", "New theme...", EDITOR_START_NEW),
-            _button("btn_copy", "Copy this one...", EDITOR_START_COPY),
+            # ONE button. "New theme..." and "Copy this one..." read as
+            # alternatives and were not: one gave you a whole theme, the other
+            # an empty shell with none of the --st-* vocabulary this page is
+            # built around, and the natural first click was the wrong one.
+            _button("btn_new", "Make a theme...", EDITOR_START_NEW),
             _only_when(_button("btn_delete", "Delete this theme",
                                EDITOR_DELETE), IS_USER_THEME, layout=True),
         ],
@@ -2191,17 +2264,11 @@ def _make_panel():
         "children": [
             {"type": "ia.display.label", "meta": {"name": "hint"},
              "position": {"grow": 0, "shrink": 0, "basis": "auto"},
-             "props": {"style": {"fontSize": "12.5px", "lineHeight": "1.5",
-                                 "color": "var(--label)"}},
-             "propConfig": {"props.text": {"binding": {
-                 "type": "expr", "config": {"expression":
-                     "if({view.custom.making} = 'copy', "
-                     "'Copies the theme you have open, files and all, under a "
-                     "new name. Yours to edit; Install still puts ours back "
-                     "without touching it.', "
-                     "'Starts a theme that renders exactly like the stock one "
-                     "you build it on, so you can change a line at a time and "
-                     "see what it did.')"}}}}},
+             "props": {"text":
+                 "Your theme starts as a copy of whatever you pick, files and "
+                 "all, and nothing on the Installer page overwrites it.",
+                 "style": {"fontSize": "12.5px", "lineHeight": "1.5",
+                           "color": "var(--label)"}}},
             {"type": "ia.container.flex", "meta": {"name": "row"},
              "position": {"grow": 0, "shrink": 0, "basis": "auto"},
              "props": {"direction": "row", "alignItems": "center",
@@ -2223,30 +2290,36 @@ def _make_panel():
                       "type": "property",
                       "config": {"path": "view.custom.new_name",
                                  "bidirectional": True}}}}},
-                 _only_when(_cap("cap2", "built on"),
-                            "{view.custom.making} = 'new'", layout=True),
-                 _only_when(
-                     {"type": "ia.input.dropdown", "meta": {"name": "new_base"},
-                      "position": {"grow": 0, "shrink": 0, "basis": "150px"},
-                      "props": {"allowClearing": False, "showSearch": False,
-                                "style": {"height": "32px"}},
-                      "propConfig": {
-                          "props.options": {"binding": _expr(
-                              "1", EDITOR_BASE_OPTIONS)},
-                          "props.value": {"binding": {
-                              "type": "property",
-                              "config": {"path": "view.custom.new_base",
-                                         "bidirectional": True}}}}},
-                     "{view.custom.making} = 'new'", layout=True),
+                 _cap("cap2", "starting from"),
+                 {"type": "ia.input.dropdown", "meta": {"name": "new_base"},
+                  "position": {"grow": 0, "shrink": 1, "basis": "260px"},
+                  "props": {"allowClearing": False, "showSearch": True,
+                            "style": {"height": "32px"}},
+                  "propConfig": {
+                      # Re-read on every nudge: a theme you made a minute ago
+                      # is a perfectly good thing to start the next one from.
+                      "props.options": {"binding": _expr(
+                          "{view.custom.nudge}", EDITOR_START_OPTIONS)},
+                      "props.value": {"binding": {
+                          "type": "property",
+                          "config": {"path": "view.custom.new_base",
+                                     "bidirectional": True}}}}},
                  _spacer(),
                  _button("btn_cancel", "Cancel", EDITOR_CANCEL),
-                 _only_when(_button("btn_create", "Create theme", EDITOR_NEW,
-                                    primary=True),
-                            "{view.custom.making} = 'new'", layout=True),
-                 _only_when(_button("btn_docopy", "Copy theme", EDITOR_COPY,
-                                    primary=True),
-                            "{view.custom.making} = 'copy'", layout=True),
+                 _button("btn_create", "Make it", EDITOR_NEW, primary=True),
              ]},
+            # Only when the choice costs something. A bare Ignition theme
+            # ships no --st-* tokens at all, so the theme you get has no
+            # accent and no card colour -- which is exactly what happened to
+            # anyone who pressed the old "New theme..." button first.
+            _only_when(
+                {"type": "ia.display.label", "meta": {"name": "startwarn"},
+                 "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+                 "props": {"style": {"fontSize": "12px", "lineHeight": "1.45",
+                                     "color": "var(--callToAction)"}},
+                 "propConfig": {"props.text": {"binding": _prop(
+                     "view.custom.startwarn")}}},
+                "{view.custom.startwarn} != ''", layout=True),
         ],
     }
 
@@ -2435,11 +2508,55 @@ def _colour_pane():
                                  "borderRadius": "3px",
                                  "borderStyle": "solid", "borderWidth": "1px",
                                  "borderColor": "var(--border)"}},
+             # sel_ok, not sel_value: a value CSS cannot parse leaves the
+             # chip painted in the last one that worked, so the only visual
+             # confirmation on the page said "fine" for a broken value.
              "propConfig": {"props.style.backgroundColor": {"binding": _prop(
-                 "view.custom.sel_value")}}},
+                 "view.custom.sel_ok")}}},
+            # Says what is wrong BEFORE you press Save, and Save refuses it
+            # afterwards -- the check is in set_any_token, not here, so the
+            # same rule holds for anything else that writes a token.
+            _only_when(
+                {"type": "ia.display.label", "meta": {"name": "warn"},
+                 "position": {"grow": 1, "shrink": 1, "basis": "0px"},
+                 "props": {"style": {"fontSize": "12px", "lineHeight": "1.4",
+                                     "color": "var(--callToAction)"}},
+                 "propConfig": {"props.text": {"binding": _prop(
+                     "view.custom.warn")}}},
+                "{view.custom.warn} != ''", layout=True),
             _spacer(),
+            # One level of undo, offered only when there is something to undo.
+            # Nobody remembers the hex they just overwrote.
+            _only_when(_bound_button(
+                "btn_undo", EDITOR_UNDO,
+                "'Undo ' + {view.custom.undo_name}"),
+                "{view.custom.undo_name} != ''", layout=True),
             _button("btn_save_token", "Save", EDITOR_SAVE_TOKEN,
                     primary=True),
+        ],
+    }
+    # The search box. 150 values is ten screens, and every visit is after ONE
+    # of them; scrolling for it was the friction, not the editing.
+    find = {
+        "type": "ia.container.flex", "meta": {"name": "find"},
+        "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+        "props": {"direction": "row", "alignItems": "center",
+                  "style": {"gap": "9px", "padding": "8px 10px",
+                            "borderBottomStyle": "solid",
+                            "borderBottomWidth": "1px",
+                            "borderBottomColor": "var(--border)"}},
+        "children": [
+            _cap("findcap", "Find"),
+            {"type": "ia.input.text-field", "meta": {"name": "filter"},
+             "position": {"grow": 0, "shrink": 1, "basis": "260px"},
+             "props": {"deferUpdates": False,
+                       "placeholder": "accent, button, #ffffff, table...",
+                       "style": {"height": "30px"}},
+             "propConfig": {"props.text": {"binding": {
+                 "type": "property",
+                 "config": {"path": "view.custom.filter",
+                            "bidirectional": True}}}}},
+            _cap("findhint", "name, description, group or value"),
         ],
     }
     pane = _pane(
@@ -2447,7 +2564,7 @@ def _colour_pane():
         "Mostly colours, and a few sizes, grouped by what they affect. Click "
         "one, change it, Save -- each save writes the file and runs the scan "
         "that makes the gateway use it.",
-        [table, _only_when(strip, IS_EDITABLE, layout=True)], "0px")
+        [find, table, _only_when(strip, IS_EDITABLE, layout=True)], "0px")
     # The grower again, now that there are five columns and the widest is a
     # sentence. The empty space Nigel saw was one column taking a whole row's
     # slack with nothing to put in it; the fix is something worth reading in
@@ -2497,11 +2614,14 @@ def build_editor_view_json(themes, version):
     """Page: copy one of ours, then tune the copy."""
     return {
         "custom": {"theme": "", "file": "variables.css", "key": "",
+                   "filter": "",
                    "text": "", "status": "", "nudge": 0, "kind": "",
                    "tokens": [], "about": [],
-                   "sel_name": "", "sel_value": "",
+                   "sel_name": "", "sel_value": "", "sel_ok": "",
+                   "warn": "", "startwarn": "",
+                   "undo_name": "", "undo_value": "",
                    "raw": False, "making": "", "new_name": "",
-                   "new_base": "dark"},
+                   "new_base": ""},
         "propConfig": {
             "custom.theme": {"binding": _expr("1", EDITOR_FIRST_THEME)},
             # One key for everything that depends on the selection, and nudge
@@ -2510,13 +2630,26 @@ def build_editor_view_json(themes, version):
             "custom.key": {"binding": {"type": "expr", "config": {
                 "expression": "{view.custom.theme} + '|' + "
                               "{view.custom.file} + '|' + "
-                              "{view.custom.nudge}"}}},
+                              "{view.custom.nudge} + '|' + "
+                              "{view.custom.filter}"}}},
             "custom.kind": {"binding": _prop("view.custom.key", EDITOR_KIND)},
             "custom.tokens": {"binding": _prop("view.custom.key",
                                                EDITOR_TOKEN_ROWS)},
             "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
             "custom.about": {"binding": _prop("view.custom.key",
                                               EDITOR_ABOUT)},
+            # Live, as you type: the chip shows the colour only when the value
+            # IS one, and the line beside it says so when it is not. The chip
+            # used to keep painting the last valid colour, so the one visual
+            # confirmation on the page said "fine" for a value that was not.
+            "custom.startwarn": {"binding": _prop("view.custom.new_base",
+                                                  EDITOR_START_WARNING)},
+            "custom.sel_ok": {"binding": _prop("view.custom.sel_value",
+                                               EDITOR_SEL_OK)},
+            "custom.warn": {"binding": {
+                "type": "expr", "config": {"expression":
+                    "{view.custom.sel_name} + '|' + {view.custom.sel_value}"},
+                "transforms": [{"type": "script", "code": EDITOR_WARN}]}},
         },
         "params": {},
         "root": {
@@ -2641,9 +2774,9 @@ def _about_pane():
         _col("fact", " ", 96, True),
         _col("detail", " "),
     ], "view.custom.about")
-    # Exactly three rows plus the header strip: 30 + 3 x 30, then stop. At
+    # Four rows plus the header strip, the last of them two lines. At
     # 164 the pane carried 40px of empty table under the last fact.
-    table["props"]["style"] = {"minHeight": "126px"}
+    table["props"]["style"] = {"minHeight": "212px"}
     pane = _pane("about_pane", "About this theme", "", [table], "auto",
                  hug=True)
     return pane

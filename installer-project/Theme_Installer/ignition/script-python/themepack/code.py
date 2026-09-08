@@ -1672,6 +1672,50 @@ def theme_kind(name):
     return "missing"
 
 
+def start_points():
+    """What a new theme can be started FROM, best first.
+
+    One list, because there was no honest way to choose between two buttons.
+    "New theme" built on a stock base, which ships no --st-* tokens at all --
+    so the theme you got had none of the vocabulary this page is organised
+    around, and the natural first click was the wrong door. The ten come
+    first; the stock bases stay, last and labelled, for someone who means it.
+    """
+    out = []
+    for name in THEME_ORDER:
+        out.append({"id": name, "label": "%s  (one of ours)" % name,
+                    "kind": "ours"})
+    for name in user_themes():
+        out.append({"id": name, "label": "%s  (yours)" % name, "kind": "user"})
+    for name in list(STOCK_BUILTIN) + list(STOCK_UPDATABLE):
+        out.append({"id": name, "label": "%s  (bare Ignition theme)" % name,
+                    "kind": "stock"})
+    return out
+
+
+def start_warning(source):
+    """The line shown under the picker when the choice costs you something."""
+    if theme_kind(source) == "stock":
+        return ("A bare Ignition theme ships none of the --st-* tokens or "
+                "st/... classes, so your theme would have no accent, no card "
+                "colour and nothing for a project to build against. Start "
+                "from one of ours unless you specifically want that.")
+    return ""
+
+
+def make_theme(name, source):
+    """Create a theme, from whatever you chose to start from.
+
+    Copying one of ours and building on a bare Ignition theme were two
+    buttons that looked like alternatives and were not comparable: one gives
+    you a whole theme, the other an empty shell. One entry point, one list,
+    and the difference stated where the choice is made.
+    """
+    if theme_kind(source) == "stock":
+        return new_theme(name, source)
+    return copy_theme(source, name)
+
+
 def user_themes():
     """Every theme on disk that is neither ours nor Ignition's, id-sorted.
 
@@ -2069,6 +2113,12 @@ def about(theme):
         rows.append({"fact": "Files",
                      "detail": "%d files, %d KB"
                                % (found[0]["files"], found[0]["bytes"] / 1024)})
+    # How to USE it. The page never said, so you finished a theme and were on
+    # your own: no mention of a project, a session or the Theme menu anywhere
+    # on it. It is installed the moment it exists -- there is no publish step.
+    rows.append({"fact": "To use it",
+                 "detail": "the Theme menu above, or your project's "
+                           "session props"})
     return rows
 
 
@@ -2195,6 +2245,60 @@ def token_file(theme, name):
     return where
 
 
+# The CSS colour keywords worth accepting by name. Not all 147: these are the
+# ones somebody types on purpose, and an unknown name is refused with a message
+# rather than written to a stylesheet where it silently does nothing.
+EDITOR_COLOUR_WORDS = set("""
+transparent currentcolor inherit initial unset black white red green blue
+yellow orange purple pink brown grey gray silver gold navy teal olive maroon
+lime aqua cyan magenta fuchsia beige ivory khaki coral salmon crimson firebrick
+indigo violet turquoise tomato tan plum orchid linen lavender
+darkred darkgreen darkblue darkgrey darkgray darkorange darkviolet darkcyan
+lightgrey lightgray lightblue lightgreen lightyellow lightpink
+whitesmoke gainsboro dimgrey dimgray slategrey slategray steelblue skyblue
+midnightblue royalblue dodgerblue cornflowerblue seagreen forestgreen
+""".split())
+
+
+def looks_like_colour(value):
+    """Whether a value will actually paint. Deliberately generous about FORM
+    (hex, rgb/hsl, var(), a keyword) and strict about nonsense.
+
+    The page used to accept anything: 'not-a-colour' saved with a cheerful
+    'Saved --st-accent = not-a-colour', went into the served stylesheet, and
+    every session using the theme quietly lost its accent. A stylesheet does
+    not report a bad value; this is the only place that can.
+    """
+    text = (value or "").strip()
+    if not text:
+        return False
+    if re.match(r'^#[0-9A-Fa-f]{3,8}$', text):
+        return True
+    if re.match(r'^(rgb|rgba|hsl|hsla|var|color-mix|linear-gradient)\s*\(', text):
+        return True
+    return text.lower() in EDITOR_COLOUR_WORDS
+
+
+def value_problem(name, old, new):
+    """The sentence to refuse a save with, or '' to allow it.
+
+    Judged against what the token ALREADY holds: a theme's values are colours,
+    lengths and keywords all in one list, so 'is it a colour' is only a
+    question for a token that currently is one.
+    """
+    text = (new or "").strip()
+    if not text:
+        return "%s cannot be empty. Type a value, or leave it alone." % name
+    if ";" in text or "}" in text:
+        return ("%s cannot contain ; or } -- that would break the rest of the "
+                "file. Use Advanced if you mean to edit the CSS itself." % name)
+    if is_colour(old) and not looks_like_colour(text):
+        return ("'%s' is not a colour, so %s would stop working. Use a hex "
+                "like #b81d38, a colour name like firebrick, or var(--other) "
+                "to point at another value." % (text, name))
+    return ""
+
+
 def set_any_token(theme, name, value):
     """set_token, but it finds the file for you.
 
@@ -2204,4 +2308,18 @@ def set_any_token(theme, name, value):
     status line said so -- but only after the user had typed a colour and
     pressed Save.
     """
-    return set_token(theme, name, value, filename=token_file(theme, name))
+    filename = token_file(theme, name)
+    old = ""
+    for row in tokens(theme, filename):
+        if row["name"] == name:
+            old = row["value"]
+    problem = value_problem(name, old, value)
+    if problem:
+        raise ValueError(problem)
+    result = set_token(theme, name, value, filename=filename)
+    # The value we replaced, so the page can offer to put it back. Nobody
+    # remembers the hex they overwrote, and until now nothing else did either.
+    if isinstance(result, dict):
+        result["was"] = old
+        return result
+    return {"was": old}
