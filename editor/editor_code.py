@@ -965,6 +965,16 @@ def live_preview_uri(theme, width=340, height=102):
 # install, so the customiser offers a COPY instead and the ten stay read-only.
 # ---------------------------------------------------------------------------
 
+def about_text(theme):
+    """The same facts as one block of text, one per line.
+
+    A table charged 30px a row plus a 30px header strip for four short facts
+    and still needed a scrollbar on a laptop. Lines in a label cost their line
+    height and nothing else, and there is no empty header band over them.
+    """
+    return "\n".join("%s:  %s" % (r["fact"], r["detail"]) for r in about(theme))
+
+
 def about(theme):
     """The handful of facts about a theme that are worth a line each.
 

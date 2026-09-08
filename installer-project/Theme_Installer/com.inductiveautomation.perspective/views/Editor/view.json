@@ -9,7 +9,7 @@
     "nudge": 0,
     "kind": "",
     "tokens": [],
-    "about": [],
+    "about": "",
     "sel_name": "",
     "sel_value": "",
     "sel_ok": "",
@@ -96,7 +96,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.about(theme)\n\texcept Exception:\n\t\treturn []"
+            "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\treturn themepack.about_text(theme)\n\texcept Exception:\n\t\treturn ''"
           }
         ]
       }
@@ -2189,15 +2189,17 @@
                         },
                         "position": {
                           "grow": 0,
-                          "shrink": 0,
+                          "shrink": 1,
                           "basis": "auto"
                         },
                         "props": {
                           "text": "",
                           "style": {
-                            "height": "96px",
-                            "width": "320px",
-                            "margin": "10px",
+                            "aspectRatio": "200 / 60",
+                            "width": "auto",
+                            "height": "auto",
+                            "maxHeight": "96px",
+                            "margin": "8px",
                             "backgroundRepeat": "no-repeat",
                             "backgroundPosition": "center",
                             "backgroundSize": "contain",
@@ -2400,42 +2402,26 @@
                         },
                         "children": [
                           {
-                            "type": "ia.display.table",
+                            "type": "ia.display.label",
                             "meta": {
                               "name": "about"
                             },
                             "position": {
-                              "grow": 1,
-                              "shrink": 1,
-                              "basis": "0px"
+                              "grow": 0,
+                              "shrink": 0,
+                              "basis": "auto"
                             },
                             "props": {
-                              "pager": {
-                                "top": false,
-                                "bottom": false
-                              },
-                              "columns": [
-                                {
-                                  "field": "fact",
-                                  "header": {
-                                    "title": " "
-                                  },
-                                  "width": 96,
-                                  "strictWidth": true
-                                },
-                                {
-                                  "field": "detail",
-                                  "header": {
-                                    "title": " "
-                                  }
-                                }
-                              ],
                               "style": {
-                                "minHeight": "212px"
+                                "fontSize": "12px",
+                                "lineHeight": "1.5",
+                                "whiteSpace": "pre-line",
+                                "padding": "7px 11px 8px",
+                                "color": "var(--label)"
                               }
                             },
                             "propConfig": {
-                              "props.data": {
+                              "props.text": {
                                 "binding": {
                                   "type": "property",
                                   "config": {

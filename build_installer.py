@@ -1747,9 +1747,9 @@ EDITOR_ABOUT = (
     "\tif not theme:\n"
     "\t\treturn []\n"
     "\ttry:\n"
-    "\t\treturn themepack.about(theme)\n"
+    "\t\treturn themepack.about_text(theme)\n"
     "\texcept Exception:\n"
-    "\t\treturn []"
+    "\t\treturn ''"
 )
 EDITOR_PICK_FILE = (
     "\tdata = event.value or {}\n"
@@ -2409,10 +2409,19 @@ def _preview_pane():
         # 96px picture. One sentence; Refresh explains itself.
         "This theme's own colours. Repaints on every save.",
         [{"type": "ia.display.label", "meta": {"name": "shot"},
-          "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+          # Scales instead of scrolling. A fixed 320x96 plus its margins was a
+          # number that fitted one window height; backgroundSize contain keeps
+          # the picture's shape at whatever height the rail can spare.
+          "position": {"grow": 0, "shrink": 1, "basis": "auto"},
           "props": {"text": "",
-                    "style": {"height": "96px", "width": "320px",
-                              "margin": "10px",
+                    # aspect-ratio does the scaling: the picture is 200x60, so
+                    # its height follows the rail's width and it is never
+                    # letterboxed inside its own box. grow 1 did not scale it
+                    # at all -- the pane hugs, so there was nothing to grow
+                    # into and it sat on its min-height at every window size.
+                    "style": {"aspectRatio": "200 / 60", "width": "auto",
+                              "height": "auto", "maxHeight": "96px",
+                              "margin": "8px",
                               "backgroundRepeat": "no-repeat",
                               "backgroundPosition": "center",
                               "backgroundSize": "contain",
@@ -2616,7 +2625,7 @@ def build_editor_view_json(themes, version):
         "custom": {"theme": "", "file": "variables.css", "key": "",
                    "filter": "",
                    "text": "", "status": "", "nudge": 0, "kind": "",
-                   "tokens": [], "about": [],
+                   "tokens": [], "about": "",
                    "sel_name": "", "sel_value": "", "sel_ok": "",
                    "warn": "", "startwarn": "",
                    "undo_name": "", "undo_value": "",
@@ -2767,19 +2776,19 @@ def _about_pane():
     theme you had open. One line says it; the names belong in the README,
     where someone building a project would look for them.
     """
-    table = _table("about", [
-        # BOTH titles are a space, not "". An empty title falls back to the
-        # FIELD NAME, which put a column headed "fact" over three facts --
-        # the same trap that once labelled a swatch column "swatc".
-        _col("fact", " ", 96, True),
-        _col("detail", " "),
-    ], "view.custom.about")
-    # Four rows plus the header strip, the last of them two lines. At
-    # 164 the pane carried 40px of empty table under the last fact.
-    table["props"]["style"] = {"minHeight": "212px"}
-    pane = _pane("about_pane", "About this theme", "", [table], "auto",
+    # Lines in a label, not rows in a table. Four short facts in a table cost
+    # a 30px header band and 30px a row -- 212px for 70px of text, and a
+    # scrollbar on the rail at laptop height (Nigel, 07/09/2026).
+    body = {"type": "ia.display.label", "meta": {"name": "about"},
+            "position": {"grow": 0, "shrink": 0, "basis": "auto"},
+            "props": {"style": {"fontSize": "12px", "lineHeight": "1.5",
+                                "whiteSpace": "pre-line",
+                                "padding": "7px 11px 8px",
+                                "color": "var(--label)"}},
+            "propConfig": {"props.text": {"binding": _prop(
+                "view.custom.about")}}}
+    return _pane("about_pane", "About this theme", "", [body], "auto",
                  hug=True)
-    return pane
 
 
 def _raw_editor():
