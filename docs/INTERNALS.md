@@ -366,6 +366,21 @@ Everything else about the repo layout and the build steps is in
   `data/config/resources/core/com.inductiveautomation.perspective/themes/<id>/`.
 - `insight/` — the capture scripts used to read a live gateway's stock
   palettes for the audits above.
+- `editor/` — the hand-authored half of the Customise page's script library,
+  appended verbatim to the generated `themepack/code.py` by
+  `build_installer.py`.
+- `selector-popup/` — the two copy-me switcher views as hand-authored JSON.
+  `build_installer.py` copies them into the generated project verbatim and
+  builds only their `resource.json`.
+- `themes-test-project/Themes_Test/` — a bare Perspective project with no
+  parent, no stylesheet resource and no style classes, used to prove a theme
+  restyles a project on its own and to shoot the README screenshots. Import it
+  alongside the installer if you want to see a theme applied to something other
+  than the installer's own pages.
+- `tools/sync-packs.sh` — historical. It re-pulled `packs/` from the retired
+  styles-template-v2 repo, which no longer exists anywhere; `packs/` here is
+  the source of truth for these ten now, and the script refuses to run rather
+  than fail ten times over. Kept only so the provenance is not lost.
 - `docs/THEMES-EVALUATION.md` — the evaluation this project grew out of: what
   a theme can and cannot reach, whether themes paint earlier than a project
   stylesheet, and what a look-and-feel parent still buys on top of one.

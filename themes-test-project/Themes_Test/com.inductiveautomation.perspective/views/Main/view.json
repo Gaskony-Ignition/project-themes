@@ -131,6 +131,10 @@
                   "label": "Finance Ledger"
                 },
                 {
+                  "value": "newsprint-dark",
+                  "label": "Newsprint Dark"
+                },
+                {
                   "value": "nord-dark",
                   "label": "Nord Dark"
                 },
@@ -529,7 +533,7 @@
               "basis": "180px"
             },
             "props": {
-              "value": "northfield",
+              "value": "treatment",
               "options": [
                 {
                   "value": "pump-station-1",
