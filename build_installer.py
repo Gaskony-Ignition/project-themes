@@ -901,6 +901,10 @@ def _nav(active, version):
     tabs.append({"type": "ia.container.flex", "meta": {"name": "spacer"},
                  "position": {"grow": 1, "shrink": 1, "basis": "0px"},
                  "props": {}})
+    # The list of themes inside it re-reads on a ten-second timer of its own.
+    # It cannot be driven from here: a counter bound in as a view PARAM never
+    # reaches the embedded view -- measured, silently, through a create and a
+    # delete (Nigel, 08/09/2026). See the transform in ThemeDropdown.view.json.
     tabs.append({"type": "ia.display.view", "meta": {"name": "theme_switcher"},
                  "position": {"grow": 0, "shrink": 0, "basis": "230px"},
                  "props": {"path": "ThemeDropdown",
