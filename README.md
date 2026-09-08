@@ -90,9 +90,10 @@ The project is two pages, linked from each header:
   `packs/` and Install overwrites them, so they are read-only here and the page
   offers a copy instead; a copy is yours and nothing overwrites it. Its values
   are listed grouped by what they affect — click one, change it, Save — beside
-  a live preview in the theme's own colours that repaints on every save, and
-  the tokens and style classes the theme publishes. Raw file editing is behind
-  an "Advanced" toggle for structural changes.
+  a live preview in the theme's own colours that repaints on every save. Colours
+  can be typed as hex or picked from a row of swatches of the colours the theme
+  already uses; Perspective ships no colour picker a view can reach. Raw file
+  editing is behind an "Advanced" toggle for structural changes.
 
 The thumbnails are SVGs generated at build time from the theme files the
 installer already embeds, so a row's picture and the files Install writes cannot
@@ -449,8 +450,8 @@ props). Doubling the class — `.psc-st\/x\/y.psc-st\/x\/y`, specificity 0-2-0 �
 beats IA's 0-1-0 component rules and still loses to inline, which is exactly
 how a real style class behaves.
 
-The installer's Editor page lists every token and class a project can
-use, read from the gateway live.
+The installer's Customise page says how many classes a theme publishes and
+whether that is the standard contract, read from the gateway live.
 
 ## Building from source
 
