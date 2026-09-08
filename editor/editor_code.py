@@ -872,7 +872,21 @@ def _colour_resolver(theme):
     var() reference painted as-is renders in the VIEWING page's colours and
     quietly shows the wrong thing.
     """
-    values = _vars_of(theme_css(theme))
+    values = {}
+    try:
+        values.update(_vars_of(theme_css(theme)))
+    except (Exception, Throwable), e:
+        # A theme made seconds ago is not being SERVED yet: the gateway 404s
+        # its stylesheet until the scan lands and httpGet raises rather than
+        # returning empty. Its BASE is already served and its own files are on
+        # disk, so fall back to those -- otherwise everything downstream of
+        # this (the preview picture, the swatch palette) is blank or in error
+        # for the first half-minute of a theme's life, which is exactly when
+        # somebody is looking at it.
+        try:
+            values.update(_vars_of(theme_css(user_base_of(theme))))
+        except (Exception, Throwable), e:
+            pass
     # Served copy for the inherited base, this theme's own files for anything
     # it sets itself -- so a save shows immediately instead of a scan later.
     values.update(_editor_declared(theme))
@@ -1202,19 +1216,26 @@ def swatches(theme, limit=EDITOR_SWATCH_COUNT):
     theme already contains is the better half of it anyway, since those are
     the colours that were chosen to sit together.
     """
-    values, resolve = _colour_resolver(theme)
     counts = {}
-    for name in values:
-        value = resolve((values.get(name) or "").strip()).strip().lower()
-        if value in EDITOR_NOT_A_SWATCH or not looks_like_colour(value):
-            continue
-        if value.startswith("linear-gradient"):
-            continue                     # a chip cannot show one honestly
-        counts[value] = counts.get(value, 0) + 1
+    try:
+        values, resolve = _colour_resolver(theme)
+        for name in values:
+            value = resolve((values.get(name) or "").strip()).strip().lower()
+            if value in EDITOR_NOT_A_SWATCH or not looks_like_colour(value):
+                continue
+            if value.startswith("linear-gradient"):
+                continue                 # a chip cannot show one honestly
+            counts[value] = counts.get(value, 0) + 1
+    except (Exception, Throwable), e:
+        counts = {}                      # padded empties below, never short
     # Most-used first: those are the theme's structural colours, and the tail
     # is one-off accents. Name as the tie-break so the row does not reshuffle
     # between visits.
     found = sorted(counts.keys(), key=lambda c: (-counts[c], c))[:limit]
+    # ALWAYS exactly `limit` entries. The page binds a chip to a fixed index,
+    # and a short list makes every one of those bindings error -- 16 red boxes
+    # where the palette should be. Returning [] on failure did exactly that
+    # for the first seconds of a new theme's life.
     return found + [""] * (limit - len(found))
 
 

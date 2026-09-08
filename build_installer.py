@@ -583,7 +583,18 @@ def build_themepack_code(themes, version):
     # The editor functions, same deal. Appended AFTER insight so it can use
     # _read/_write/_rescan/_stock_rewrite_manifest and THEMES, all defined above.
     with open(EDITOR_SRC) as handle:
-        lines.append(handle.read().rstrip("\n"))
+        editor = handle.read().rstrip("\n")
+    # The page draws a fixed number of chips at fixed indexes and themepack
+    # pads its answer to match. A mismatch is silent at runtime -- too few
+    # values and every chip past the end is a binding in error -- so it is
+    # caught here instead.
+    declared = re.search(r'^EDITOR_SWATCH_COUNT\s*=\s*(\d+)', editor, re.M)
+    if not declared or int(declared.group(1)) != SWATCH_COUNT:
+        raise SystemExit("build_installer.py: SWATCH_COUNT is %d but "
+                         "editor_code.py declares %s"
+                         % (SWATCH_COUNT,
+                            declared.group(1) if declared else "nothing"))
+    lines.append(editor)
     lines.append('')
     return "\n".join(lines)
 
@@ -1928,15 +1939,23 @@ EDITOR_START_WARNING = (
     "\t\treturn ''"
 )
 
+# Chips in the palette row. Must match themepack.EDITOR_SWATCH_COUNT --
+# asserted at build time, because a mismatch is silent at runtime.
+SWATCH_COUNT = 16
+
 EDITOR_SWATCHES = (
     "\timport themepack\n"
+    "\t# Always SWATCH_COUNT entries, never a short list: each chip binds to a\n"
+    "\t# fixed index, so [] puts all sixteen bindings in error and draws the\n"
+    "\t# palette as sixteen red boxes.\n"
+    "\tempty = [''] * %d\n"
     "\ttheme = (value + '|||').split('|')[0]\n"
     "\tif not theme:\n"
-    "\t\treturn []\n"
+    "\t\treturn empty\n"
     "\ttry:\n"
-    "\t\treturn themepack.swatches(theme)\n"
+    "\t\treturn themepack.swatches(theme) or empty\n"
     "\texcept Exception:\n"
-    "\t\treturn []"
+    "\t\treturn empty" % SWATCH_COUNT
 )
 
 
@@ -2459,9 +2478,6 @@ def _preview_pane():
         # button, so it cannot scroll and cannot leave a gap, whatever the
         # caption does at whatever width.
         "auto", hug=True)
-
-
-SWATCH_COUNT = 16
 
 
 def _swatch_chip(index):
