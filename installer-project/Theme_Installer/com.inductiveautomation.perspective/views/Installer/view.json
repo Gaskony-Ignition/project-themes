@@ -95,7 +95,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Theme Installer  1.16.3",
+              "text": "Theme Installer  1.16.4",
               "style": {
                 "fontSize": "13.5px",
                 "fontWeight": 600,
@@ -193,9 +193,22 @@
             },
             "props": {
               "path": "ThemeDropdown",
+              "params": {
+                "refresh": 0
+              },
               "style": {
                 "minHeight": "34px",
                 "marginBottom": "4px"
+              }
+            },
+            "propConfig": {
+              "props.params.refresh": {
+                "binding": {
+                  "type": "expr",
+                  "config": {
+                    "expression": "{view.custom.tick}"
+                  }
+                }
               }
             }
           }

@@ -718,7 +718,7 @@ def build_view_json(themes, version):
             "children": [
                 # Same nav as the insight pages. Without it those pages are
                 # reachable only by typing the URL, which is not shipping them.
-                _nav("Installer", version),
+                _nav("Installer", version, "{view.custom.tick}"),
                 _action_grid(themes),
                 {
                     "type": "ia.display.table",
@@ -830,7 +830,7 @@ def _label(name, text, size="13px", colour="var(--label)", weight=None, grow=0):
             "props": {"text": text, "style": style}}
 
 
-def _nav(active, version):
+def _nav(active, version, refresh=None):
     """A tab strip across the top. These are separate PAGES, so this cannot be
     an ia.container.tab -- that switches views inside one view. It is a row of
     tabs drawn to look like one: the active tab carries the accent underline
@@ -901,15 +901,20 @@ def _nav(active, version):
     tabs.append({"type": "ia.container.flex", "meta": {"name": "spacer"},
                  "position": {"grow": 1, "shrink": 1, "basis": "0px"},
                  "props": {}})
-    # The list of themes inside it re-reads on a ten-second timer of its own.
-    # It cannot be driven from here: a counter bound in as a view PARAM never
-    # reaches the embedded view -- measured, silently, through a create and a
-    # delete (Nigel, 08/09/2026). See the transform in ThemeDropdown.view.json.
-    tabs.append({"type": "ia.display.view", "meta": {"name": "theme_switcher"},
-                 "position": {"grow": 0, "shrink": 0, "basis": "230px"},
-                 "props": {"path": "ThemeDropdown",
-                           "style": {"minHeight": "34px",
-                                     "marginBottom": "4px"}}})
+    switcher = {"type": "ia.display.view", "meta": {"name": "theme_switcher"},
+                "position": {"grow": 0, "shrink": 0, "basis": "230px"},
+                "props": {"path": "ThemeDropdown", "params": {"refresh": 0},
+                          "style": {"minHeight": "34px",
+                                    "marginBottom": "4px"}}}
+    # The theme list inside it is read when its options binding evaluates, so
+    # passing the page's counter in is what makes a theme you just made appear
+    # in the menu at once rather than on the view's own 30s floor. It works
+    # only because ThemeDropdown declares paramDirection input for it; without
+    # that the value is silently discarded (see the transform's note there).
+    if refresh:
+        switcher["propConfig"] = {"props.params.refresh": {
+            "binding": {"type": "expr", "config": {"expression": refresh}}}}
+    tabs.append(switcher)
     return {"type": "ia.container.flex", "meta": {"name": "tabs"},
             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
             "props": {"direction": "row", "alignItems": "flex-end",
@@ -2772,7 +2777,7 @@ def build_editor_view_json(themes, version):
                                 "height": "100%", "overflow": "hidden",
                                 "backgroundColor": "var(--containerRoot)"}},
             "children": [
-                _nav("Customise", version),
+                _nav("Customise", version, "{view.custom.nudge}"),
                 _prose("sub",
                        "Make a theme of your own: copy one of the ten, then "
                        "change its colours here. The ten themselves are "
