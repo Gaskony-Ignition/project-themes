@@ -5,12 +5,11 @@
 # build_installer.py (same pattern as insight/ and selector-popup/).
 #
 # WHY THIS EXISTS. Ectobox ship a Designer module that does exactly this, and
-# it is a good tool; Nigel did not want a module for it (07/09/2026). Their
-# module turned out to be one RPC interface of eleven filesystem methods over
-# the same directory this file resolves, with "refresh" being an ordinary
-# config scan -- nothing that needs a JVM, a Designer, or a signed .modl. So it
-# lives here instead, and ships with the project import that already installs
-# the themes.
+# it is a good tool, but a module is not wanted for it. Their module is one
+# RPC interface of eleven filesystem methods over the same directory this
+# file resolves, with "refresh" being an ordinary config scan -- nothing that
+# needs a JVM, a Designer, or a signed .modl. So it lives here instead, and
+# ships with the project import that already installs the themes.
 #
 # WHAT IT IS NOT. It is not a themes BUILD tool. The ten packs are generated
 # from packs/*.json by build_theme.py and embedded in THEMES above; editing a
@@ -524,12 +523,11 @@ def compare_options(theme=None):
 # ---------------------------------------------------------------------------
 # USER THEMES -- create and delete a theme of your own.
 #
-# Nigel, 07/09/2026: there needs to be the ability to manage user customised
-# themes from the editor page. The Installer's buttons deliberately refuse any
-# id outside the ten this project carries, which is what makes them safe to
-# press; so a theme somebody makes here needs its own create and delete, and
-# those must refuse the packaged and stock ids just as firmly in the other
-# direction.
+# The editor page manages user-customised themes of their own. The
+# Installer's buttons deliberately refuse any id outside the ten this
+# project carries, which is what makes them safe to press; so a theme
+# somebody makes here needs its own create and delete, and those must
+# refuse the packaged and stock ids just as firmly in the other direction.
 #
 # Three kinds of theme, and the kind decides what may be done to it:
 #   packaged  one of ours -- edit it, revert it, but the Installer owns its
@@ -673,12 +671,10 @@ def new_theme(name, based_on="dark", description=""):
     identically to the base, which is the point, but the page has a list to
     show and every line is yours to change.
 
-    It used to be written empty-but-for-a-comment, on the reasoning that a
-    theme identical to its base is one you can change a line at a time. That
-    reasoning was right and the file was wrong: this page's whole proposition
-    is a list of values you click, so New theme handed you a 550px void and a
-    Save button with nothing to save. Empty is only defensible in a file
-    editor, which this stopped being.
+    It is written fully populated rather than empty-but-for-a-comment: this
+    page's whole proposition is a list of values you click, and an empty
+    file would hand New theme a 550px void and a Save button with nothing
+    to save. Empty is only defensible in a file editor, which this is not.
 
     globals.css stays empty. Its content is rules and classes, not values, and
     nothing on this page edits those except the Advanced text box.
@@ -780,8 +776,8 @@ _GENERATED_HEADER = re.compile(r'\A\s*/\*.*?\*/\s*', re.S)
 def _reheader(text, filename, source, name):
     """Replace a copied file's "DO NOT EDIT BY HAND" banner with the truth.
 
-    Nigel, 07/09/2026: that warning on every generated file makes it hard for
-    people to change anything if they want to. On the ten themselves it is
+    That warning on every generated file makes it hard for people to change
+    anything if they want to. On the ten themselves it is
     correct -- they are generated and Install overwrites them. On a COPY it is
     the opposite of correct: the copy is yours, nothing regenerates it, and
     carrying the banner over tells you not to do the one thing this page exists
@@ -1131,10 +1127,9 @@ def all_tokens(theme):
         for row in found:
             row = dict(row)
             row["file"] = filename
-            # What the value is FOR, in a sentence. It used to live in a
-            # read-only pane beside this one, listing the same --st-* names
-            # again with their resolved values -- the names were the
-            # duplication and this was the only part of it worth keeping.
+            # What the value is FOR, in a sentence -- kept here rather than a
+            # separate read-only pane, which would only repeat the same
+            # --st-* names with their resolved values.
             row["what"] = plain(row["name"], why.get(row["name"], ""))
             # The --st-* tokens have their OWN grouping. Run through GROUPS
             # (which classifies Ignition's variable names) they all land in
@@ -1181,10 +1176,10 @@ def looks_like_colour(value):
     """Whether a value will actually paint. Deliberately generous about FORM
     (hex, rgb/hsl, var(), a keyword) and strict about nonsense.
 
-    The page used to accept anything: 'not-a-colour' saved with a cheerful
-    'Saved --st-accent = not-a-colour', went into the served stylesheet, and
-    every session using the theme quietly lost its accent. A stylesheet does
-    not report a bad value; this is the only place that can.
+    Without this check, 'not-a-colour' would save with a cheerful
+    'Saved --st-accent = not-a-colour', go into the served stylesheet, and
+    every session using the theme would quietly lose its accent. A
+    stylesheet does not report a bad value; this is the only place that can.
     """
     text = (value or "").strip()
     if not text:

@@ -14,7 +14,7 @@
  * a bug in any project's view JSON), one level inside #app-container. That
  * hides the background set above on every ordinary page unless punched
  * through. Found live against test-aurora-violet and test-leather-night-tan
- * on the module-testing gateway, 24/08/2026; the selector is a structural
+ * on the module-testing gateway; the selector is a structural
  * Perspective shell pattern (present on every view, not specific to any one
  * pack or project's component tree), so the same fix generalises unchanged
  * to all 9 themes. Scoped to `.view-parent > .view.ia_container--root` so
@@ -185,7 +185,7 @@
    table surfaces coincide nobody notices; in cmms-workorder and wms-scanner
    (a dark header band on a light table) every header cell came out table-
    white under white --st-head-fg text - a header with sort arrows and no
-   words. Found by Access Manager's Activity page, 19/08/2026. */
+   words (see Access Manager's Activity page). */
 [class*="/tables/frame"] .ia_table__head__header__cell .content {
   color: var(--st-head-fg) !important;
   font-size: 10px !important;
