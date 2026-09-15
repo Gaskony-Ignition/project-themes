@@ -35,6 +35,23 @@
 
 set -eu
 
+# Repo gate (REPO-STANDARD.md). Blocking; bypass deliberately with --skip-readme-check.
+_skip=0
+for _a in "$@"; do [ "$_a" = "--skip-readme-check" ] && _skip=1; done
+if [ "$_skip" -ne 1 ]; then
+    _repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+    _gate=""; _d="$_repo"
+    while [ "$_d" != / ]; do
+        [ -x "$_d/modules/readme-gate.sh" ] && { _gate="$_d/modules/readme-gate.sh"; break; }
+        _d=$(dirname "$_d")
+    done
+    if [ -n "$_gate" ]; then
+        "$_gate" "$_repo" || { echo "repo gate failed: fix the README/tree or pass --skip-readme-check" >&2; exit 1; }
+    else
+        echo "readme-gate.sh not found above $_repo; gate skipped" >&2
+    fi
+fi
+
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 cd "$SCRIPT_DIR"
 
