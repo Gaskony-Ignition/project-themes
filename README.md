@@ -132,7 +132,8 @@ itself.
 `build_installer.py` nor `package.sh` touches it. `package.sh` refuses to run
 if `out/`, `out/themes.json` or
 `installer-project/Theme_Installer/project.json` is missing, rather than
-silently packaging a stale or empty `dist/`.
+silently packaging a stale or empty `dist/`. It also runs the repo's
+README/tree gate first; bypass deliberately with `--skip-readme-check`.
 
 ## Boundaries
 
