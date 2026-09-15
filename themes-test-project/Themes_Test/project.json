@@ -1,0 +1,6 @@
+{
+  "title": "Themes Test",
+  "description": "THROWAWAY experiment. Parent-free, zero style classes, zero stylesheet resource -- proves a bare Perspective project restyles via a gateway theme (session.props.theme) alone. See ignition-themes/README.md.",
+  "enabled": true,
+  "inheritable": false
+}

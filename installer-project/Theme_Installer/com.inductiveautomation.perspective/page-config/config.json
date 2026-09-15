@@ -1,0 +1,12 @@
+{
+  "pages": {
+    "/": {
+      "title": "Theme Installer",
+      "viewPath": "Installer"
+    },
+    "/editor": {
+      "title": "Customise",
+      "viewPath": "Editor"
+    }
+  }
+}
