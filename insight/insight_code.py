@@ -304,9 +304,9 @@ def summary(theme_id, against=None):
     theme = THEMES.get(theme_id, {"files": {}})
     globals_css = theme["files"].get("globals.css", "")
     counts["base"] = against or base_of(theme_id)
-    # The tiles used to be captioned "of Ignition's variables repainted"
-    # unconditionally. That is only true against the stock base; comparing two
-    # custom themes, it says Ignition where it means the other theme.
+    # A caption of "of Ignition's variables repainted" is only true against
+    # the stock base; comparing two custom themes it must name the other
+    # theme instead of Ignition.
     other = label_of(against)
     if other:
         counts["cap_overridden"] = "differ from %s" % other

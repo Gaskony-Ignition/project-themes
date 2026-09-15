@@ -53,7 +53,7 @@ INSIGHT_SRC = os.path.join(HERE, "insight", "insight_code.py")
 
 # The theme-file editor -- same rules as insight/ above: hand-authored,
 # commit-tracked, appended verbatim. It is the reason this project can edit a
-# gateway's themes without a Designer module (Nigel, 07/09/2026).
+# gateway's themes without a Designer module.
 EDITOR_SRC = os.path.join(HERE, "editor", "editor_code.py")
 
 THEME_FILES = ["config.json", "index.css", "variables.css", "globals.css", "resource.json"]
@@ -608,12 +608,11 @@ def py_repr(text):
     return repr(text)
 
 
-# One padding for every page root. Nigel, 07/09/2026: the tab strip did not
-# line up when you changed pages -- the Installer's root was padded 24px and
-# Customise's 14/18/16, so the strip that is meant to be the SAME piece of
-# furniture on both started 10px lower and 6px further right on one of them.
-# A shared strip needs a shared origin; two literals in two builders is how
-# they drift.
+# One padding for every page root: the tab strip must not shift when the
+# page changes. A per-page padding (the Installer's root at 24px,
+# Customise's at 14/18/16) puts the strip that is meant to be the SAME piece
+# of furniture on both at a different offset on each page. A shared strip
+# needs a shared origin; two literals in two builders is how they drift.
 PAGE_PADDING = "14px 18px 16px"
 
 
@@ -836,19 +835,18 @@ def _nav(active, version, refresh=None):
     tabs drawn to look like one: the active tab carries the accent underline
     and does not offer to navigate to the page you are already on.
 
-    It also carries the project's name and version (Nigel, 07/09/2026). Both
-    pages opened with a 24px heading that repeated the tab you had just
-    clicked and stamped the same version twice; the strip already spans the
-    page and had room, so the identity moved into it and the pages got the
-    height back."""
-    # Two pages (Nigel, 07/09/2026). "The themes" was folded into the
-    # Installer -- seeing what you are about to install, on the page that
-    # installs it, is better than a gallery you have to navigate to. "How it
-    # works" went for being redundant once that happened, and "For builders"
-    # moved into the Editor, where the token and class list is something you
-    # read WHILE editing rather than a page of its own.
-    # The route stays /editor; the LABEL changed when the page stopped
-    # being a file editor (Nigel, 07/09/2026).
+    It also carries the project's name and version: putting the identity in
+    the strip, which already spans the page and has room, avoids a separate
+    24px heading on every page that would repeat the tab you had just
+    clicked and stamp the same version twice."""
+    # Two pages. "The themes" is folded into the Installer -- seeing what
+    # you are about to install, on the page that installs it, is better than
+    # a gallery you have to navigate to. "How it works" is redundant once
+    # that happens, and "For builders" belongs in the Editor, where the
+    # token and class list is something you read WHILE editing rather than
+    # a page of its own.
+    # The route stays /editor even though the LABEL is not "file editor" --
+    # the page is no longer only that.
     pages = [("Installer", "/"), ("Customise", "/editor")]
     # The name leads, the way an app bar does. Bottom-aligned with the tabs and
     # padded to match them, or it floats off the baseline they sit on.
@@ -1005,10 +1003,10 @@ CHANGES_LAYERS = (
     "\t\treturn []\n"
     "\treturn themepack.layers(value)"
 )
-# EVERY theme present on this gateway, not just the ten this project installs.
-# Nigel wanted to examine a stock theme that had been given the optional
-# additions -- a question the page could not be asked, because the left-hand
-# list offered custom themes only.
+# EVERY theme present on this gateway, not just the ten this project installs
+# -- examining a stock theme that has been given the optional additions is a
+# question the page could not be asked if the left-hand list offered custom
+# themes only.
 INSTALLED_OPTIONS = (
     "\timport themepack\n"
     "\tstock, custom = [], []\n"
@@ -1022,11 +1020,11 @@ INSTALLED_OPTIONS = (
     "\t\t\tcustom.append({'value': r['id'], 'label': r['label']})\n"
     "\treturn stock + custom"
 )
-# Ignition's own themes come FIRST and say so. They were last, unlabelled, at
-# the bottom of a flat 17-item list -- so the comparison a reader most wants
-# ("what did you change from stock?") was the one they had to scroll past ten
-# custom themes to find, with nothing telling them which six were Ignition's.
-# Nigel went looking for them and concluded they were not offered at all.
+# Ignition's own themes come FIRST and say so. Leaving them last and
+# unlabelled at the bottom of a flat 17-item list makes the comparison a
+# reader most wants ("what did you change from stock?") the one they have
+# to scroll past ten custom themes to find, with nothing telling them which
+# six are Ignition's -- easy to conclude they are not offered at all.
 AGAINST_OPTIONS = (
     "\timport themepack\n"
     "\topts = [{'value': '', 'label': 'its own base theme'}]\n"
@@ -1157,7 +1155,7 @@ def theme_palette(theme):
 def preview_svg(pal):
     """The mini screen again, as ONE SVG string, for the status table.
 
-    Nigel, 07/09/2026: put the theme images in the table. The gallery draws the
+    Puts the theme images in the table. The gallery draws the
     same screen out of Perspective components, which cannot go in a table cell
     -- a view-render column takes ONE viewPath for every row, and a per-row
     preview would have to be parameterised, which this repo already records as
@@ -1405,7 +1403,7 @@ def _action_scripts():
         "\tself.view.custom.tick += 1"
     )
     # Size is passed HERE, at the call, not as the popup view's own
-    # props.defaultSize (Nigel's spec -- see selector-popup/README.md).
+    # props.defaultSize -- see selector-popup/README.md.
     #
     # NOTE ON THE FORM: the originally specified
     # height='min(460px, 88vh)', width='min(560px, 94vw)' kwargs do not exist
@@ -1532,12 +1530,11 @@ def _act_button(name, text, script, kind="normal"):
 def _action_grid(themes):
     """The top of the Installer: three cards of related buttons.
 
-    Nigel, 07/09/2026: the two paragraphs sprawling across the page followed by
-    a flat row of five buttons was not organised. The prose was accurate and
-    told you nothing about which button it applied to -- the stock-theme caveat
-    sat above 'Install custom themes', which it has nothing to do with. Grouped
-    into three cards, each explanation is next to the buttons it describes and
-    each card is short enough to read.
+    Grouped into three cards rather than two paragraphs of prose followed by
+    a flat row of five buttons, so each explanation sits next to the
+    buttons it describes -- a caveat about stock themes above 'Install
+    custom themes' would tell you nothing about which button it applies
+    to -- and each card stays short enough to read.
     """
     scripts = _action_scripts()
     return {
@@ -1567,7 +1564,7 @@ def _action_grid(themes):
                                   scripts["install"], kind="primary"),
                       _act_button("remove_all_btn", "Remove",
                                   scripts["remove"])],
-                     # Nigel, 07/09/2026: say PRE-PACKAGED, because a theme
+                     # Says PRE-PACKAGED, because a theme
                      # made in the Editor is not one of them and must not read
                      # as something Remove would take away. install()/
                      # uninstall() already refuse any id outside THEMES, so
@@ -1608,12 +1605,12 @@ def _action_grid(themes):
 def _gallery_block(themes):
     """The previews as a wall of cards. NOT CURRENTLY USED.
 
-    It moved here from its own page on 07/09/2026, and moved again the same
-    day: Nigel asked for the theme images to go INTO the status table, and once
-    every row carries its own thumbnail a second copy of the same sixteen
-    pictures underneath is duplication rather than emphasis. Kept because the
-    cards are considerably more readable than a 148px thumbnail and this is the
-    only thing that draws them; delete it if it is still unused in a month.
+    Moved off its own page once the theme images went INTO the status
+    table: with every row carrying its own thumbnail, a second copy of the
+    same sixteen pictures underneath is duplication rather than emphasis.
+    Kept because the cards are considerably more readable than a 148px
+    thumbnail and this is the only thing that draws them; delete it if it
+    is still unused.
     """
     order, labels, palettes = _stock_palettes()
     stock = [preview_node("stock%d" % i, palettes[theme_id],
@@ -1671,11 +1668,10 @@ def _bound_cap(name, expression, size="12px"):
 # ---------------------------------------------------------------------------
 # THE EDITOR
 #
-# Rebuilt 07/09/2026. Nigel: "I wanted you to build a page that really operated
-# in the same or similar way to the designer theme builder, the current page is
-# not useful." The first version was a token TABLE with an edit strip -- fine
-# for changing one colour, useless for the thing a theme editor is for, which
-# is opening a file and working in it.
+# Built to operate the same or similar way to the Designer theme builder,
+# rather than as a token TABLE with an edit strip -- fine for changing one
+# colour, useless for the thing a theme editor is for, which is opening a
+# file and working in it.
 #
 # So this is the shape Ectobox's Designer module has, in a browser: the files
 # down the left, the file you picked filling the middle, and a toolbar that
@@ -2044,17 +2040,17 @@ EDITOR_KIND_LABEL = (
     "\t\t'user': '%s is yours, built on %s. Nothing on the Installer "
     "page overwrites it.',\n"
     "\t}\n"
-    "\t# The NAME leads. The badge used to describe the theme without\n"
-    "\t# ever saying which one, so after a create -- when the picker\n"
-    "\t# was the only thing naming it -- the page named it nowhere.\n"
+    "\t# The NAME leads: the badge always says which theme it describes,\n"
+    "\t# so after a create -- when the picker is the only other thing\n"
+    "\t# naming it -- the page still names it somewhere.\n"
     "\ttext = words.get(kind, kind)\n"
     "\tif '%s' in text:\n"
     "\t\ttext = text % (theme, base or 'a stock theme')\n"
     "\treturn text"
 )
 # The banner's button and the bar's button are the same door, deliberately:
-# "Copy this one" and "New theme" looked like alternatives and were not
-# comparable (Nigel, 07/09/2026).
+# "Copy this one" and "New theme" look like alternatives but are not
+# comparable.
 EDITOR_START_NEW = (
     "\t# One door. It opens pre-set to the theme you are looking at,\n"
     "\t# which is the answer nine times out of ten.\n"
@@ -2152,10 +2148,6 @@ def _button(name, text, script, primary=False):
 # ---------------------------------------------------------------------------
 # THE EDITOR
 #
-# Rewritten a third time, 07/09/2026. Nigel on v1.11.0: "poorly organised and I
-# have no idea how to use it... please take notice of both the example module
-# and our finished installer page for quality."
-#
 # What the Installer page got right, applied here:
 #   - every group of controls has a heading and ONE line saying what it does,
 #   - a button sits with the thing it acts on rather than in a shared toolbar,
@@ -2166,8 +2158,8 @@ def _button(name, text, script, primary=False):
 #   THEME level   pick one, make one, copy one, delete one you made
 #   FILE level    open one, save it, put it back
 #   REFERENCE     what this theme publishes for a project to build on
-# In v1.11.0 Save sat next to "Revert to shipped" and a theme dropdown, three
-# scopes in one strip, which is most of why it read as unusable.
+# Putting Save next to "Revert to shipped" and a theme dropdown mixes three
+# scopes in one strip, which reads as unusable -- hence the separate places.
 # ---------------------------------------------------------------------------
 
 def _pane(name, title, hint, children, basis, body_pad="0px", hug=False):
@@ -2378,8 +2370,8 @@ def _make_panel():
 def _editor_pane():
     """The file you have open, with the buttons that act on THAT FILE.
 
-    Save used to live in a toolbar beside a theme dropdown and a delete. Here
-    it is inside the pane whose contents it writes, which is the same rule the
+    Save lives inside the pane whose contents it writes, rather than a
+    toolbar beside a theme dropdown and a delete -- the same rule the
     Installer's cards follow.
     """
     actions = {
@@ -2543,11 +2535,11 @@ def _colour_pane():
         # column takes the slack.
         _col("group", "Affects", 150, True),
         _col("name", "Token", 210, True),
-        # The slack column, and the one that answers "what IS this". A
-        # read-only pane next door listed the same --st-* names with their
-        # resolved values, which was the token list again (Nigel, 07/09/2026);
-        # its sentence is the part that was not a duplicate, so it moved in
-        # here, where it is beside the value you are about to change.
+        # The slack column, and the one that answers "what IS this". Kept
+        # here rather than in a separate read-only pane, which would only
+        # repeat the same --st-* names with their resolved values -- the
+        # sentence is the part that is not a duplicate of the token list,
+        # and it belongs beside the value you are about to change.
         _col("what", "What it does"),
         _col("swatch", "Colour", 58, True),
         _col("value", "Value", 130, True),
@@ -2681,9 +2673,8 @@ def _colour_pane():
         "that makes the gateway use it.",
         [find, table, _only_when(editblock, IS_EDITABLE, layout=True)], "0px")
     # The grower again, now that there are five columns and the widest is a
-    # sentence. The empty space Nigel saw was one column taking a whole row's
-    # slack with nothing to put in it; the fix is something worth reading in
-    # that space, not a narrower table.
+    # sentence: a column taking a whole row's slack needs something worth
+    # reading in that space, not a narrower table.
     pane["position"] = {"grow": 1, "shrink": 1, "basis": "0px"}
     pane["props"]["style"]["minWidth"] = "560px"
     return pane
@@ -2757,10 +2748,11 @@ def build_editor_view_json(themes, version):
             "custom.text": {"binding": _prop("view.custom.key", EDITOR_TEXT)},
             "custom.about": {"binding": _prop("view.custom.key",
                                               EDITOR_ABOUT)},
-            # Live, as you type: the chip shows the colour only when the value
-            # IS one, and the line beside it says so when it is not. The chip
-            # used to keep painting the last valid colour, so the one visual
-            # confirmation on the page said "fine" for a value that was not.
+            # Live, as you type: the chip shows the colour only when the
+            # value IS one, and the line beside it says so when it is not --
+            # otherwise the one visual confirmation on the page would keep
+            # painting the last valid colour and say "fine" for a value that
+            # is not.
             "custom.startwarn": {"binding": _prop("view.custom.new_base",
                                                   EDITOR_START_WARNING)},
             "custom.sel_ok": {"binding": _prop("view.custom.sel_value",
@@ -2888,7 +2880,7 @@ def _about_pane():
     """
     # Lines in a label, not rows in a table. Four short facts in a table cost
     # a 30px header band and 30px a row -- 212px for 70px of text, and a
-    # scrollbar on the rail at laptop height (Nigel, 07/09/2026).
+    # scrollbar on the rail at laptop height.
     body = {"type": "ia.display.label", "meta": {"name": "about"},
             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
             "props": {"style": {"fontSize": "12px", "lineHeight": "1.5",
@@ -3012,11 +3004,11 @@ def main():
     write_json(os.path.join(script_dir, "resource.json"), resource_json(["code.py"]))
 
     # session-props -- hide the app bar (standing rule for every project) and
-    # run on Ignition's STOCK dark theme (Nigel, 31/08/2026).
+    # run on Ignition's STOCK dark theme.
     #
-    # This used to set no theme at all, so the project inherited whatever the
-    # gateway session had. That reasoning does not survive the preview pages:
-    # they paint every theme in literal colours, so the surface behind them has
+    # Setting no theme at all would let the project inherit whatever the
+    # gateway session had, which does not survive the preview pages: they
+    # paint every theme in literal colours, so the surface behind them has
     # to be a known, stable backdrop or the same gallery reads differently on
     # every gateway. "dark" is also the one theme guaranteed to exist -- it
     # lives inside the Perspective module, so it is present before this project

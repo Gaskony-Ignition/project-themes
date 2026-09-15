@@ -57,17 +57,17 @@ PACKS_DIR = os.path.join(REPO, "packs")
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(OUT_DIR, "out")
 
-# The 9 curated themes. "id"/"label" are Nigel's exact names (24/08/2026
-# review); "pack" is the SOURCE PACK file this theme derives from -- kept
-# explicit (not assumed == id) so the derivation stays traceable even where
-# id and pack diverge (glass-green <- aurora-teal, everything else <-
-# a pack of a related-but-different name; only finance-ledger has id == pack).
+# The 9 curated themes. "id"/"label" are the exact display names; "pack" is
+# the SOURCE PACK file this theme derives from -- kept explicit (not assumed
+# == id) so the derivation stays traceable even where id and pack diverge
+# (glass-green <- aurora-teal, everything else <- a pack of a
+# related-but-different name; only finance-ledger has id == pack).
 # family: grouping for pickers (a family is not necessarily a light/dark pair --
 # the glass pair are two hues, both dark). pair: the id of this theme's
 # light<->dark counterpart, or None. Emitted into out/themes.json so consumers
-# lay out counterparts side by side without deriving pairs from id strings
-# (requested by the Work-Dockers consumer, 25/08/2026 -- string-stripping
-# cannot know finance-ledger's counterpart or that the glass pair isn't one).
+# lay out counterparts side by side without deriving pairs from id strings --
+# string-stripping cannot know finance-ledger's counterpart or that the glass
+# pair isn't one.
 THEMES = [
     {"id": "glass-violet", "label": "Glass Violet", "pack": "aurora-violet",
      "family": "glass", "pair": None},
@@ -474,10 +474,8 @@ def check_qual_scale(theme_name, qual, page_hex):
 #      pack with no signature background image still gets its solid page
 #      colour rather than Perspective's own default.
 #
-#   2. The occlusion-fix rule. FOUND LIVE against test-aurora-violet and
-#      test-leather-night-tan on the module-testing gateway, 24/08/2026 (see
-#      that finding's own writeup for the full DOM walk -- superseded here
-#      by the generic version, git history keeps the original comment):
+#   2. The occlusion-fix rule, found live against test-aurora-violet and
+#      test-leather-night-tan on the module-testing gateway:
 #      Perspective's own top-level view root -- the element carrying both
 #      `.view` and `.ia_container--root` -- paints itself OPAQUE using the
 #      theme's own --containerRoot, one level inside #app-container. That is
@@ -497,7 +495,7 @@ OCCLUSION_FIX_COMMENT = """/* Perspective's own top-level view root paints itsel
  * a bug in any project's view JSON), one level inside #app-container. That
  * hides the background set above on every ordinary page unless punched
  * through. Found live against test-aurora-violet and test-leather-night-tan
- * on the module-testing gateway, 24/08/2026; the selector is a structural
+ * on the module-testing gateway; the selector is a structural
  * Perspective shell pattern (present on every view, not specific to any one
  * pack or project's component tree), so the same fix generalises unchanged
  * to all 9 themes. Scoped to `.view-parent > .view.ia_container--root` so
@@ -561,7 +559,7 @@ def build_globals(pack, page_solid, globals_tweak, sb_thumb, sb_hover, accent_he
     lines.append("}")
     lines.append("::-webkit-scrollbar-thumb:hover { background: %s; background-clip: content-box; }" % sb_hover)
 
-    # ---- compensating rules for hard-coded IA colours (25/08/2026 audit) --
+    # ---- compensating rules for hard-coded IA colours --------------------
     # A handful of rules in IA's own flattened dark.css/light.css apply a
     # colour LITERAL directly to a selector rather than through a --var, so
     # no theme -- IA's or ours -- can reach them by overriding variables.css
@@ -658,10 +656,9 @@ def build_theme(theme):
     # scales, so both see the corrected values.
     apply_tweaks(theme_id, computed, theme_id)
     # list, not set: a set of strings iterates in PYTHONHASHSEED order, which
-    # made this block's emission order differ between processes -- same lines,
-    # different order, 26-line diffs from unchanged input (found by the
-    # Work-Dockers consumer, 25/08/2026). The dict's declared order is the
-    # deterministic one.
+    # makes this block's emission order differ between processes -- same
+    # lines, different order, large diffs from unchanged input. The dict's
+    # declared order is the deterministic one.
     tweaked_vars = list(TWEAKS.get(theme_id, {}).get("vars", {}))
     for var in tweaked_vars:
         # Replace pass-1's resolution record so variables.css's comment

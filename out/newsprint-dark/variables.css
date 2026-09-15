@@ -49,9 +49,9 @@
   --checkbox--unchecked:                #3a3630; /* reuses --border (ref:--border) */
   --checkbox--indeterminate:            #b1554a; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(58,54,48,0.5); /* reuses --border--disabled (ref:--border--disabled) */
-  --radio--selected:                    #b1554a; /* reuses --callToAction (name CONFIRMED 25/08/2026 against the live flattened dark.css/light.css -- corrects the earlier --radio--checked guess) (ref:--callToAction) */
-  --radio--unselected:                  #3a3630; /* reuses --border (name CONFIRMED 25/08/2026 -- corrects the earlier --radio--unchecked guess) (ref:--border) */
-  --radio--disabled:                    rgba(58,54,48,0.5); /* reuses --border--disabled (name CONFIRMED 25/08/2026 against the live CSS) (ref:--border--disabled) */
+  --radio--selected:                    #b1554a; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
+  --radio--unselected:                  #3a3630; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--disabled:                    rgba(58,54,48,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #b1554a; /* reuses --callToAction (ref:--callToAction) */
   --toggleSwitch--unselected:           #3a3630; /* reuses --border (ref:--border) */
   --progressLinearBar--determinate:     #b1554a; /* reuses --callToAction (ref:--callToAction) */

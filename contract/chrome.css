@@ -30,7 +30,7 @@
    table surfaces coincide nobody notices; in cmms-workorder and wms-scanner
    (a dark header band on a light table) every header cell came out table-
    white under white --st-head-fg text - a header with sort arrows and no
-   words. Found by Access Manager's Activity page, 19/08/2026. */
+   words (see Access Manager's Activity page). */
 [class*="/tables/frame"] .ia_table__head__header__cell .content {
   color: var(--st-head-fg) !important;
   font-size: 10px !important;

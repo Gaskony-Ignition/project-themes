@@ -81,24 +81,21 @@ DSL/transform vocabulary for this pass:
                    used for the --neutral-40/50/60/70/80 midtones, which no
                    pack token supplies.
 
-GROUND TRUTH, 25/08/2026: the live gateway's flattened dark.css/light.css
-were audited (curl http://<gw>/data/perspective/themes/{dark,light}.css,
-every `--name: value;` enumerated) and define exactly 120 unique custom
-properties each -- NOT the ~136 an earlier exploration pass estimated; that
-figure is superseded. MAPPING + EXTENDED_MAPPING + the chart-scale generator
-together now cover all 120 except the 11 documented below as deliberately
-out of scope. That same audit CONFIRMED `--checkbox--*`, `--radio--selected/
---unselected/--disabled` (not `--checked`/`--unchecked`/`--indeterminate` --
-an earlier guess invented a --radio--indeterminate that does not exist),
+GROUND TRUTH: the live gateway's flattened dark.css/light.css define exactly
+120 unique custom properties each (audited via
+curl http://<gw>/data/perspective/themes/{dark,light}.css, every
+`--name: value;` enumerated). MAPPING + EXTENDED_MAPPING + the chart-scale
+generator together cover all 120 except the 11 documented below as
+deliberately out of scope. The real CSS confirms `--checkbox--*`,
+`--radio--selected/--unselected/--disabled` (not `--checked`/`--unchecked`/
+`--indeterminate` -- there is no `--radio--indeterminate`),
 `--toggleSwitch--selected/--unselected` (not `--on`/`--off`, and there is no
-`--toggleSwitch--disabled`), `--progressLinearBar--*` and
-`--progressLinearTrack--*` all against the real CSS -- every "inferred by
-symmetry, TO BE CONFIRMED" naming caveat this file used to carry for those
-families is now resolved. `--tooltip-background-color` and `--arrow-color`
-were ALSO confirmed real and, interestingly, IA's own theme CSS never
-defines either of them anywhere (they're referenced via `var()` in
-`.ia_form__tooltip-*` rules with no `:root` value at all) -- our themes are
-the only thing giving those two a colour.
+`--toggleSwitch--disabled`), and `--progressLinearBar--*` /
+`--progressLinearTrack--*`. `--tooltip-background-color` and `--arrow-color`
+are also real, and IA's own theme CSS never defines either of them anywhere
+(they're referenced via `var()` in `.ia_form__tooltip-*` rules with no
+`:root` value at all) -- our themes are the only thing giving those two a
+colour.
 
 TWEAKS (below EXTENDED_MAPPING) is a per-theme-id table of LITERAL
 overrides applied to `computed` after MAPPING resolves but BEFORE
@@ -324,10 +321,10 @@ MAPPING = [
         # and an error rendered as a warning is worse than one that is merely
         # dim.
         #
-        # Measured 28/08/2026: this leaves five themes on their existing value
-        # and lifts five that were under 3:1 -- finance-ledger 1.00 -> 7.45,
-        # industrial-light 1.00 -> 4.83, industrial-dark 1.03 -> 5.56,
-        # nord-dark 1.93 -> 3.72, newsprint-dark 2.82 -> 3.29.
+        # The min:3.0 gate is why order matters here: a theme whose
+        # accent.danger already clears 3:1 keeps it, while one that doesn't
+        # falls through to border.danger or accent.alarm-high instead of
+        # emitting an illegible colour.
         "var": "--error",
         "sources": ["token:accent.danger", "token:border.danger",
                     "token:accent.alarm-high"],
@@ -426,8 +423,7 @@ MAPPING = [
 
 EXTENDED_MAPPING = [
     # ---- neutral midtones (--neutral-40/50/60/70/80) --------------------
-    # Added 25/08/2026 after auditing the live flattened dark.css/light.css:
-    # these 5 steps are NOT mere indirection behind vars we already cover --
+    # These 5 steps are NOT mere indirection behind vars we already cover --
     # ~98 component rules across the two files reference them DIRECTLY
     # (icon fills/strokes, secondary text, hairline borders, SVG symbol
     # strokes, …), so leaving them unthemed left a large swath of secondary
@@ -476,17 +472,16 @@ EXTENDED_MAPPING = [
      "transform": "literal", "behind": None, "note": "reuses --border--disabled"},
 
     {"var": "--radio--selected", "sources": ["ref:--callToAction"],
-     "transform": "literal", "behind": None, "note": "reuses --callToAction (name CONFIRMED 25/08/2026 against the live flattened dark.css/light.css -- corrects the earlier --radio--checked guess)"},
+     "transform": "literal", "behind": None, "note": "reuses --callToAction (the real var is --radio--selected, not --radio--checked)"},
     {"var": "--radio--unselected", "sources": ["ref:--border"],
-     "transform": "literal", "behind": None, "note": "reuses --border (name CONFIRMED 25/08/2026 -- corrects the earlier --radio--unchecked guess)"},
+     "transform": "literal", "behind": None, "note": "reuses --border (the real var is --radio--unselected, not --radio--unchecked)"},
     {"var": "--radio--disabled", "sources": ["ref:--border--disabled"],
-     "transform": "literal", "behind": None, "note": "reuses --border--disabled (name CONFIRMED 25/08/2026 against the live CSS)"},
-    # NOTE: there is no --radio--indeterminate in IA's real var set (confirmed
-    # by the live-CSS audit) -- the earlier guess invented one that doesn't
-    # exist. Dropped, not renamed.
+     "transform": "literal", "behind": None, "note": "reuses --border--disabled"},
+    # NOTE: there is no --radio--indeterminate in IA's real var set. Dropped,
+    # not renamed.
 
-    # ---- toggle switch (names CONFIRMED 25/08/2026 against the live
-    # flattened CSS -- corrects the earlier --toggleSwitch--on/off guess) ---
+    # ---- toggle switch (the real vars are --toggleSwitch--selected/
+    # --unselected, not --toggleSwitch--on/off) ----------------------------
     {"var": "--toggleSwitch--selected", "sources": ["ref:--callToAction"],
      "transform": "literal", "behind": None, "note": "reuses --callToAction"},
     {"var": "--toggleSwitch--unselected", "sources": ["ref:--border"],
@@ -551,11 +546,9 @@ EXTENDED_MAPPING = [
     {"var": "--arrow-color", "sources": ["ref:--icon"],
      "transform": "literal", "behind": None, "note": "reuses --icon"},
 
-    # ---- added 25/08/2026, from the coverage audit against the live
-    # flattened dark.css/light.css (Part 1 of Nigel's release-readiness
-    # check) -- these are all vars the audit found we did NOT cover, that
-    # the audit's usage-context check (grep for `var(--x)` in the actual
-    # component rules) confirmed drive something visible. ---------------
+    # ---- vars found uncovered against the live flattened dark.css/light.css
+    # -- each one confirmed to drive something visible (grep for `var(--x)`
+    # in the actual component rules). ------------------------------------
     {"var": "--indicator", "sources": ["ref:--success"],
      "transform": "literal", "behind": None,
      "note": "reuses --success -- drives the LED component's \"on\" diode fill AND the quality-overlay \"pending\" state (IA's own dark.css uses a bright green for both, same semantic fit)"},
@@ -602,8 +595,8 @@ EXTENDED_MAPPING = [
 # colour makes every one of those 85 declarations invalid at once and the
 # borders simply vanish -- inputs, dropdowns, buttons, alarm tables, accordions,
 # dashboard tiles. On a light theme a text field is then white on a white card
-# with nothing to say where it is. All six stock IA themes hold the shorthand;
-# every one of these ten held a bare colour until 28/08/2026.
+# with nothing to say where it is. All six stock IA themes hold the shorthand,
+# and this emit-time step is what makes these ten do the same.
 #
 # Counted against a SERVED theme (8.3.8, /data/perspective/themes/dark.css, 83 KB
 # -- the Perspective module bundle itself has only one of the 85; the rest come
@@ -628,11 +621,10 @@ SHORTHAND_VARS = {
 
 TWEAKS = {
     "newsprint-dark": {
-        # Nigel 25/08/2026, approving the tenth theme: newsprint-night's
-        # accent.primary is the literal same value as text.body (#e8e2d6),
-        # so the pack is deliberately monochrome -- handsome, but
-        # --callToAction gives ZERO separation between an action and the
-        # surface it sits on (found by the Work-Dockers consumer session).
+        # newsprint-night's accent.primary is the literal same value as
+        # text.body (#e8e2d6), so the pack is deliberately monochrome --
+        # handsome, but --callToAction gives ZERO separation between an
+        # action and the surface it sits on.
         # Fix is an OXBLOOD accent, chosen over navy so it suits the
         # ink-and-paper character while staying clearly apart from BOTH the
         # pack's own masthead-red danger (#c23b3b, kept danger-only) and
@@ -652,9 +644,8 @@ TWEAKS = {
         },
     },
     "glass-green": {
-        # Nigel 24/08/2026, reviewing the first 9-theme batch: aurora-teal
-        # (the source pack for glass-green) still LOOKED like aurora-violet
-        # with a teal accent swapped in. Root cause: aurora-teal's
+        # aurora-teal (the source pack for glass-green) still LOOKS like
+        # aurora-violet with a teal accent swapped in. Root cause: aurora-teal's
         # surface.page/surface.card/surface.sidebar/... tokens were never
         # diverged from aurora-violet when the teal pack was cloned -- both
         # packs' tokens["surface.page"] are the literal string "#1a1233"
@@ -674,10 +665,9 @@ TWEAKS = {
         # declares for its cards/inputs/sidebar/borders (rgba(255,255,255,
         # 0.06/0.08/0.10/0.14/0.22)) -- the glass EFFECT is untouched, only
         # what it now sits on. Accent moved from the pack's own muted teal
-        # (#0f766e) to a brighter mint per Nigel's spec. Every value below
-        # was computed with the exact same parse_colour()/flatten() this
-        # generator uses (verified by hand, see the task's own worked
-        # calculation) -- nothing here is eyeballed.
+        # (#0f766e) to a brighter mint. Every value below was computed with
+        # the exact same parse_colour()/flatten() this generator uses --
+        # nothing here is eyeballed.
         "vars": {
             "--containerRoot": "#0d1412",
             "--neutral-10": "#0d1412",
@@ -705,7 +695,7 @@ TWEAKS = {
             "--success": "#4ade80",
         },
         "globals": {
-            # Reuses the hues Nigel named (#065f46, #0e7490 -- the one cool
+            # Reuses the chosen hues (#065f46, #0e7490 -- the one cool
             # blue-green allowed, #134e4a, #0f766e); same stop positions as
             # the original aurora layout, just re-picked so every stop is
             # green/teal, none violet.
