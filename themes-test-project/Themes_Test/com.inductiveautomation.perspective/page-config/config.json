@@ -1,0 +1,8 @@
+{
+  "pages": {
+    "/": {
+      "title": "Themes Test",
+      "viewPath": "Main"
+    }
+  }
+}
