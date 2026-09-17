@@ -52,6 +52,11 @@ Chrome's auto dark mode does not repaint chart SVGs white. Each also publishes
 a 69-class `st/...` style-class contract a project can build on without a
 parent project — see [docs/INTERNALS.md](docs/INTERNALS.md#the-style-class-contract).
 
+Every theme meets WCAG 2.1 AA colour contrast for text and control edges,
+draws a 2px keyboard focus ring, and honours the operating system's reduced
+motion setting. The build fails if a theme drops below the thresholds — see
+[docs/INTERNALS.md](docs/INTERNALS.md#accessibility).
+
 `out/themes.json` carries the same theme list as data (`id`, `label`, `dark`,
 `source_pack`) for anything that wants to build a picker from it.
 
@@ -125,8 +130,10 @@ so a rename can never leave a stale directory under an old theme id sitting
 beside the new one. It prints a `WARNING` line for any mapping entry that
 needed a fallback or produced a low-contrast chart colour, a `TWEAK` line per
 theme listing overridden variables, and a `SWATCH` line per theme with its ten
-`--qual-*` hex values. It exits non-zero only on a hard error in the mapping
-itself.
+`--qual-*` hex values, and an `A11Y` line for every colour it moved to reach
+a contrast threshold. It exits non-zero only on a hard error in the mapping
+itself. `tools/check_contrast.py` checks the generated themes against WCAG 2.1
+AA; `package.sh` runs it and refuses to package on a failure.
 
 `VERSION` is a plain one-line file, bumped by hand before packaging; neither
 `build_installer.py` nor `package.sh` touches it. `package.sh` refuses to run

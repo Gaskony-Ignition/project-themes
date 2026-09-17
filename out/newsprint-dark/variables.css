@@ -22,7 +22,7 @@
   --icon:                               #e8e2d6; /* reuses body text colour -- neither pack declares a distinct icon ink (token:text.body) */
   --icon--selected:                     #e8e2d6; /* same as --icon--hover (literal reuse; no distinct selected-icon token) (ref:--icon--hover) */
   --icon--disabled:                     rgba(168,161,150,0.6); /* muted text colour at reduced alpha (ref:--label--disabled) */
-  --error:                              #c94d4d; /* danger accent -- first candidate legible as ink on a card (token:accent.alarm-high) */
+  --error:                              #d47272; /* danger accent -- first candidate legible as ink on a card -- lightened #c94d4d -> #d47272 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-high) */
   --warning:                            #c9a53f; /* medium-priority alarm colour (token:accent.alarm-med) */
   --success:                            #5f9e6f; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #6f9dbd; /* low-priority alarm colour (token:accent.alarm-low) */
@@ -34,7 +34,7 @@
   --boxShadow4:                         none; /* same as --boxShadow1 (literal reuse) (literal:none) */
   --boxShadow5:                         none; /* same as --boxShadow1 (literal reuse) (literal:none) */
   --callToAction:                       #b1554a; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[newsprint-dark]) */
-  --callToAction--hover:                #c26a5e; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[newsprint-dark]) */
+  --callToAction--hover:                #bb594c; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning -- darkened #c26a5e -> #bb594c for 4.5:1 on every surface (button text) (tweak:mapping.TWEAKS[newsprint-dark]) */
   --callToAction--active:               #96453c; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[newsprint-dark]) */
   --callToAction--disabled:             rgba(177,85,74,0.35); /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[newsprint-dark]) */
   --callToActionHighlight:              #3a2a25; /* overridden by mapping.TWEAKS -- see mapping.py for the reasoning (tweak:mapping.TWEAKS[newsprint-dark]) */
@@ -46,14 +46,14 @@
   --neutral-70:                         #bcb7ad; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #cac5ba; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #b1554a; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #3a3630; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #797064; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #b1554a; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(58,54,48,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #b1554a; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #3a3630; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #797064; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(58,54,48,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #b1554a; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #3a3630; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #797064; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #b1554a; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #b1554a; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #3a352e; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
@@ -62,11 +62,11 @@
   --infoSecondary:                      rgba(111,157,189,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #2a2723; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #5f9e6f; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #c94d4d; /* reuses --error (ref:--error) */
+  --symbolFill--faulted:                #d47272; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #a8a196; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #3a3630; /* reuses --containerBorder (ref:--containerBorder) */
   --symbolStroke--running:              #4c7e59; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #a13e3e; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--faulted:              #aa5b5b; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #868178; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #3a3630; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #a8a196; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */
@@ -80,7 +80,7 @@
   --contextBackground:                  #2a2723; /* reuses --containerNested -- the right-click context-menu background. IA hardcodes this to --black in BOTH its light and dark themes, which is a real contrast bug for a light pack: the context menu's own text uses --label (dark ink on a light theme), so a literal black background would be near-illegible. --containerNested keeps it in the theme's own surface family and pairs correctly with --label either way (ref:--containerNested) */
   --defaultSliderFocusColor:            rgba(177,85,74,0.5); /* --callToAction at IA's own 0.5 alpha -- the slider handle's focus glow. Reaches the ALTERNATE slider selector that actually consumes this var via var(); the PRIMARY .ia_slider__handle:focus selector hardcodes its own colour instead (see README's hard-coded-colour audit) and needs a compensating rule in globals.css, not a var override, to pick this up (ref:--callToAction) */
   --callToAction--activeAlt:            #3a2a25; /* reuses --callToActionHighlight -- IA's own activeAlt (#093952) and callToActionHighlight (#0C2938) are both dark, similarly-saturated accent washes used for different components' pressed/focused feedback (a dropdown option's focus background, a split-container handle's active-drag background); close enough in IA's own values that one derivation covers both meaningfully (ref:--callToActionHighlight) */
-  --callToAction--activeAltInvis:       #c26a5e; /* reuses --callToAction--hover -- IA's own activeAltInvis (#0A6291) sits roughly midway between callToAction and callToActionHighlight in lightness; --callToAction--hover is already a mid-tone lighter accent in this generator and is the closest existing derived value without inventing a new blend (ref:--callToAction--hover) */
+  --callToAction--activeAltInvis:       #bb594c; /* reuses --callToAction--hover -- IA's own activeAltInvis (#0A6291) sits roughly midway between callToAction and callToActionHighlight in lightness; --callToAction--hover is already a mid-tone lighter accent in this generator and is the closest existing derived value without inventing a new blend (ref:--callToAction--hover) */
   --symbolFillAnimation--default:       #cac5ba; /* reuses the newly-interpolated --neutral-80 -- a symbol flow/pulse animation overlay; IA's own value is identical to its own --neutral-80 (ref:--neutral-80) */
   --symbolFillAnimation--running:       #cac5ba; /* same as --symbolFillAnimation--default -- IA defines both with the identical value (ref:--neutral-80) */
   --qual-1:                             #db7c70; /* hue 1/10 rotated from --callToAction (generated:colorsys) */

@@ -1384,3 +1384,56 @@ button[class*="/buttons/danger"] {
   padding: 18px 18px 6px;
   text-transform: uppercase;
 }
+
+/* ---- accessibility (WCAG 2.1 AA) ----
+ * Stock inputs take their edge from --containerBorder, the same hairline as a
+ * card, which sits under 3:1 on every theme. Only the controls are raised, so
+ * cards keep their light outline. */
+:root {
+  --a11y-input-edge: #4c657d;
+  --a11y-focus-ring: #2bb3d6;
+  --a11y-button-text: #070b10;
+  --st-input-border: var(--a11y-input-edge);
+}
+.ia_inputField,
+.ia_dropdown,
+.ia_select,
+.ia_textArea {
+  border-color: var(--a11y-input-edge);
+}
+
+/* Stock primary buttons write --neutral-10 on the accent; on a mid-tone
+ * accent that is under 4.5:1, so the build picks the text colour. */
+.ia_button--primary {
+  color: var(--a11y-button-text);
+}
+
+/* IA's own :focus outline is 1px of --callToAction--hover, under 3:1 on some
+ * themes. Keyboard focus gets a 2px ring that clears 3:1 on every surface. */
+:focus-visible {
+  outline: 2px solid var(--a11y-focus-ring);
+  outline-offset: 1px;
+}
+/* A dropdown turns its search input's outline off and marks the box instead. */
+.ia_dropdown.ia_dropdown--focused,
+.ia_dropdown.ia_dropdown--active {
+  outline: 2px solid var(--a11y-focus-ring);
+  outline-offset: 1px;
+}
+/* The table grid sets outline:none on itself; inset so the scroll box does
+ * not clip the ring. */
+.ReactVirtualized__Grid:focus-visible {
+  outline: 2px solid var(--a11y-focus-ring) !important;
+  outline-offset: -2px;
+}
+
+/* Honour the OS "reduce motion" setting, project alarm pulses included.
+ * Near-zero rather than none so animationend/transitionend still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

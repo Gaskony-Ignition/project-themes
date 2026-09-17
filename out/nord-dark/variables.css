@@ -24,12 +24,12 @@
   --icon--selected:                     #55749b; /* same as --icon--hover (literal reuse; no distinct selected-icon token) (ref:--icon--hover) */
   --icon--disabled:                     rgba(216,222,233,0.6); /* muted text colour at reduced alpha (ref:--label--disabled) */
   --callToAction:                       #55749b; /* primary accent colour (token:accent.primary) */
-  --callToAction--hover:                #6483aa; /* the pack's own buttons/primary:hover colour when it declares a solid one, else its secondary accent, else --callToAction itself (variant:buttons/primary:hover:backgroundColor) */
+  --callToAction--hover:                #5879a1; /* the pack's own buttons/primary:hover colour when it declares a solid one, else its secondary accent, else --callToAction itself -- darkened #6483aa -> #5879a1 for 4.5:1 on every surface (button text) (variant:buttons/primary:hover:backgroundColor) */
   --callToAction--active:               #486384; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
   --callToAction--disabled:             rgba(85,116,155,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #46566f; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #d18d93; /* danger accent -- first candidate legible as ink on a card (token:accent.alarm-high) */
-  --warning:                            #d89a87; /* medium-priority alarm colour (token:accent.alarm-med) */
+  --error:                              #daa3a8; /* danger accent -- first candidate legible as ink on a card -- lightened #d18d93 -> #daa3a8 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-high) */
+  --warning:                            #dca493; /* medium-priority alarm colour -- lightened #d89a87 -> #dca493 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-med) */
   --success:                            #a3be8c; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #88c0d0; /* low-priority alarm colour (token:accent.alarm-low) */
   --borderRadius:                       8px; /* control radius (token:radius.control) */
@@ -46,27 +46,27 @@
   --neutral-70:                         #bdc1c9; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #caced6; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #55749b; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #4c566a; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #909bb0; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #55749b; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(76,86,106,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #55749b; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #4c566a; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #909bb0; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(76,86,106,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #55749b; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #4c566a; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #909bb0; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #55749b; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #55749b; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #424f64; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
   --progressLinearTrack--indeterminate: #424f64; /* same as the determinate track (name inferred by symmetry, see docstring) (ref:--progressLinearTrack--determinate) */
-  --warningSecondary:                   rgba(216,154,135,0.16); /* --warning as a low-opacity wash (ref:--warning) */
+  --warningSecondary:                   rgba(220,164,147,0.16); /* --warning as a low-opacity wash (ref:--warning) */
   --infoSecondary:                      rgba(136,192,208,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #3b4452; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #a3be8c; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #d18d93; /* reuses --error (ref:--error) */
+  --symbolFill--faulted:                #daa3a8; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #d8dee9; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #4c566a; /* reuses --containerBorder (ref:--containerBorder) */
   --symbolStroke--running:              #829870; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #a77176; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--faulted:              #ae8286; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #adb2ba; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #4c566a; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #d8dee9; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */
@@ -80,7 +80,7 @@
   --contextBackground:                  #3b4452; /* reuses --containerNested -- the right-click context-menu background. IA hardcodes this to --black in BOTH its light and dark themes, which is a real contrast bug for a light pack: the context menu's own text uses --label (dark ink on a light theme), so a literal black background would be near-illegible. --containerNested keeps it in the theme's own surface family and pairs correctly with --label either way (ref:--containerNested) */
   --defaultSliderFocusColor:            rgba(85,116,155,0.5); /* --callToAction at IA's own 0.5 alpha -- the slider handle's focus glow. Reaches the ALTERNATE slider selector that actually consumes this var via var(); the PRIMARY .ia_slider__handle:focus selector hardcodes its own colour instead (see README's hard-coded-colour audit) and needs a compensating rule in globals.css, not a var override, to pick this up (ref:--callToAction) */
   --callToAction--activeAlt:            #46566f; /* reuses --callToActionHighlight -- IA's own activeAlt (#093952) and callToActionHighlight (#0C2938) are both dark, similarly-saturated accent washes used for different components' pressed/focused feedback (a dropdown option's focus background, a split-container handle's active-drag background); close enough in IA's own values that one derivation covers both meaningfully (ref:--callToActionHighlight) */
-  --callToAction--activeAltInvis:       #6483aa; /* reuses --callToAction--hover -- IA's own activeAltInvis (#0A6291) sits roughly midway between callToAction and callToActionHighlight in lightness; --callToAction--hover is already a mid-tone lighter accent in this generator and is the closest existing derived value without inventing a new blend (ref:--callToAction--hover) */
+  --callToAction--activeAltInvis:       #5879a1; /* reuses --callToAction--hover -- IA's own activeAltInvis (#0A6291) sits roughly midway between callToAction and callToActionHighlight in lightness; --callToAction--hover is already a mid-tone lighter accent in this generator and is the closest existing derived value without inventing a new blend (ref:--callToAction--hover) */
   --symbolFillAnimation--default:       #caced6; /* reuses the newly-interpolated --neutral-80 -- a symbol flow/pulse animation overlay; IA's own value is identical to its own --neutral-80 (ref:--neutral-80) */
   --symbolFillAnimation--running:       #caced6; /* same as --symbolFillAnimation--default -- IA defines both with the identical value (ref:--neutral-80) */
   --qual-1:                             #70a0db; /* hue 1/10 rotated from --callToAction (generated:colorsys) */
@@ -111,8 +111,8 @@
   --div-10:                             #5e4446; /* step 10/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-11:                             #74474b; /* step 11/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-12:                             #8d484e; /* step 12/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-13:                             #a8474f; /* step 13/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-13:                             #a84750; /* step 13/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-14:                             #c04953; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-15:                             #d0535e; /* step 15/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-16:                             #dd5f6a; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-16:                             #dd5f6b; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
 }

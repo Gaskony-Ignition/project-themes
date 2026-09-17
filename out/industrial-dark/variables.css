@@ -31,7 +31,7 @@
   --error:                              #ff4d4d; /* danger accent -- first candidate legible as ink on a card (token:border.danger) */
   --warning:                            #e4d24b; /* medium-priority alarm colour (token:accent.alarm-med) */
   --success:                            #35d39a; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
-  --info:                               #354657; /* low-priority alarm colour (token:accent.alarm-low) */
+  --info:                               #6482a0; /* low-priority alarm colour -- lightened #354657 -> #6482a0 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-low) */
   --borderRadius:                       6px; /* control radius (token:radius.control) */
   --borderRadiusInput:                  6px; /* same as --borderRadius (literal reuse; neither pack declares a separate input radius) (token:radius.control) */
   --boxShadow1:                         none; /* the pack's one elevation shadow, reused across all 5 slots (literal:none) */
@@ -46,20 +46,20 @@
   --neutral-70:                         #b6bdc3; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #c6cdd3; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #2bb3d6; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #354657; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #4c657d; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #2bb3d6; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(53,70,87,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #2bb3d6; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #354657; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #4c657d; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(53,70,87,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #2bb3d6; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #354657; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #4c657d; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #2bb3d6; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #2bb3d6; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #1e2935; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
   --progressLinearTrack--indeterminate: #1e2935; /* same as the determinate track (name inferred by symmetry, see docstring) (ref:--progressLinearTrack--determinate) */
   --warningSecondary:                   rgba(228,210,75,0.16); /* --warning as a low-opacity wash (ref:--warning) */
-  --infoSecondary:                      rgba(53,70,87,0.16); /* --info as a low-opacity wash (ref:--info) */
+  --infoSecondary:                      rgba(100,130,160,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #0f161e; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #35d39a; /* reuses --success (ref:--success) */
   --symbolFill--faulted:                #ff4d4d; /* reuses --error (ref:--error) */

@@ -29,7 +29,7 @@
   --callToAction--disabled:             rgba(11,61,92,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #f0f3f2; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
   --error:                              #9e2a2a; /* danger accent -- first candidate legible as ink on a card (token:border.danger) */
-  --warning:                            #a85b00; /* medium-priority alarm colour (token:accent.alarm-med) */
+  --warning:                            #a55a00; /* medium-priority alarm colour -- darkened #a85b00 -> #a55a00 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-med) */
   --success:                            #0f7a4a; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #2a5f7a; /* low-priority alarm colour (token:accent.alarm-low) */
   --borderRadius:                       3px; /* control radius (token:radius.control) */
@@ -46,19 +46,19 @@
   --neutral-70:                         #465059; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #36424b; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #0b3d5c; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #d3dbd8; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #789087; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #0b3d5c; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(211,219,216,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #0b3d5c; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #d3dbd8; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #789087; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(211,219,216,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #0b3d5c; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #d3dbd8; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #789087; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #0b3d5c; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #0b3d5c; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #eaf0ee; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
   --progressLinearTrack--indeterminate: #eaf0ee; /* same as the determinate track (name inferred by symmetry, see docstring) (ref:--progressLinearTrack--determinate) */
-  --warningSecondary:                   rgba(168,91,0,0.16); /* --warning as a low-opacity wash (ref:--warning) */
+  --warningSecondary:                   rgba(165,90,0,0.16); /* --warning as a low-opacity wash (ref:--warning) */
   --infoSecondary:                      rgba(42,95,122,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #ffffff; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #0f7a4a; /* reuses --success (ref:--success) */

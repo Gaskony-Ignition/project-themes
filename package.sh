@@ -61,7 +61,8 @@ VERSION=$(head -n1 VERSION | tr -d '[:space:]')
 
 [ -d out ] || { echo "package.sh: out/ not found -- run build_theme.py first" >&2; exit 1; }
 [ -f out/themes.json ] || { echo "package.sh: out/themes.json not found -- run build_theme.py first" >&2; exit 1; }
-[ -f install.sh ] || { echo "package.sh: install.sh not found" >&2; exit 1; }
+python3 tools/check_contrast.py || { echo "package.sh: a theme misses WCAG 2.1 AA contrast (above)" >&2; exit 1; }
+[ -f install.sh ] ||{ echo "package.sh: install.sh not found" >&2; exit 1; }
 [ -f RELEASE-README.md ] || { echo "package.sh: RELEASE-README.md not found" >&2; exit 1; }
 [ -f LICENSE ] || { echo "package.sh: LICENSE not found" >&2; exit 1; }
 [ -f installer-project/Theme_Installer/project.json ] || { echo "package.sh: installer-project/Theme_Installer/project.json not found -- run build_installer.py first" >&2; exit 1; }
