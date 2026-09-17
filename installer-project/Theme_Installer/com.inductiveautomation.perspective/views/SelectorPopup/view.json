@@ -65,7 +65,7 @@
             "props": {
               "style": {
                 "color": "var(--label--disabled)",
-                "fontSize": "10px",
+                "fontSize": "11px",
                 "fontWeight": "700",
                 "letterSpacing": "0.08em",
                 "lineHeight": 1.4,
@@ -625,7 +625,7 @@
             "props": {
               "style": {
                 "color": "var(--label--disabled)",
-                "fontSize": "10px",
+                "fontSize": "11px",
                 "fontWeight": "700",
                 "letterSpacing": "0.08em",
                 "lineHeight": 1.4,
@@ -914,7 +914,7 @@
             "props": {
               "style": {
                 "color": "var(--label--disabled)",
-                "fontSize": "10px",
+                "fontSize": "11px",
                 "fontWeight": "700",
                 "letterSpacing": "0.08em",
                 "lineHeight": 1.4,
