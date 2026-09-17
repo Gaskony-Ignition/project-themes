@@ -9,8 +9,21 @@
  * wrong thing the instant anyone picked Leather Light. The rule is to
  * declare what the page is ACTUALLY painted in; where that can change,
  * the honest declaration is both. */
-:root {
+html {
   color-scheme: light dark;
+}
+
+/* The installer usually runs on a stock theme, whose focus outline is
+ * 1px and can fall under 3:1. The Ignition Themes supply a measured
+ * ring; the heading ink stands in on a stock theme. */
+:focus-visible,
+.ia_dropdown.ia_dropdown--focused {
+  outline: 2px solid var(--a11y-focus-ring, var(--neutral-100));
+  outline-offset: 1px;
+}
+.ReactVirtualized__Grid:focus-visible {
+  outline: 2px solid var(--a11y-focus-ring, var(--neutral-100)) !important;
+  outline-offset: -2px;
 }
 
 .app-bar {

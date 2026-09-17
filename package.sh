@@ -52,6 +52,21 @@ if [ "$_skip" -ne 1 ]; then
     fi
 fi
 
+# Accessibility gate (a11y.json). Checks the installer as deployed, so deploy
+# the current build first. Blocking; bypass deliberately with --skip-a11y-check.
+_skip_a11y=0
+for _a in "$@"; do [ "$_a" = "--skip-a11y-check" ] && _skip_a11y=1; done
+if [ "$_skip_a11y" -ne 1 ]; then
+    _repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+    _a11y=""; _d="$_repo"
+    while [ "$_d" != / ]; do
+        [ -x "$_d/modules/a11y-gate.sh" ] && { _a11y="$_d/modules/a11y-gate.sh"; break; }
+        _d=$(dirname "$_d")
+    done
+    [ -n "$_a11y" ] || { echo "a11y-gate.sh not found above $_repo; pass --skip-a11y-check" >&2; exit 1; }
+    "$_a11y" "$_repo" || { echo "accessibility gate failed: fix the findings or pass --skip-a11y-check" >&2; exit 1; }
+fi
+
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 cd "$SCRIPT_DIR"
 
@@ -62,7 +77,7 @@ VERSION=$(head -n1 VERSION | tr -d '[:space:]')
 [ -d out ] || { echo "package.sh: out/ not found -- run build_theme.py first" >&2; exit 1; }
 [ -f out/themes.json ] || { echo "package.sh: out/themes.json not found -- run build_theme.py first" >&2; exit 1; }
 python3 tools/check_contrast.py || { echo "package.sh: a theme misses WCAG 2.1 AA contrast (above)" >&2; exit 1; }
-[ -f install.sh ] ||{ echo "package.sh: install.sh not found" >&2; exit 1; }
+[ -f install.sh ] || { echo "package.sh: install.sh not found" >&2; exit 1; }
 [ -f RELEASE-README.md ] || { echo "package.sh: RELEASE-README.md not found" >&2; exit 1; }
 [ -f LICENSE ] || { echo "package.sh: LICENSE not found" >&2; exit 1; }
 [ -f installer-project/Theme_Installer/project.json ] || { echo "package.sh: installer-project/Theme_Installer/project.json not found -- run build_installer.py first" >&2; exit 1; }

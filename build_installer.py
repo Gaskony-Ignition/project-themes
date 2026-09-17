@@ -869,7 +869,7 @@ def _nav(active, version, refresh=None):
                  "borderBottomColor": ("var(--callToAction)" if current
                                        else "transparent"),
                  "color": ("var(--label)" if current
-                           else "var(--label--disabled)"),
+                           else "var(--neutral-70)"),
                  # The SAME weight either way. Bolding only the active tab
                  # made each tab change width when it became active, so the
                  # tabs after it slid sideways every time you changed page --
@@ -889,6 +889,7 @@ def _nav(active, version, refresh=None):
                 "config": {"script":
                            "\tsystem.perspective.navigate(page='%s')" % path},
                 "scope": "G", "type": "script"}}}
+            _keyboard_click(tab)
         tabs.append(tab)
     # A spacer, then the switcher, hard right. It rides in the tab strip so a
     # reader can repaint the page from ANY page -- comparing the previews
@@ -949,7 +950,7 @@ def _stat(key, caption):
              "position": {"grow": 0, "shrink": 0, "basis": "auto"},
              "props": {"text": caption,
                        "style": {"fontSize": "12px",
-                                 "color": "var(--label--disabled)"}},
+                                 "color": "var(--neutral-70)"}},
              "propConfig": {"props.text": {"binding": {
                  "type": "expr",
                  "config": {"expression": "{view.custom.counts.cap_%s}" % key}}}}},
@@ -1066,7 +1067,7 @@ def _theme_picker(name, label, custom_path, options_code):
         "position": {"grow": 0, "shrink": 0, "basis": "auto"},
         "props": {"direction": "column", "style": {"gap": "3px"}},
         "children": [
-            _label("cap", label, size="12px", colour="var(--label--disabled)"),
+            _label("cap", label, size="12px", colour="var(--neutral-70)"),
             {"type": "ia.input.dropdown", "meta": {"name": "dd"},
              "position": {"grow": 0, "shrink": 0, "basis": "auto"},
              "props": {"allowClearing": False, "showSearch": False,
@@ -1313,7 +1314,7 @@ def preview_node(name, pal, label, caption):
     return _flex(name, basis="205px", style={"gap": "0px"}, children=[
         _flex("frame", basis="150px", children=[screen]),
         _txt("name", label, "12px", "var(--label)", 600),
-        _txt("cap", caption, "10px", "var(--label--disabled)")])
+        _txt("cap", caption, "11px", "var(--neutral-70)")])
 
 
 def _layer_card(i):
@@ -1342,7 +1343,7 @@ def _layer_card(i):
                             "border": "var(--containerBorder)"}},
         "children": [
             bound("layer", "13px", "var(--label)", 600),
-            bound("what", "12px", "var(--label--disabled)"),
+            bound("what", "12px", "var(--neutral-70)"),
             bound("here", "12px", "var(--label)"),
         ],
     }
@@ -1473,7 +1474,7 @@ def _action_card(name, title, body, buttons, note=None):
          "position": {"grow": 0, "shrink": 0, "basis": "auto"},
          "props": {"text": body,
                    "style": {"fontSize": "12.5px", "lineHeight": "1.5",
-                             "color": "var(--label--disabled)"}}},
+                             "color": "var(--neutral-70)"}}},
     ]
     if note:
         children.append(
@@ -1481,7 +1482,7 @@ def _action_card(name, title, body, buttons, note=None):
              "position": {"grow": 0, "shrink": 0, "basis": "auto"},
              "props": {"text": note,
                        "style": {"fontSize": "12px", "lineHeight": "1.5",
-                                 "color": "var(--label--disabled)",
+                                 "color": "var(--neutral-70)",
                                  "fontStyle": "italic"}}})
     # The spacer is what pushes the buttons down. It is the card's only grower.
     children.append({"type": "ia.container.flex", "meta": {"name": "gap"},
@@ -1632,14 +1633,14 @@ def _gallery_block(themes):
                    "Each little screen is the same imaginary plant page drawn "
                    "in that theme's colours. Install them, then pick one from "
                    "any project's Theme button.",
-                   size="12px", colour="var(--label--disabled)"),
+                   size="12px", colour="var(--neutral-70)"),
             _gallery("ours", ours),
             _label("stock_h", "What every gateway starts with", size="15px",
                    weight=600),
             _prose("stock_sub",
                    "Ignition's own six. Never modified by this project, and "
                    "they stay available alongside the ones it installs.",
-                   size="12px", colour="var(--label--disabled)"),
+                   size="12px", colour="var(--neutral-70)"),
             _gallery("stock", stock),
         ],
     }
@@ -1965,6 +1966,17 @@ EDITOR_SWATCHES = (
 )
 
 
+def _keyboard_click(component):
+    """Give a clickable label the keyboard route its onClick lacks: Tab
+    reaches it, and Enter or Space runs the same script."""
+    component["meta"]["tabIndex"] = 0
+    dom = component["events"]["dom"]
+    body = "\n".join("\t" + line for line in dom["onClick"]["config"]["script"].splitlines())
+    dom["onKeyDown"] = {"config": {"script": "\tif event.key in ('Enter', ' '):\n" + body},
+                        "scope": "G", "type": "script"}
+    return component
+
+
 def _pick_swatch(index):
     """Filling sel_value IS the click: the hex field is bidirectional to it,
     and the confirmation chip repaints from the same property, so the colour
@@ -2182,7 +2194,7 @@ def _pane(name, title, hint, children, basis, body_pad="0px", hug=False):
                      "props": {"text": hint,
                                "style": {"fontSize": "11.5px",
                                          "lineHeight": "1.45",
-                                         "color": "var(--label--disabled)"}}})
+                                         "color": "var(--neutral-70)"}}})
     # hug: the pane is as tall as what is in it. A pane given a fixed height
     # is a guess that goes wrong the moment its own caption wraps one more
     # line -- which is how the preview came to have a scrollbar in a box that
@@ -2227,7 +2239,7 @@ def _cap(name, text, size="12px"):
             "position": {"grow": 0, "shrink": 0, "basis": "auto"},
             "props": {"text": text,
                       "style": {"fontSize": size,
-                                "color": "var(--label--disabled)",
+                                "color": "var(--neutral-70)",
                                 "whiteSpace": "nowrap"}}}
 
 
@@ -2273,7 +2285,7 @@ def _theme_bar():
             {"type": "ia.display.label", "meta": {"name": "kind"},
              "position": {"grow": 0, "shrink": 1, "basis": "auto"},
              "props": {"style": {"fontSize": "12px",
-                                 "color": "var(--label--disabled)"}},
+                                 "color": "var(--neutral-70)"}},
              "propConfig": {"props.text": {"binding": _prop(
                  "view.custom.key", EDITOR_KIND_LABEL)}}},
             _spacer(),
@@ -2510,6 +2522,7 @@ def _swatch_chip(index):
             "scope": "G", "type": "script"}}},
     }
     chip["meta"]["tooltip"] = {"enabled": True, "text": ""}
+    _keyboard_click(chip)
     return _only_when(chip, "{%s} != ''" % path, layout=True)
 
 
@@ -2777,7 +2790,7 @@ def build_editor_view_json(themes, version):
                        "generated from the repo and Install overwrites them, "
                        "so they are read-only on this page -- a copy is yours "
                        "and nothing overwrites it.",
-                       size="12.5px", colour="var(--label--disabled)"),
+                       size="12.5px", colour="var(--neutral-70)"),
                 _theme_bar(),
                 _only_when(_make_panel(), "{view.custom.making} != ''",
                            layout=True),
@@ -2853,7 +2866,7 @@ def _pane_head(name, text):
                       "style": {"fontSize": "11px", "fontWeight": 600,
                                 "letterSpacing": "0.06em",
                                 "textTransform": "uppercase",
-                                "color": "var(--label--disabled)",
+                                "color": "var(--neutral-70)",
                                 "padding": "9px 10px 5px",
                                 "borderTopStyle": "solid",
                                 "borderTopWidth": "1px",
@@ -3047,8 +3060,21 @@ def main():
         " * wrong thing the instant anyone picked Leather Light. The rule is to\n"
         " * declare what the page is ACTUALLY painted in; where that can change,\n"
         " * the honest declaration is both. */\n"
-        ":root {\n"
+        "html {\n"
         "  color-scheme: light dark;\n"
+        "}\n"
+        "\n"
+        "/* The installer usually runs on a stock theme, whose focus outline is\n"
+        " * 1px and can fall under 3:1. The Ignition Themes supply a measured\n"
+        " * ring; the heading ink stands in on a stock theme. */\n"
+        ":focus-visible,\n"
+        ".ia_dropdown.ia_dropdown--focused {\n"
+        "  outline: 2px solid var(--a11y-focus-ring, var(--neutral-100));\n"
+        "  outline-offset: 1px;\n"
+        "}\n"
+        ".ReactVirtualized__Grid:focus-visible {\n"
+        "  outline: 2px solid var(--a11y-focus-ring, var(--neutral-100)) !important;\n"
+        "  outline-offset: -2px;\n"
         "}\n"
         "\n"
         ".app-bar {\n"

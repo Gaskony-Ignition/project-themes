@@ -55,7 +55,9 @@ parent project — see [docs/INTERNALS.md](docs/INTERNALS.md#the-style-class-con
 Every theme meets WCAG 2.1 AA colour contrast for text and control edges,
 draws a 2px keyboard focus ring, and honours the operating system's reduced
 motion setting. The build fails if a theme drops below the thresholds — see
-[docs/INTERNALS.md](docs/INTERNALS.md#accessibility).
+[docs/INTERNALS.md](docs/INTERNALS.md#accessibility). The installer's own screens
+meet WCAG 2.1 AA too, apart from limits in Perspective itself: there is no page
+language setting, and some chart and table internals are out of reach.
 
 `out/themes.json` carries the same theme list as data (`id`, `label`, `dark`,
 `source_pack`) for anything that wants to build a picker from it.
