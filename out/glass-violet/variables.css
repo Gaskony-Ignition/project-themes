@@ -25,10 +25,10 @@
   --icon--disabled:                     rgba(199,194,224,0.6); /* muted text colour at reduced alpha (ref:--label--disabled) */
   --callToAction:                       #8558ec; /* primary accent colour (token:accent.primary) */
   --callToAction--hover:                #8b5cf6; /* the pack's own buttons/primary:hover colour when it declares a solid one, else its secondary accent, else --callToAction itself (token:accent.progress) */
-  --callToAction--active:               #714bc9; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
+  --callToAction--active:               #8261cf; /* --callToAction darkened 15% -- neither pack declares a distinct :active state -- lightened #714bc9 -> #8261cf for 4.5:1 on every surface (button text) (ref:--callToAction) */
   --callToAction--disabled:             rgba(133,88,236,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #3a276a; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #d76368; /* danger accent -- first candidate legible as ink on a card (token:accent.danger) */
+  --error:                              #e69c9f; /* danger accent -- first candidate legible as ink on a card -- lightened #d76368 -> #e69c9f for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.danger) */
   --warning:                            #fbbf24; /* medium-priority alarm colour (token:accent.alarm-med) */
   --success:                            #34d399; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
   --info:                               #38bdf8; /* low-priority alarm colour (token:accent.alarm-low) */
@@ -46,14 +46,14 @@
   --neutral-70:                         #c5c2d2; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #d4d1e0; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #8558ec; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #4c4660; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #9189a9; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #8558ec; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(76,70,96,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #8558ec; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #4c4660; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #9189a9; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(76,70,96,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #8558ec; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #4c4660; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #9189a9; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #8558ec; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #8558ec; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #3a3350; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
@@ -62,11 +62,11 @@
   --infoSecondary:                      rgba(56,189,248,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #312a47; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #34d399; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #d76368; /* reuses --error (ref:--error) */
+  --symbolFill--faulted:                #e69c9f; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #c7c2e0; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #5e596f; /* reuses --containerBorder (ref:--containerBorder) */
   --symbolStroke--running:              #2aa97a; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #ac4f53; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--faulted:              #b87d7f; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #9f9bb3; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #4c4660; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #c7c2e0; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */
@@ -112,7 +112,7 @@
   --div-11:                             #653d3f; /* step 11/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-12:                             #804144; /* step 12/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-13:                             #9d4246; /* step 13/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-14:                             #bd4147; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-14:                             #bd4146; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-15:                             #cf4f54; /* step 15/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-16:                             #dd5f65; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-16:                             #dd5f64; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
 }

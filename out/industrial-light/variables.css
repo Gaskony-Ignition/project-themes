@@ -28,10 +28,10 @@
   --callToAction--active:               #2b485e; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
   --callToAction--disabled:             rgba(51,85,110,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #ffffff; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #dc2626; /* danger accent -- first candidate legible as ink on a card (token:border.danger) */
-  --warning:                            #ca8a04; /* medium-priority alarm colour (token:accent.alarm-med) */
+  --error:                              #d52222; /* danger accent -- first candidate legible as ink on a card -- darkened #dc2626 -> #d52222 for 4.5:1 on every surface (WCAG 1.4.3) (token:border.danger) */
+  --warning:                            #936403; /* medium-priority alarm colour -- darkened #ca8a04 -> #936403 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-med) */
   --success:                            #374151; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
-  --info:                               #b0b8c4; /* low-priority alarm colour (token:accent.alarm-low) */
+  --info:                               #616e82; /* low-priority alarm colour -- darkened #b0b8c4 -> #616e82 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-low) */
   --borderRadius:                       2px; /* control radius (token:radius.control) */
   --borderRadiusInput:                  2px; /* same as --borderRadius (literal reuse; neither pack declares a separate input radius) (token:radius.control) */
   --boxShadow1:                         none; /* the pack's one elevation shadow, reused across all 5 slots (literal:none) */
@@ -46,27 +46,27 @@
   --neutral-70:                         #4d5560; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #3e4753; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #33556e; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #b0b8c4; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #7e8b9f; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #33556e; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(176,184,196,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #33556e; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #b0b8c4; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #7e8b9f; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(176,184,196,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #33556e; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #b0b8c4; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #7e8b9f; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #33556e; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #33556e; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #dde1e7; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
   --progressLinearTrack--indeterminate: #dde1e7; /* same as the determinate track (name inferred by symmetry, see docstring) (ref:--progressLinearTrack--determinate) */
-  --warningSecondary:                   rgba(202,138,4,0.16); /* --warning as a low-opacity wash (ref:--warning) */
-  --infoSecondary:                      rgba(176,184,196,0.16); /* --info as a low-opacity wash (ref:--info) */
+  --warningSecondary:                   rgba(147,100,3,0.16); /* --warning as a low-opacity wash (ref:--warning) */
+  --infoSecondary:                      rgba(97,110,130,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #ffffff; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #374151; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #dc2626; /* reuses --error (ref:--error) */
+  --symbolFill--faulted:                #d52222; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #666d7a; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #b0b8c4; /* reuses --containerBorder (ref:--containerBorder) */
   --symbolStroke--running:              #2c3441; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #b01e1e; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--faulted:              #aa1b1b; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #525762; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #b0b8c4; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #666d7a; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */

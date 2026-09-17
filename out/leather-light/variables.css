@@ -29,9 +29,9 @@
   --callToAction--disabled:             rgba(138,90,43,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #f1ebe5; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
   --error:                              #a3352c; /* danger accent -- first candidate legible as ink on a card (token:accent.danger) */
-  --warning:                            #d97706; /* medium-priority alarm colour (token:accent.alarm-med) */
+  --warning:                            #ac5f05; /* medium-priority alarm colour -- darkened #d97706 -> #ac5f05 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-med) */
   --success:                            #3d6b3a; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
-  --info:                               #0ea5e9; /* low-priority alarm colour (token:accent.alarm-low) */
+  --info:                               #0a7aad; /* low-priority alarm colour -- darkened #0ea5e9 -> #0a7aad for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-low) */
   --borderRadius:                       8px; /* control radius (token:radius.control) */
   --borderRadiusInput:                  8px; /* same as --borderRadius (literal reuse; neither pack declares a separate input radius) (token:radius.control) */
   --boxShadow1:                         0 1px 2px rgba(16, 24, 40, 0.06); /* the pack's one elevation shadow, reused across all 5 slots (token:shadow.card) */
@@ -46,20 +46,20 @@
   --neutral-70:                         #59544f; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #4a4640; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #8a5a2b; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #e6d6b8; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #b28a3f; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #8a5a2b; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(230,214,184,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #8a5a2b; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #e6d6b8; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #b28a3f; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(230,214,184,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #8a5a2b; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #e6d6b8; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #b28a3f; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #8a5a2b; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #8a5a2b; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #e6d6b8; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
   --progressLinearTrack--indeterminate: #e6d6b8; /* same as the determinate track (name inferred by symmetry, see docstring) (ref:--progressLinearTrack--determinate) */
-  --warningSecondary:                   rgba(217,119,6,0.16); /* --warning as a low-opacity wash (ref:--warning) */
-  --infoSecondary:                      rgba(14,165,233,0.16); /* --info as a low-opacity wash (ref:--info) */
+  --warningSecondary:                   rgba(172,95,5,0.16); /* --warning as a low-opacity wash (ref:--warning) */
+  --infoSecondary:                      rgba(10,122,173,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #fdfdfc; /* reuses --container (idle/neutral tone) (ref:--container) */
   --symbolFill--running:                #3d6b3a; /* reuses --success (ref:--success) */
   --symbolFill--faulted:                #a3352c; /* reuses --error (ref:--error) */
@@ -112,7 +112,7 @@
   --div-11:                             #b8cbd4; /* step 11/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-12:                             #9dbecd; /* step 12/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-13:                             #80b2c9; /* step 13/16 of the accent<->error diverging ramp (generated:colorsys) */
-  --div-14:                             #60a8c8; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
+  --div-14:                             #60a7c8; /* step 14/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-15:                             #3d9eca; /* step 15/16 of the accent<->error diverging ramp (generated:colorsys) */
   --div-16:                             #288fbd; /* step 16/16 of the accent<->error diverging ramp (generated:colorsys) */
 }

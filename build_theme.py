@@ -447,6 +447,55 @@ def rgb_distance(hex_a, hex_b):
     return sum((ca[i] - cb[i]) ** 2 for i in range(3)) ** 0.5
 
 
+# ---- WCAG 2.1 AA floors ----------------------------------------------------
+# IA's stock components use --error/--warning/--success/--info as TEXT
+# (.ia_form__error, alarm table footers, file upload messages) and never as a
+# fill behind text, so the vars themselves must reach 4.5:1 -- a separate
+# text token would never reach the stock components.
+
+TEXT_FLOOR = 4.5         # 1.4.3
+NON_TEXT_FLOOR = 3.0     # 1.4.11
+TEXT_VARS = ["--label", "--label--disabled", "--error", "--warning", "--success", "--info"]
+SURFACE_VARS = ["--containerRoot", "--container", "--containerNested"]
+# Controls whose unselected edge is the only thing that shows they exist.
+EDGE_VARS = ["--checkbox--unchecked", "--radio--unselected", "--toggleSwitch--unselected"]
+
+
+def min_contrast(colour, surfaces):
+    return min(contrast_ratio(colour, s) for s in surfaces)
+
+
+def lift_to_floor(colour, surfaces, floor, is_dark):
+    """Move `colour` in lightness only (hue and saturation kept) away from the
+    surfaces until it clears `floor` against every one. Returns the colour
+    unchanged when it already passes."""
+    if min_contrast(colour, surfaces) >= floor:
+        return colour
+    h, l, s = colorsys.rgb_to_hls(*_rgb01(colour))
+    step = 0.005 if is_dark else -0.005
+    while 0.0 <= l + step <= 1.0:
+        l += step
+        candidate = _hls_hex(h, l, s)
+        if min_contrast(candidate, surfaces) >= floor:
+            return candidate
+    return "#ffffff" if is_dark else "#000000"
+
+
+def apply_contrast_floors(theme_id, computed, resolutions, names, surfaces, floor, is_dark, why):
+    for var in names:
+        before = computed[var]
+        after = lift_to_floor(before, surfaces, floor, is_dark)
+        if after == before:
+            continue
+        computed[var] = after
+        for i, (v, value, spec, note) in enumerate(resolutions):
+            if v == var:
+                resolutions[i] = (v, after, spec, "%s -- %s %s -> %s for %.1f:1 on every surface (%s)"
+                                  % (note, "lightened" if is_dark else "darkened", before, after, floor, why))
+        print("A11Y [%s] %s %s -> %s (%.2f -> %.2f:1)" % (
+            theme_id, var, before, after, min_contrast(before, surfaces), min_contrast(after, surfaces)))
+
+
 def check_qual_scale(theme_name, qual, page_hex):
     for i, colour in enumerate(qual):
         cr = contrast_ratio(colour, page_hex)
@@ -628,6 +677,63 @@ def build_globals(pack, page_solid, globals_tweak, sb_thumb, sb_hover, accent_he
     return "\n".join(lines) + "\n"
 
 
+def build_a11y(input_edge, focus_ring, button_text):
+    return """
+/* ---- accessibility (WCAG 2.1 AA) ----
+ * Stock inputs take their edge from --containerBorder, the same hairline as a
+ * card, which sits under 3:1 on every theme. Only the controls are raised, so
+ * cards keep their light outline. */
+:root {
+  --a11y-input-edge: %s;
+  --a11y-focus-ring: %s;
+  --a11y-button-text: %s;
+  --st-input-border: var(--a11y-input-edge);
+}
+.ia_inputField,
+.ia_dropdown,
+.ia_select,
+.ia_textArea {
+  border-color: var(--a11y-input-edge);
+}
+
+/* Stock primary buttons write --neutral-10 on the accent; on a mid-tone
+ * accent that is under 4.5:1, so the build picks the text colour. */
+.ia_button--primary {
+  color: var(--a11y-button-text);
+}
+
+/* IA's own :focus outline is 1px of --callToAction--hover, under 3:1 on some
+ * themes. Keyboard focus gets a 2px ring that clears 3:1 on every surface. */
+:focus-visible {
+  outline: 2px solid var(--a11y-focus-ring);
+  outline-offset: 1px;
+}
+/* A dropdown turns its search input's outline off and marks the box instead. */
+.ia_dropdown.ia_dropdown--focused,
+.ia_dropdown.ia_dropdown--active {
+  outline: 2px solid var(--a11y-focus-ring);
+  outline-offset: 1px;
+}
+/* The table grid sets outline:none on itself; inset so the scroll box does
+ * not clip the ring. */
+.ReactVirtualized__Grid:focus-visible {
+  outline: 2px solid var(--a11y-focus-ring) !important;
+  outline-offset: -2px;
+}
+
+/* Honour the OS "reduce motion" setting, project alarm pulses included.
+ * Near-zero rather than none so animationend/transitionend still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+""" % (input_edge, focus_ring, button_text)
+
+
 # ---------------------------------------------------------------------------
 
 def build_theme(theme):
@@ -667,11 +773,37 @@ def build_theme(theme):
         resolutions.append((var, computed[var], "tweak:mapping.TWEAKS[%s]" % theme_id,
                              "overridden by mapping.TWEAKS -- see mapping.py for the reasoning"))
 
+    # Before pass 2, so the symbol fills and chart poles that reuse these
+    # colours pick up the corrected values.
+    surfaces = [computed[v] for v in SURFACE_VARS]
+    apply_contrast_floors(theme_id, computed, resolutions, TEXT_VARS, surfaces,
+                          TEXT_FLOOR, is_dark, "WCAG 1.4.3")
+    # Stock primary buttons put --neutral-10 on --callToAction. Keep that
+    # when it passes; otherwise use white or black, whichever reads better,
+    # and move the hover/pressed fills away from it until they pass too.
+    button_text = computed["--neutral-10"]
+    if contrast_ratio(button_text, computed["--callToAction"]) < TEXT_FLOOR:
+        button_text = max(["#ffffff", "#000000"],
+                          key=lambda c: contrast_ratio(c, computed["--callToAction"]))
+    apply_contrast_floors(theme_id, computed, resolutions,
+                          ["--callToAction--hover", "--callToAction--active"], [button_text],
+                          TEXT_FLOOR, relative_luminance(button_text) < 0.5, "button text")
+
     # Pass 2: extended vars (controls/status/symbols/pipes/misc), can ref:
     # anything from pass 1, tweaked or not.
     for entry in EXTENDED_MAPPING:
         value, used_spec = resolve_entry(pack, entry, computed, theme_id)
         resolutions.append((entry["var"], value, used_spec, entry["note"]))
+
+    # --border stays a hairline (dividers, menu rows, chart frames); only the
+    # edges that identify a control are raised to 3:1.
+    input_edge = lift_to_floor(computed["--border"], surfaces + [computed["--input"]],
+                               NON_TEXT_FLOOR, is_dark)
+    for var in EDGE_VARS:
+        computed[var] = input_edge
+    resolutions = [(v, input_edge if v in EDGE_VARS else value, spec,
+                    note + " -- replaced by the 3:1 input edge (WCAG 1.4.11)" if v in EDGE_VARS else note)
+                   for v, value, spec, note in resolutions]
 
     # Chart scales -- algorithmic, anchored on the FINAL --callToAction /
     # --error / --neutral-10 (post-tweak).
@@ -761,7 +893,17 @@ def build_theme(theme):
     # Appended rather than woven in: everything above is this repo's own
     # generated theme, everything below is the contract it now also carries,
     # and a reader (or a diff) can tell them apart at a glance.
-    globals_css += build_contract(pack["id"])
+    contract_css = build_contract(pack["id"])
+    globals_css += contract_css
+    # The table grid's ring is drawn inset, over the contract's table surfaces.
+    ring_surfaces = list(surfaces)
+    for var in ("--st-table-bg", "--st-head-solid"):
+        m = re.search(r"%s:\s*([^;]+);" % var, contract_css)
+        if m and parse_colour(m.group(1)):
+            ring_surfaces.append(flatten(m.group(1), computed["--containerRoot"]))
+    focus_ring = lift_to_floor(computed["--callToAction"], ring_surfaces, NON_TEXT_FLOOR, is_dark)
+    # After the contract, so its :root --st-input-border is the one replaced.
+    globals_css += build_a11y(input_edge, focus_ring, button_text)
     with open(os.path.join(theme_dir, "globals.css"), "w") as fh:
         fh.write(globals_css)
 

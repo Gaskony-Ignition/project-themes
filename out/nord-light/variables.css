@@ -28,10 +28,10 @@
   --callToAction--active:               #486384; /* --callToAction darkened 15% -- neither pack declares a distinct :active state (ref:--callToAction) */
   --callToAction--disabled:             rgba(85,116,155,0.35); /* --callToAction at reduced alpha (ref:--callToAction) */
   --callToActionHighlight:              #dfe6ee; /* the pack's own active-nav wash, flattened over the page (token:surface.nav-active) */
-  --error:                              #b64b55; /* danger accent -- first candidate legible as ink on a card (token:accent.danger) */
-  --warning:                            #c66d51; /* medium-priority alarm colour (token:accent.alarm-med) */
-  --success:                            #657657; /* positive-delta accent (falls back to the OK status text colour) (token:accent.delta-up) */
-  --info:                               #5f87b0; /* low-priority alarm colour (token:accent.alarm-low) */
+  --error:                              #b54953; /* danger accent -- first candidate legible as ink on a card -- darkened #b64b55 -> #b54953 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.danger) */
+  --warning:                            #aa5338; /* medium-priority alarm colour -- darkened #c66d51 -> #aa5338 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-med) */
+  --success:                            #617254; /* positive-delta accent (falls back to the OK status text colour) -- darkened #657657 -> #617254 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.delta-up) */
+  --info:                               #4a7097; /* low-priority alarm colour -- darkened #5f87b0 -> #4a7097 for 4.5:1 on every surface (WCAG 1.4.3) (token:accent.alarm-low) */
   --borderRadius:                       8px; /* control radius (token:radius.control) */
   --borderRadiusInput:                  8px; /* same as --borderRadius (literal reuse; neither pack declares a separate input radius) (token:radius.control) */
   --boxShadow1:                         0 1px 2px rgba(16, 24, 40, 0.06); /* the pack's one elevation shadow, reused across all 5 slots (token:shadow.card) */
@@ -46,27 +46,27 @@
   --neutral-70:                         #626876; /* 78% from page toward ink (IA neutral-70 spacing; no pack token for this step) (ref:--neutral-10) */
   --neutral-80:                         #565c6a; /* 85% from page toward ink (IA neutral-80 spacing; no pack token for this step) (ref:--neutral-10) */
   --checkbox--checked:                  #55749b; /* reuses --callToAction (ref:--callToAction) */
-  --checkbox--unchecked:                #d8dee9; /* reuses --border (ref:--border) */
+  --checkbox--unchecked:                #768bb2; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --checkbox--indeterminate:            #55749b; /* same accent tone as --checkbox--checked (no pack distinguishes an indeterminate colour) (ref:--callToAction) */
   --checkbox--disabled:                 rgba(216,222,233,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --radio--selected:                    #55749b; /* reuses --callToAction (the real var is --radio--selected, not --radio--checked) (ref:--callToAction) */
-  --radio--unselected:                  #d8dee9; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) (ref:--border) */
+  --radio--unselected:                  #768bb2; /* reuses --border (the real var is --radio--unselected, not --radio--unchecked) -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --radio--disabled:                    rgba(216,222,233,0.5); /* reuses --border--disabled (ref:--border--disabled) */
   --toggleSwitch--selected:             #55749b; /* reuses --callToAction (ref:--callToAction) */
-  --toggleSwitch--unselected:           #d8dee9; /* reuses --border (ref:--border) */
+  --toggleSwitch--unselected:           #768bb2; /* reuses --border -- replaced by the 3:1 input edge (WCAG 1.4.11) (ref:--border) */
   --progressLinearBar--determinate:     #55749b; /* reuses --callToAction (ref:--callToAction) */
   --progressLinearBar--indeterminate:   #55749b; /* same accent tone as the determinate bar; IA's indeterminate animation reuses one colour, not a second one (ref:--callToAction) */
   --progressLinearTrack--determinate:   #ecf0f5; /* the pack's own progress-track surface flattened over the page (name inferred by symmetry, see docstring) (token:surface.progress-track) */
   --progressLinearTrack--indeterminate: #ecf0f5; /* same as the determinate track (name inferred by symmetry, see docstring) (ref:--progressLinearTrack--determinate) */
-  --warningSecondary:                   rgba(198,109,81,0.16); /* --warning as a low-opacity wash (ref:--warning) */
-  --infoSecondary:                      rgba(95,135,176,0.16); /* --info as a low-opacity wash (ref:--info) */
+  --warningSecondary:                   rgba(170,83,56,0.16); /* --warning as a low-opacity wash (ref:--warning) */
+  --infoSecondary:                      rgba(74,112,151,0.16); /* --info as a low-opacity wash (ref:--info) */
   --symbolFill--default:                #ffffff; /* reuses --container (idle/neutral tone) (ref:--container) */
-  --symbolFill--running:                #657657; /* reuses --success (ref:--success) */
-  --symbolFill--faulted:                #b64b55; /* reuses --error (ref:--error) */
+  --symbolFill--running:                #617254; /* reuses --success (ref:--success) */
+  --symbolFill--faulted:                #b54953; /* reuses --error (ref:--error) */
   --symbolFill--stopped:                #4c566a; /* reuses --label--disabled (muted ink) (ref:--label--disabled) */
   --symbolStroke--default:              #d8dee9; /* reuses --containerBorder (ref:--containerBorder) */
-  --symbolStroke--running:              #515e46; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
-  --symbolStroke--faulted:              #923c44; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
+  --symbolStroke--running:              #4e5b43; /* --success darkened 20% for a visible outline against its own fill (ref:--success) */
+  --symbolStroke--faulted:              #913a42; /* --error darkened 20% for a visible outline against its own fill (ref:--error) */
   --symbolStroke--stopped:              #3d4555; /* --label--disabled darkened 20% for a visible outline against its own fill (ref:--label--disabled) */
   --pipeStroke:                         #d8dee9; /* reuses --border (ref:--border) */
   --pipePrimaryFill:                    #4c566a; /* reuses --label--disabled (muted ink -- an inactive/unqualified pipe) (ref:--label--disabled) */
@@ -75,8 +75,8 @@
   --tooltip-background-color:           #ffffff; /* reuses --containerNested (a raised-above-card tone) (ref:--containerNested) */
   --boxShadow--inset:                   inset 0 1px 2px rgba(16, 24, 40, 0.06); /* --boxShadow1 turned into an inset shadow (or "none" unchanged, for packs with no shadow token) (ref:--boxShadow1) */
   --arrow-color:                        #3b4252; /* reuses --icon (ref:--icon) */
-  --indicator:                          #657657; /* reuses --success -- drives the LED component's "on" diode fill AND the quality-overlay "pending" state (IA's own dark.css uses a bright green for both, same semantic fit) (ref:--success) */
-  --indicatorOff:                       #0f120d; /* --indicator darkened 85% -- the LED component's "off" diode fill; IA's own indicatorOff is a near-black shade of indicator's own hue, same ratio applied here (ref:--indicator) */
+  --indicator:                          #617254; /* reuses --success -- drives the LED component's "on" diode fill AND the quality-overlay "pending" state (IA's own dark.css uses a bright green for both, same semantic fit) (ref:--success) */
+  --indicatorOff:                       #0f110d; /* --indicator darkened 85% -- the LED component's "off" diode fill; IA's own indicatorOff is a near-black shade of indicator's own hue, same ratio applied here (ref:--indicator) */
   --contextBackground:                  #ffffff; /* reuses --containerNested -- the right-click context-menu background. IA hardcodes this to --black in BOTH its light and dark themes, which is a real contrast bug for a light pack: the context menu's own text uses --label (dark ink on a light theme), so a literal black background would be near-illegible. --containerNested keeps it in the theme's own surface family and pairs correctly with --label either way (ref:--containerNested) */
   --defaultSliderFocusColor:            rgba(85,116,155,0.5); /* --callToAction at IA's own 0.5 alpha -- the slider handle's focus glow. Reaches the ALTERNATE slider selector that actually consumes this var via var(); the PRIMARY .ia_slider__handle:focus selector hardcodes its own colour instead (see README's hard-coded-colour audit) and needs a compensating rule in globals.css, not a var override, to pick this up (ref:--callToAction) */
   --callToAction--activeAlt:            #dfe6ee; /* reuses --callToActionHighlight -- IA's own activeAlt (#093952) and callToActionHighlight (#0C2938) are both dark, similarly-saturated accent washes used for different components' pressed/focused feedback (a dropdown option's focus background, a split-container handle's active-drag background); close enough in IA's own values that one derivation covers both meaningfully (ref:--callToActionHighlight) */

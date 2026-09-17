@@ -203,6 +203,55 @@ theme unless punched through. The selector is a structural Perspective shell
 pattern rather than something specific to one theme, so the fix generalises
 unchanged across all ten.
 
+### Accessibility
+
+Every theme meets WCAG 2.1 AA for colour, focus and motion. The pack's
+colours are the starting point. Where a colour misses a threshold, the
+generator changes its lightness only (hue and saturation kept) until it
+passes, and prints an `A11Y` line for each colour it moved.
+
+| What | Threshold | Checked against |
+|---|---|---|
+| `--label`, `--label--disabled`, `--error`, `--warning`, `--success`, `--info` | 4.5:1 | page, card and nested-card surfaces |
+| Primary button text (`--a11y-button-text`) | 4.5:1 | `--callToAction` and its hover and pressed shades |
+| Input, dropdown, checkbox, radio and toggle edges (`--a11y-input-edge`) | 3:1 | the three surfaces and `--input` |
+| Keyboard focus ring (`--a11y-focus-ring`) | 3:1 | the three surfaces and the table's own surfaces |
+
+The severity colours are adjusted in place because stock components use
+them directly as text (`.ia_form__error`, the alarm table footer, file upload
+messages); a separate text token would never reach those components.
+
+**Primary button text.** A stock primary button puts `--neutral-10` on the
+accent. When that pairing misses 4.5:1, the build switches the text to
+whichever of white or black reads better, then moves the hover and pressed
+shades away from the text until they pass as well.
+
+**Borders.** `--border` and `--containerBorder` stay hairlines, because cards,
+dividers and chart frames use them. Only the edges that show a control
+exists are raised to 3:1.
+
+**Focus ring.** It is 2px wide:
+
+- on `:focus-visible`;
+- on the dropdown box, because the dropdown turns its own search input's
+  outline off;
+- inset on the table grid, which turns its own outline off.
+
+**Reduced motion.** `prefers-reduced-motion: reduce` cuts every animation and
+transition to 0.01ms. That includes project alarm pulses. A near-zero
+duration still fires `animationend` and `transitionend`, so scripts waiting
+on those events keep working.
+
+`tools/check_contrast.py` reads each generated theme as the gateway serves it
+and checks every pair above, plus the contract's own text pairs. It prints
+each pair it could not check. `package.sh` will not package a failing theme.
+
+Some failures are Perspective's own markup, and no theme can fix them:
+
+- the page has no `lang` attribute;
+- the Table's grid roles are incomplete;
+- the checkbox and dropdown-search inputs have no labels.
+
 ## The style-class contract
 
 A theme is CSS only, and the conventional reading is that it therefore cannot
