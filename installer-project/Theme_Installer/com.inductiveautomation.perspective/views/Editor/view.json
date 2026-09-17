@@ -209,7 +209,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Theme Installer  1.17.0",
+              "text": "Theme Installer  1.17.1",
               "style": {
                 "fontSize": "13.5px",
                 "fontWeight": 600,
@@ -225,7 +225,8 @@
           {
             "type": "ia.display.label",
             "meta": {
-              "name": "tab_home"
+              "name": "tab_home",
+              "tabIndex": 0
             },
             "position": {
               "grow": 0,
@@ -242,7 +243,7 @@
                 "borderBottomStyle": "solid",
                 "borderBottomWidth": "2px",
                 "borderBottomColor": "transparent",
-                "color": "var(--label--disabled)",
+                "color": "var(--neutral-70)",
                 "fontWeight": 600
               }
             },
@@ -251,6 +252,13 @@
                 "onClick": {
                   "config": {
                     "script": "\tsystem.perspective.navigate(page='/')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                },
+                "onKeyDown": {
+                  "config": {
+                    "script": "\tif event.key in ('Enter', ' '):\n\t\tsystem.perspective.navigate(page='/')"
                   },
                   "scope": "G",
                   "type": "script"
@@ -342,7 +350,7 @@
           "text": "Make a theme of your own: copy one of the ten, then change its colours here. The ten themselves are generated from the repo and Install overwrites them, so they are read-only on this page -- a copy is yours and nothing overwrites it.",
           "style": {
             "fontSize": "12.5px",
-            "color": "var(--label--disabled)",
+            "color": "var(--neutral-70)",
             "lineHeight": "1.55",
             "maxWidth": "880px"
           }
@@ -388,7 +396,7 @@
               "text": "Editing theme",
               "style": {
                 "fontSize": "12px",
-                "color": "var(--label--disabled)",
+                "color": "var(--neutral-70)",
                 "whiteSpace": "nowrap"
               }
             }
@@ -449,7 +457,7 @@
             "props": {
               "style": {
                 "fontSize": "12px",
-                "color": "var(--label--disabled)"
+                "color": "var(--neutral-70)"
               }
             },
             "propConfig": {
@@ -695,7 +703,7 @@
                       "text": "Call it",
                       "style": {
                         "fontSize": "12px",
-                        "color": "var(--label--disabled)",
+                        "color": "var(--neutral-70)",
                         "whiteSpace": "nowrap"
                       }
                     }
@@ -744,7 +752,7 @@
                       "text": "starting from",
                       "style": {
                         "fontSize": "12px",
-                        "color": "var(--label--disabled)",
+                        "color": "var(--neutral-70)",
                         "whiteSpace": "nowrap"
                       }
                     }
@@ -1223,7 +1231,7 @@
                           "style": {
                             "fontSize": "11.5px",
                             "lineHeight": "1.45",
-                            "color": "var(--label--disabled)"
+                            "color": "var(--neutral-70)"
                           }
                         }
                       }
@@ -1284,7 +1292,7 @@
                               "text": "Find",
                               "style": {
                                 "fontSize": "12px",
-                                "color": "var(--label--disabled)",
+                                "color": "var(--neutral-70)",
                                 "whiteSpace": "nowrap"
                               }
                             }
@@ -1332,7 +1340,7 @@
                               "text": "name, description, group or value",
                               "style": {
                                 "fontSize": "12px",
-                                "color": "var(--label--disabled)",
+                                "color": "var(--neutral-70)",
                                 "whiteSpace": "nowrap"
                               }
                             }
@@ -1803,7 +1811,7 @@
                                       "text": "Already in this theme",
                                       "style": {
                                         "fontSize": "12px",
-                                        "color": "var(--label--disabled)",
+                                        "color": "var(--neutral-70)",
                                         "whiteSpace": "nowrap"
                                       }
                                     }
@@ -1848,7 +1856,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -1890,6 +1899,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 0 and colours[0]:\n\t\tself.view.custom.sel_value = colours[0]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 0 and colours[0]:\n\t\t\tself.view.custom.sel_value = colours[0]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -1939,7 +1955,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -1981,6 +1998,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 1 and colours[1]:\n\t\tself.view.custom.sel_value = colours[1]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 1 and colours[1]:\n\t\t\tself.view.custom.sel_value = colours[1]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2030,7 +2054,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2072,6 +2097,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 2 and colours[2]:\n\t\tself.view.custom.sel_value = colours[2]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 2 and colours[2]:\n\t\t\tself.view.custom.sel_value = colours[2]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2121,7 +2153,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2163,6 +2196,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 3 and colours[3]:\n\t\tself.view.custom.sel_value = colours[3]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 3 and colours[3]:\n\t\t\tself.view.custom.sel_value = colours[3]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2212,7 +2252,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2254,6 +2295,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 4 and colours[4]:\n\t\tself.view.custom.sel_value = colours[4]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 4 and colours[4]:\n\t\t\tself.view.custom.sel_value = colours[4]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2303,7 +2351,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2345,6 +2394,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 5 and colours[5]:\n\t\tself.view.custom.sel_value = colours[5]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 5 and colours[5]:\n\t\t\tself.view.custom.sel_value = colours[5]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2394,7 +2450,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2436,6 +2493,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 6 and colours[6]:\n\t\tself.view.custom.sel_value = colours[6]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 6 and colours[6]:\n\t\t\tself.view.custom.sel_value = colours[6]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2485,7 +2549,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2527,6 +2592,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 7 and colours[7]:\n\t\tself.view.custom.sel_value = colours[7]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 7 and colours[7]:\n\t\t\tself.view.custom.sel_value = colours[7]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2576,7 +2648,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2618,6 +2691,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 8 and colours[8]:\n\t\tself.view.custom.sel_value = colours[8]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 8 and colours[8]:\n\t\t\tself.view.custom.sel_value = colours[8]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2667,7 +2747,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2709,6 +2790,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 9 and colours[9]:\n\t\tself.view.custom.sel_value = colours[9]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 9 and colours[9]:\n\t\t\tself.view.custom.sel_value = colours[9]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2758,7 +2846,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2800,6 +2889,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 10 and colours[10]:\n\t\tself.view.custom.sel_value = colours[10]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 10 and colours[10]:\n\t\t\tself.view.custom.sel_value = colours[10]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2849,7 +2945,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2891,6 +2988,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 11 and colours[11]:\n\t\tself.view.custom.sel_value = colours[11]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 11 and colours[11]:\n\t\t\tself.view.custom.sel_value = colours[11]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -2940,7 +3044,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -2982,6 +3087,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 12 and colours[12]:\n\t\tself.view.custom.sel_value = colours[12]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 12 and colours[12]:\n\t\t\tself.view.custom.sel_value = colours[12]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -3031,7 +3143,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -3073,6 +3186,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 13 and colours[13]:\n\t\tself.view.custom.sel_value = colours[13]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 13 and colours[13]:\n\t\t\tself.view.custom.sel_value = colours[13]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -3122,7 +3242,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -3164,6 +3285,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 14 and colours[14]:\n\t\tself.view.custom.sel_value = colours[14]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 14 and colours[14]:\n\t\t\tself.view.custom.sel_value = colours[14]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -3213,7 +3341,8 @@
                                           "tooltip": {
                                             "enabled": true,
                                             "text": ""
-                                          }
+                                          },
+                                          "tabIndex": 0
                                         },
                                         "position": {
                                           "grow": 1,
@@ -3255,6 +3384,13 @@
                                             "onClick": {
                                               "config": {
                                                 "script": "\tcolours = self.view.custom.swatches or []\n\tif len(colours) > 15 and colours[15]:\n\t\tself.view.custom.sel_value = colours[15]\n\t\tself.view.custom.status = ''"
+                                              },
+                                              "scope": "G",
+                                              "type": "script"
+                                            },
+                                            "onKeyDown": {
+                                              "config": {
+                                                "script": "\tif event.key in ('Enter', ' '):\n\t\tcolours = self.view.custom.swatches or []\n\t\tif len(colours) > 15 and colours[15]:\n\t\t\tself.view.custom.sel_value = colours[15]\n\t\t\tself.view.custom.status = ''"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -3390,7 +3526,7 @@
                           "style": {
                             "fontSize": "11.5px",
                             "lineHeight": "1.45",
-                            "color": "var(--label--disabled)"
+                            "color": "var(--neutral-70)"
                           }
                         }
                       }
@@ -3701,7 +3837,7 @@
                           "style": {
                             "fontSize": "11.5px",
                             "lineHeight": "1.45",
-                            "color": "var(--label--disabled)"
+                            "color": "var(--neutral-70)"
                           }
                         }
                       }
@@ -4094,7 +4230,7 @@
                   "text": "",
                   "style": {
                     "fontSize": "12px",
-                    "color": "var(--label--disabled)",
+                    "color": "var(--neutral-70)",
                     "whiteSpace": "normal"
                   }
                 },

@@ -95,7 +95,7 @@
               "basis": "auto"
             },
             "props": {
-              "text": "Theme Installer  1.17.0",
+              "text": "Theme Installer  1.17.1",
               "style": {
                 "fontSize": "13.5px",
                 "fontWeight": 600,
@@ -136,7 +136,8 @@
           {
             "type": "ia.display.label",
             "meta": {
-              "name": "tab_editor"
+              "name": "tab_editor",
+              "tabIndex": 0
             },
             "position": {
               "grow": 0,
@@ -153,7 +154,7 @@
                 "borderBottomStyle": "solid",
                 "borderBottomWidth": "2px",
                 "borderBottomColor": "transparent",
-                "color": "var(--label--disabled)",
+                "color": "var(--neutral-70)",
                 "fontWeight": 600
               }
             },
@@ -162,6 +163,13 @@
                 "onClick": {
                   "config": {
                     "script": "\tsystem.perspective.navigate(page='/editor')"
+                  },
+                  "scope": "G",
+                  "type": "script"
+                },
+                "onKeyDown": {
+                  "config": {
+                    "script": "\tif event.key in ('Enter', ' '):\n\t\tsystem.perspective.navigate(page='/editor')"
                   },
                   "scope": "G",
                   "type": "script"
@@ -309,7 +317,7 @@
                       "style": {
                         "fontSize": "12.5px",
                         "lineHeight": "1.5",
-                        "color": "var(--label--disabled)"
+                        "color": "var(--neutral-70)"
                       }
                     }
                   },
@@ -328,7 +336,7 @@
                       "style": {
                         "fontSize": "12px",
                         "lineHeight": "1.5",
-                        "color": "var(--label--disabled)",
+                        "color": "var(--neutral-70)",
                         "fontStyle": "italic"
                       }
                     }
@@ -486,7 +494,7 @@
                       "style": {
                         "fontSize": "12.5px",
                         "lineHeight": "1.5",
-                        "color": "var(--label--disabled)"
+                        "color": "var(--neutral-70)"
                       }
                     }
                   },
@@ -505,7 +513,7 @@
                       "style": {
                         "fontSize": "12px",
                         "lineHeight": "1.5",
-                        "color": "var(--label--disabled)",
+                        "color": "var(--neutral-70)",
                         "fontStyle": "italic"
                       }
                     }
@@ -665,7 +673,7 @@
                       "style": {
                         "fontSize": "12.5px",
                         "lineHeight": "1.5",
-                        "color": "var(--label--disabled)"
+                        "color": "var(--neutral-70)"
                       }
                     }
                   },
@@ -684,7 +692,7 @@
                       "style": {
                         "fontSize": "12px",
                         "lineHeight": "1.5",
-                        "color": "var(--label--disabled)",
+                        "color": "var(--neutral-70)",
                         "fontStyle": "italic"
                       }
                     }
