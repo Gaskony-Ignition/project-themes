@@ -197,7 +197,7 @@ def _rescan():
     try:
         from java.util.concurrent import TimeUnit
         from_future.get(30, TimeUnit.SECONDS)
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass  # scan still runs; only the wait failed
 
 
@@ -246,7 +246,7 @@ def uninstall(name):
         res = system.config.getResource(
             moduleId="com.inductiveautomation.perspective",
             typeId="themes", name=name)
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         return False
     system.config.delete(
         moduleId="com.inductiveautomation.perspective",
@@ -322,7 +322,7 @@ def _stock_rewrite_manifest(theme_dir):
         old = json.loads(_read(path))
         if old.get("description"):
             doc["description"] = old["description"]
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass
     doc["files"] = [n for n in sorted(os.listdir(theme_dir))
                     if n != "resource.json"]
@@ -340,7 +340,7 @@ def stock_state(name):
         return "missing"
     try:
         text = _read(idx)
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         return "missing"
     for filename, marker in ([(ADDITIONS_FILE, ADDITIONS_IMPORT)] +
                             zip(LEGACY_ADDITIONS, LEGACY_IMPORTS)):
@@ -439,7 +439,7 @@ def status():
         for res in system.config.getResources(
                 moduleId="com.inductiveautomation.perspective", typeId="themes"):
             installed.add(str(res.getName()))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass
     out = []
     for name in THEME_ORDER:
@@ -649,7 +649,7 @@ def _gateway_port():
         found = re.search(r'"gateway\.port"\s*>\s*(\d+)', xml)
         if found:
             return int(found.group(1))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass
     return 8088
 
@@ -1307,7 +1307,7 @@ def write_file(theme, filename, text, rescan=True):
         # picker with nothing on the page to say why.
         try:
             json.loads(text)
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             raise ValueError("'%s' is not valid JSON: %s" % (filename, e))
 
     staged = path + ".editor-staged"
@@ -1603,7 +1603,7 @@ def tokens_compared(theme, against=None, filename="variables.css"):
         return rows
     try:
         theirs = _vars_of(theme_css(against))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         # A comparison we could not fetch must not take the editor down with
         # it: the rows are still editable without it.
         for row in rows:
@@ -1743,7 +1743,7 @@ def user_base_of(name):
     """
     try:
         text = read_file(name, "index.css")["text"]
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         return "light"
     return "dark" if re.search(r'@import\s+"\.\./dark/', text) else "light"
 
@@ -1765,7 +1765,7 @@ def _seed_variables(name, based_on, dark):
     body = ":root {\n  color-scheme: %s;\n" % ("dark" if dark else "light")
     try:
         values = _vars_of(theme_css(based_on))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         values = {}
     rows = [(group_of(var, GROUPS), var, values[var]) for var in values]
     order = dict((label, i) for i, (label, _) in enumerate(GROUPS))
@@ -1874,7 +1874,7 @@ def delete_theme(name):
             moduleId="com.inductiveautomation.perspective",
             typeId="themes", name=name,
             signature=res.getSignature(), actor="theme-editor")
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass          # not registered; the directory removal below is the work
     if os.path.isdir(theme_dir):
         for entry in os.listdir(theme_dir):
@@ -1973,7 +1973,7 @@ def _editor_declared(theme):
     for filename in EDITOR_COLOUR_FILES:
         try:
             values.update(_vars_of(read_file(theme, filename)["text"]))
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             continue                     # a theme need not have both files
     return values
 
@@ -1987,7 +1987,7 @@ def _colour_resolver(theme):
     values = {}
     try:
         values.update(_vars_of(theme_css(theme)))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         # A theme made seconds ago is not being SERVED yet: the gateway 404s
         # its stylesheet until the scan lands and httpGet raises rather than
         # returning empty. Its BASE is already served and its own files are on
@@ -1997,7 +1997,7 @@ def _colour_resolver(theme):
         # somebody is looking at it.
         try:
             values.update(_vars_of(theme_css(user_base_of(theme))))
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             pass
     # Served copy for the inherited base, this theme's own files for anything
     # it sets itself -- so a save shows immediately instead of a scan later.
@@ -2125,7 +2125,7 @@ def about(theme):
     rows.append({"fact": "Built on", "detail": base or "nothing -- it IS a base"})
     try:
         classes = editor_classes(theme)
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         classes = []
     if classes:
         rows.append({"fact": "Style classes",
@@ -2136,7 +2136,7 @@ def about(theme):
                      "detail": "none -- a stock base ships none"})
     try:
         found = [r for r in list_themes() if r["id"] == theme]
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         found = []
     if found:
         rows.append({"fact": "Files",
@@ -2163,12 +2163,12 @@ def editor_css(theme):
     parts = []
     try:
         parts.append(theme_css(theme))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass
     for filename in EDITOR_COLOUR_FILES:
         try:
             parts.append(read_file(theme, filename)["text"])
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             continue
     return "\n".join(parts)
 
@@ -2182,7 +2182,7 @@ def editor_classes(theme):
     """contract_classes(), read from the theme's own globals.css on disk."""
     try:
         css = read_file(theme, "globals.css")["text"]
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         return contract_classes(theme)
     return contract_classes(theme, css)
 
@@ -2234,11 +2234,11 @@ def all_tokens(theme):
     for filename in EDITOR_COLOUR_FILES:
         try:
             found = tokens(theme, filename)
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             continue                     # a theme need not have both files
         try:
             why = _reasons(theme)
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             why = {}
         for row in found:
             row = dict(row)
@@ -2266,7 +2266,7 @@ def token_file(theme, name):
             for row in tokens(theme, filename):
                 if row["name"] == name:
                     where = filename
-        except (Exception, Throwable), e:
+        except (Exception, Throwable) as e:
             continue
     if not where:
         raise ValueError("'%s' is not declared in this theme" % name)
@@ -2337,7 +2337,7 @@ def swatches(theme, limit=EDITOR_SWATCH_COUNT):
             if value.startswith("linear-gradient"):
                 continue                 # a chip cannot show one honestly
             counts[value] = counts.get(value, 0) + 1
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         counts = {}                      # padded empties below, never short
     # Most-used first: those are the theme's structural colours, and the tail
     # is one-off accents. Name as the tie-break so the row does not reshuffle

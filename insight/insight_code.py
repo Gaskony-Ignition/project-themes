@@ -176,7 +176,7 @@ def _gateway_port():
         found = re.search(r'"gateway\.port"\s*>\s*(\d+)', xml)
         if found:
             return int(found.group(1))
-    except (Exception, Throwable), e:
+    except (Exception, Throwable) as e:
         pass
     return 8088
 
