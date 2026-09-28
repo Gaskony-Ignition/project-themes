@@ -209,7 +209,7 @@ def build_themepack_code(themes, version):
     """ignition/script-python/themepack/code.py -- gateway-scope module
     embedding every theme's file contents plus install/uninstall/status.
 
-    Jython 2.7 (workspace rule): `except (Exception, Throwable), e:` syntax,
+    Jython 2.7 (workspace rule): `except (Exception, Throwable) as e:` syntax,
     catching java.lang.Throwable because Ignition system calls raise Java
     Throwables that a plain `except Exception` does not see.
     """
@@ -295,7 +295,7 @@ def build_themepack_code(themes, version):
     lines.append('    try:')
     lines.append('        from java.util.concurrent import TimeUnit')
     lines.append('        from_future.get(30, TimeUnit.SECONDS)')
-    lines.append('    except (Exception, Throwable), e:')
+    lines.append('    except (Exception, Throwable) as e:')
     lines.append('        pass  # scan still runs; only the wait failed')
     lines.append('')
     lines.append('')
@@ -344,7 +344,7 @@ def build_themepack_code(themes, version):
     lines.append('        res = system.config.getResource(')
     lines.append('            moduleId="com.inductiveautomation.perspective",')
     lines.append('            typeId="themes", name=name)')
-    lines.append('    except (Exception, Throwable), e:')
+    lines.append('    except (Exception, Throwable) as e:')
     lines.append('        return False')
     lines.append('    system.config.delete(')
     lines.append('        moduleId="com.inductiveautomation.perspective",')
@@ -420,7 +420,7 @@ def build_themepack_code(themes, version):
     lines.append('        old = json.loads(_read(path))')
     lines.append('        if old.get("description"):')
     lines.append('            doc["description"] = old["description"]')
-    lines.append('    except (Exception, Throwable), e:')
+    lines.append('    except (Exception, Throwable) as e:')
     lines.append('        pass')
     lines.append('    doc["files"] = [n for n in sorted(os.listdir(theme_dir))')
     lines.append('                    if n != "resource.json"]')
@@ -438,7 +438,7 @@ def build_themepack_code(themes, version):
     lines.append('        return "missing"')
     lines.append('    try:')
     lines.append('        text = _read(idx)')
-    lines.append('    except (Exception, Throwable), e:')
+    lines.append('    except (Exception, Throwable) as e:')
     lines.append('        return "missing"')
     lines.append('    for filename, marker in ([(ADDITIONS_FILE, ADDITIONS_IMPORT)] +')
     lines.append('                            zip(LEGACY_ADDITIONS, LEGACY_IMPORTS)):')
@@ -537,7 +537,7 @@ def build_themepack_code(themes, version):
     lines.append('        for res in system.config.getResources(')
     lines.append('                moduleId="com.inductiveautomation.perspective", typeId="themes"):')
     lines.append('            installed.add(str(res.getName()))')
-    lines.append('    except (Exception, Throwable), e:')
+    lines.append('    except (Exception, Throwable) as e:')
     lines.append('        pass')
     lines.append('    out = []')
     lines.append('    for name in THEME_ORDER:')
@@ -1756,7 +1756,7 @@ EDITOR_TEXT = (
     "\t\treturn ''\n"
     "\ttry:\n"
     "\t\treturn themepack.read_file(theme, filename)['text']\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\treturn str(e)"
 )
 EDITOR_ABOUT = (
@@ -1790,7 +1790,7 @@ EDITOR_SAVE = (
     "\t\tself.view.custom.status = ('Saved %s (%d bytes) and scanned'\n"
     "\t\t                           % (filename, result['bytes']))\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 EDITOR_REVERT = (
@@ -1804,7 +1804,7 @@ EDITOR_REVERT = (
     "\t\tself.view.custom.status = ('Put back what the installer ships for %s'\n"
     "\t\t                           % filename)\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 EDITOR_REFRESH = (
@@ -1815,7 +1815,7 @@ EDITOR_REFRESH = (
     "\t\t# keeps showing what it read before it.\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 
@@ -1928,7 +1928,7 @@ EDITOR_UNDO = (
     "\t\tself.view.custom.undo_name = ''\n"
     "\t\tself.view.custom.undo_value = ''\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 EDITOR_START_OPTIONS = (
@@ -2015,7 +2015,7 @@ EDITOR_SAVE_TOKEN = (
     "\t\t# equally true of a save that wrote back what was already there.\n"
     "\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 EDITOR_TOGGLE_RAW = (
@@ -2095,7 +2095,7 @@ EDITOR_NEW = (
     "\t\tself.view.custom.status = ('Created %s from %s -- it looks exactly "
     "like it until you change something'\n"
     "\t\t                           % (name, self.view.custom.new_base))\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 EDITOR_COPY = (
@@ -2111,7 +2111,7 @@ EDITOR_COPY = (
     "\t\tself.view.custom.file = 'variables.css'\n"
     "\t\tself.view.custom.status = ('Copied %s to %s -- you are now "
     "editing the copy' % (source, name))\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 EDITOR_DELETE = (
@@ -2130,7 +2130,7 @@ EDITOR_DELETE = (
     "\t\tself.view.custom.theme = (mine or [r['id'] for r in rows] or [''])[0]\n"
     "\t\tself.view.custom.file = 'variables.css'\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
-    "\texcept Exception, e:\n"
+    "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
 # Delete is offered ONLY for a theme made here. A packaged theme's lifecycle

@@ -67,6 +67,20 @@ if [ "$_skip_a11y" -ne 1 ]; then
     "$_a11y" "$_repo" || { echo "accessibility gate failed: fix the findings or pass --skip-a11y-check" >&2; exit 1; }
 fi
 
+# Lint gate (ign-lint + pylint via modules/lint-gate.sh). Blocking; bypass deliberately with --skip-lint-check.
+_skip_lint=0
+for _a in "$@"; do [ "$_a" = "--skip-lint-check" ] && _skip_lint=1; done
+if [ "$_skip_lint" -ne 1 ]; then
+    _repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+    _lint=""; _d="$_repo"
+    while [ "$_d" != / ]; do
+        [ -x "$_d/modules/lint-gate.sh" ] && { _lint="$_d/modules/lint-gate.sh"; break; }
+        _d=$(dirname "$_d")
+    done
+    [ -n "$_lint" ] || { echo "lint-gate.sh not found above $_repo; pass --skip-lint-check" >&2; exit 1; }
+    "$_lint" "$_repo" || { echo "lint gate failed: fix the findings or pass --skip-lint-check" >&2; exit 1; }
+fi
+
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 cd "$SCRIPT_DIR"
 

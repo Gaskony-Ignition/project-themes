@@ -69,7 +69,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\tbits = (value + '|||').split('|')\n\ttheme = bits[0]\n\t# The filter rides in the key, so typing re-reads the list. 150\n\t# values is ten screens of scrolling to reach one token.\n\tneedle = bits[3].strip().lower()\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.all_tokens(theme)\n\texcept Exception:\n\t\treturn []\n\tif needle:\n\t\trows = [r for r in rows\n\t\t        if needle in r['name'].lower()\n\t\t        or needle in (r.get('what') or '').lower()\n\t\t        or needle in (r.get('group') or '').lower()\n\t\t        or needle in (r['value'] or '').lower()]\n\tout = []\n\tlast = None\n\tfor r in rows:\n\t\tgroup = r['group']\n\t\tout.append({'group': group if group != last else '',\n\t\t            'name': r['name'],\n\t\t            'what': r.get('what', ''),\n\t\t            'swatch': r['swatch'],\n\t\t            'value': r['value']})\n\t\tlast = group\n\treturn out"
+            "code": "\timport themepack\n\tbits = (value + '|||').split('|')\n\ttheme = bits[0]\n\t# The filter rides in the key, so typing re-reads the list. 150\n\t# values is ten screens of scrolling to reach one token.\n\tneedle = bits[3].strip().lower()\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.all_tokens(theme)\n\texcept Exception:\n\t\treturn []\n\tif needle:\n\t\trows = [r for r in rows\n\t\t\t\tif needle in r['name'].lower()\n\t\t\t\tor needle in (r.get('what') or '').lower()\n\t\t\t\tor needle in (r.get('group') or '').lower()\n\t\t\t\tor needle in (r['value'] or '').lower()]\n\tout = []\n\tlast = None\n\tfor r in rows:\n\t\tgroup = r['group']\n\t\tout.append({'group': group if group != last else '',\n\t\t\t\t\t'name': r['name'],\n\t\t\t\t\t'what': r.get('what', ''),\n\t\t\t\t\t'swatch': r['swatch'],\n\t\t\t\t\t'value': r['value']})\n\t\tlast = group\n\treturn out"
           }
         ]
       }
@@ -97,7 +97,7 @@
         "transforms": [
           {
             "type": "script",
-            "code": "\timport themepack\n\ttheme, filename = (value + '|').split('|')[:2]\n\tif not theme or not filename:\n\t\treturn ''\n\ttry:\n\t\treturn themepack.read_file(theme, filename)['text']\n\texcept Exception, e:\n\t\treturn str(e)"
+            "code": "\timport themepack\n\ttheme, filename = (value + '|').split('|')[:2]\n\tif not theme or not filename:\n\t\treturn ''\n\ttry:\n\t\treturn themepack.read_file(theme, filename)['text']\n\texcept Exception as e:\n\t\treturn str(e)"
           }
         ]
       }
@@ -428,7 +428,7 @@
                   "transforms": [
                     {
                       "type": "script",
-                      "code": "\timport themepack\n\t# Say what each one IS. The label was '(not ours)', which is true\n\t# of a theme you just made and reads as a disclaimer about it.\n\tsuffix = {'user': '  (yours)', 'stock': \"  (Ignition's)\"}\n\tout = []\n\tfor r in themepack.list_themes():\n\t\tkind = themepack.theme_kind(r['id'])\n\t\tout.append({'value': r['id'],\n\t                    'label': r['id'] + suffix.get(kind, '')})\n\treturn out"
+                      "code": "\timport themepack\n\t# Say what each one IS. The label was '(not ours)', which is true\n\t# of a theme you just made and reads as a disclaimer about it.\n\tsuffix = {'user': '  (yours)', 'stock': \"  (Ignition's)\"}\n\tout = []\n\tfor r in themepack.list_themes():\n\t\tkind = themepack.theme_kind(r['id'])\n\t\tout.append({'value': r['id'],\n\t\t\t\t\t\t'label': r['id'] + suffix.get(kind, '')})\n\treturn out"
                     }
                   ]
                 }
@@ -470,7 +470,7 @@
                   "transforms": [
                     {
                       "type": "script",
-                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\tkind = themepack.theme_kind(theme)\n\t# base_of() answers from the built-in tables, so for a theme made\n\t# here it falls through to 'light' -- and called every copy of a\n\t# dark theme light.\n\tbase = (themepack.user_base_of(theme) if kind == 'user'\n\t        else themepack.base_of(theme))\n\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n\t# point: the separator here arrived on the page as mojibake.\n\twords = {\n\t\t'packaged': '%s is one of the ten pre-packaged themes, built on %s. Install on the first page puts it back.',\n\t\t'stock': \"%s is one of Ignition's own, built on %s. Editing it changes every project using it.\",\n\t\t'user': '%s is yours, built on %s. Nothing on the Installer page overwrites it.',\n\t}\n\t# The NAME leads: the badge always says which theme it describes,\n\t# so after a create -- when the picker is the only other thing\n\t# naming it -- the page still names it somewhere.\n\ttext = words.get(kind, kind)\n\tif '%s' in text:\n\t\ttext = text % (theme, base or 'a stock theme')\n\treturn text"
+                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn ''\n\tkind = themepack.theme_kind(theme)\n\t# base_of() answers from the built-in tables, so for a theme made\n\t# here it falls through to 'light' -- and called every copy of a\n\t# dark theme light.\n\tbase = (themepack.user_base_of(theme) if kind == 'user'\n\t\t\telse themepack.base_of(theme))\n\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n\t# point: the separator here arrived on the page as mojibake.\n\twords = {\n\t\t'packaged': '%s is one of the ten pre-packaged themes, built on %s. Install on the first page puts it back.',\n\t\t'stock': \"%s is one of Ignition's own, built on %s. Editing it changes every project using it.\",\n\t\t'user': '%s is yours, built on %s. Nothing on the Installer page overwrites it.',\n\t}\n\t# The NAME leads: the badge always says which theme it describes,\n\t# so after a create -- when the picker is the only other thing\n\t# naming it -- the page still names it somewhere.\n\ttext = words.get(kind, kind)\n\tif '%s' in text:\n\t\ttext = text % (theme, base or 'a stock theme')\n\treturn text"
                     }
                   ]
                 }
@@ -582,7 +582,7 @@
                   "component": {
                     "onActionPerformed": {
                       "config": {
-                        "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\ttry:\n\t\tif themepack.delete_theme(theme):\n\t\t\tself.view.custom.status = 'Deleted %s' % theme\n\t\telse:\n\t\t\tself.view.custom.status = 'There was no %s to delete' % theme\n\t\t# Land on another theme rather than on an empty picker: the\n\t\t# dropdown's default only evaluates once, so clearing it leaves\n\t\t# 'Select...' and an editor with nothing in it.\n\t\trows = themepack.list_themes()\n\t\tmine = [r['id'] for r in rows if r['ours']]\n\t\tself.view.custom.theme = (mine or [r['id'] for r in rows] or [''])[0]\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                        "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\ttry:\n\t\tif themepack.delete_theme(theme):\n\t\t\tself.view.custom.status = 'Deleted %s' % theme\n\t\telse:\n\t\t\tself.view.custom.status = 'There was no %s to delete' % theme\n\t\t# Land on another theme rather than on an empty picker: the\n\t\t# dropdown's default only evaluates once, so clearing it leaves\n\t\t# 'Select...' and an editor with nothing in it.\n\t\trows = themepack.list_themes()\n\t\tmine = [r['id'] for r in rows if r['ours']]\n\t\tself.view.custom.theme = (mine or [r['id'] for r in rows] or [''])[0]\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                       },
                       "scope": "G",
                       "type": "script"
@@ -784,7 +784,7 @@
                           "transforms": [
                             {
                               "type": "script",
-                              "code": "\timport themepack\n\treturn [{'value': r['id'], 'label': r['label']}\n\t        for r in themepack.start_points()]"
+                              "code": "\timport themepack\n\treturn [{'value': r['id'], 'label': r['label']}\n\t\t\tfor r in themepack.start_points()]"
                             }
                           ]
                         }
@@ -867,7 +867,7 @@
                       "component": {
                         "onActionPerformed": {
                           "config": {
-                            "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\ttry:\n\t\t# make_theme copies one of ours, or builds on a bare Ignition\n\t\t# theme, depending on what was chosen -- one action, because\n\t\t# two buttons made them look like comparable alternatives.\n\t\tthemepack.make_theme(name, self.view.custom.new_base)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.making = ''\n\t\t# nudge FIRST: it is what re-reads the theme list, and a\n\t\t# selection the options do not contain yet shows as blank.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.status = ('Created %s from %s -- it looks exactly like it until you change something'\n\t\t                           % (name, self.view.custom.new_base))\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                            "script": "\timport themepack\n\tname = (self.view.custom.new_name or '').strip()\n\ttry:\n\t\t# make_theme copies one of ours, or builds on a bare Ignition\n\t\t# theme, depending on what was chosen -- one action, because\n\t\t# two buttons made them look like comparable alternatives.\n\t\tthemepack.make_theme(name, self.view.custom.new_base)\n\t\tself.view.custom.new_name = ''\n\t\tself.view.custom.making = ''\n\t\t# nudge FIRST: it is what re-reads the theme list, and a\n\t\t# selection the options do not contain yet shows as blank.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.theme = name\n\t\tself.view.custom.file = 'variables.css'\n\t\tself.view.custom.status = ('Created %s from %s -- it looks exactly like it until you change something'\n\t\t\t\t\t\t\t\t% (name, self.view.custom.new_base))\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                           },
                           "scope": "G",
                           "type": "script"
@@ -1725,7 +1725,7 @@
                                           "component": {
                                             "onActionPerformed": {
                                               "config": {
-                                                "script": "\timport themepack\n\tname = self.view.custom.undo_name\n\twas = self.view.custom.undo_value\n\tif not name:\n\t\treturn\n\ttry:\n\t\tthemepack.set_any_token(self.view.custom.theme, name, was)\n\t\tself.view.custom.status = 'Put %s back to %s' % (name, was)\n\t\tself.view.custom.sel_name = name\n\t\tself.view.custom.sel_value = was\n\t\t# One level, and it is spent. Two Undos in a row putting the\n\t\t# same value back twice would be a button that lies.\n\t\tself.view.custom.undo_name = ''\n\t\tself.view.custom.undo_value = ''\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                                "script": "\timport themepack\n\tname = self.view.custom.undo_name\n\twas = self.view.custom.undo_value\n\tif not name:\n\t\treturn\n\ttry:\n\t\tthemepack.set_any_token(self.view.custom.theme, name, was)\n\t\tself.view.custom.status = 'Put %s back to %s' % (name, was)\n\t\tself.view.custom.sel_name = name\n\t\tself.view.custom.sel_value = was\n\t\t# One level, and it is spent. Two Undos in a row putting the\n\t\t# same value back twice would be a button that lies.\n\t\tself.view.custom.undo_name = ''\n\t\tself.view.custom.undo_value = ''\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                                               },
                                               "scope": "G",
                                               "type": "script"
@@ -1766,7 +1766,7 @@
                                       "component": {
                                         "onActionPerformed": {
                                           "config": {
-                                            "script": "\timport themepack\n\tname = self.view.custom.sel_name\n\tif not name:\n\t\tself.view.custom.status = 'Pick a value in the list first'\n\t\treturn\n\tvalue = self.view.custom.sel_value\n\ttry:\n\t\t# set_any_token finds the file: --st-* live in globals.css and\n\t\t# Ignition's own names in variables.css, and the page never showed\n\t\t# the user which is which. It also refuses a value that would\n\t\t# stop the token working, which is why this can fail loudly.\n\t\tresult = themepack.set_any_token(self.view.custom.theme,\n\t\t                                 name, value)\n\t\t# Remember what it replaced. Nobody remembers the hex they\n\t\t# overwrote, and there was no way back from a wrong save.\n\t\tself.view.custom.undo_name = name\n\t\tself.view.custom.undo_value = result.get('was', '')\n\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n\t\t# equally true of a save that wrote back what was already there.\n\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                            "script": "\timport themepack\n\tname = self.view.custom.sel_name\n\tif not name:\n\t\tself.view.custom.status = 'Pick a value in the list first'\n\t\treturn\n\tvalue = self.view.custom.sel_value\n\ttry:\n\t\t# set_any_token finds the file: --st-* live in globals.css and\n\t\t# Ignition's own names in variables.css, and the page never showed\n\t\t# the user which is which. It also refuses a value that would\n\t\t# stop the token working, which is why this can fail loudly.\n\t\tresult = themepack.set_any_token(self.view.custom.theme,\n\t\t\t\t\t\t\t\t\t\tname, value)\n\t\t# Remember what it replaced. Nobody remembers the hex they\n\t\t# overwrote, and there was no way back from a wrong save.\n\t\tself.view.custom.undo_name = name\n\t\tself.view.custom.undo_value = result.get('was', '')\n\t\t# Report the VALUE, not just the name: 'Saved --st-accent' is\n\t\t# equally true of a save that wrote back what was already there.\n\t\tself.view.custom.status = 'Saved %s = %s' % (name, value)\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                                           },
                                           "scope": "G",
                                           "type": "script"
@@ -3602,7 +3602,7 @@
                                   "transforms": [
                                     {
                                       "type": "script",
-                                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.list_files(theme)\n\texcept Exception:\n\t\treturn []\n\treturn [{'value': r['name'], 'label': r['name']}\n\t        for r in rows if r['editable']]"
+                                      "code": "\timport themepack\n\ttheme = (value + '|').split('|')[0]\n\tif not theme:\n\t\treturn []\n\ttry:\n\t\trows = themepack.list_files(theme)\n\texcept Exception:\n\t\treturn []\n\treturn [{'value': r['name'], 'label': r['name']}\n\t\t\tfor r in rows if r['editable']]"
                                     }
                                   ]
                                 }
@@ -3651,7 +3651,7 @@
                               "component": {
                                 "onActionPerformed": {
                                   "config": {
-                                    "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\tfilename = self.view.custom.file\n\tif not filename:\n\t\tself.view.custom.status = 'Pick a file first'\n\t\treturn\n\ttry:\n\t\tresult = themepack.write_file(theme, filename,\n\t\t                              self.view.custom.text)\n\t\tself.view.custom.status = ('Saved %s (%d bytes) and scanned'\n\t\t                           % (filename, result['bytes']))\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                    "script": "\timport themepack\n\ttheme = self.view.custom.theme\n\tfilename = self.view.custom.file\n\tif not filename:\n\t\tself.view.custom.status = 'Pick a file first'\n\t\treturn\n\ttry:\n\t\tresult = themepack.write_file(theme, filename,\n\t\t\t\t\t\t\t\t\tself.view.custom.text)\n\t\tself.view.custom.status = ('Saved %s (%d bytes) and scanned'\n\t\t\t\t\t\t\t\t% (filename, result['bytes']))\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                                   },
                                   "scope": "G",
                                   "type": "script"
@@ -3685,7 +3685,7 @@
                               "component": {
                                 "onActionPerformed": {
                                   "config": {
-                                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\t# Bump the key too, or the scan runs and every binding on this page\n\t\t# keeps showing what it read before it.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\t# Bump the key too, or the scan runs and every binding on this page\n\t\t# keeps showing what it read before it.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                                   },
                                   "scope": "G",
                                   "type": "script"
@@ -3947,7 +3947,7 @@
                               "component": {
                                 "onActionPerformed": {
                                   "config": {
-                                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\t# Bump the key too, or the scan runs and every binding on this page\n\t\t# keeps showing what it read before it.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception, e:\n\t\tself.view.custom.status = str(e)"
+                                    "script": "\timport themepack\n\ttry:\n\t\tthemepack.refresh()\n\t\t# Bump the key too, or the scan runs and every binding on this page\n\t\t# keeps showing what it read before it.\n\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n\t\tself.view.custom.status = 'Scanned -- the gateway has re-read the themes'\n\texcept Exception as e:\n\t\tself.view.custom.status = str(e)"
                                   },
                                   "scope": "G",
                                   "type": "script"
