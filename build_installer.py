@@ -295,7 +295,7 @@ def build_themepack_code(themes, version):
     lines.append('    try:')
     lines.append('        from java.util.concurrent import TimeUnit')
     lines.append('        from_future.get(30, TimeUnit.SECONDS)')
-    lines.append('    except (Exception, Throwable) as e:')
+    lines.append('    except (Exception, Throwable):')
     lines.append('        pass  # scan still runs; only the wait failed')
     lines.append('')
     lines.append('')
@@ -344,7 +344,7 @@ def build_themepack_code(themes, version):
     lines.append('        res = system.config.getResource(')
     lines.append('            moduleId="com.inductiveautomation.perspective",')
     lines.append('            typeId="themes", name=name)')
-    lines.append('    except (Exception, Throwable) as e:')
+    lines.append('    except (Exception, Throwable):')
     lines.append('        return False')
     lines.append('    system.config.delete(')
     lines.append('        moduleId="com.inductiveautomation.perspective",')
@@ -420,7 +420,7 @@ def build_themepack_code(themes, version):
     lines.append('        old = json.loads(_read(path))')
     lines.append('        if old.get("description"):')
     lines.append('            doc["description"] = old["description"]')
-    lines.append('    except (Exception, Throwable) as e:')
+    lines.append('    except (Exception, Throwable):')
     lines.append('        pass')
     lines.append('    doc["files"] = [n for n in sorted(os.listdir(theme_dir))')
     lines.append('                    if n != "resource.json"]')
@@ -438,7 +438,7 @@ def build_themepack_code(themes, version):
     lines.append('        return "missing"')
     lines.append('    try:')
     lines.append('        text = _read(idx)')
-    lines.append('    except (Exception, Throwable) as e:')
+    lines.append('    except (Exception, Throwable):')
     lines.append('        return "missing"')
     lines.append('    for filename, marker in ([(ADDITIONS_FILE, ADDITIONS_IMPORT)] +')
     lines.append('                            zip(LEGACY_ADDITIONS, LEGACY_IMPORTS)):')
@@ -537,7 +537,7 @@ def build_themepack_code(themes, version):
     lines.append('        for res in system.config.getResources(')
     lines.append('                moduleId="com.inductiveautomation.perspective", typeId="themes"):')
     lines.append('            installed.add(str(res.getName()))')
-    lines.append('    except (Exception, Throwable) as e:')
+    lines.append('    except (Exception, Throwable):')
     lines.append('        pass')
     lines.append('    out = []')
     lines.append('    for name in THEME_ORDER:')
@@ -1016,7 +1016,7 @@ INSTALLED_OPTIONS = (
     "\t\t\tif r.get('stock') == 'missing':\n"
     "\t\t\t\tcontinue\n"
     "\t\t\tstock.append({'value': r['id'],\n"
-    "\t\t\t              'label': themepack.label_of(r['id'])})\n"
+    "\t\t\t'label': themepack.label_of(r['id'])})\n"
     "\t\telif r.get('installed'):\n"
     "\t\t\tcustom.append({'value': r['id'], 'label': r['label']})\n"
     "\treturn stock + custom"
@@ -1696,7 +1696,7 @@ EDITOR_THEME_OPTIONS = (
     "\tfor r in themepack.list_themes():\n"
     "\t\tkind = themepack.theme_kind(r['id'])\n"
     "\t\tout.append({'value': r['id'],\n"
-    "\t                    'label': r['id'] + suffix.get(kind, '')})\n"
+    "\t'label': r['id'] + suffix.get(kind, '')})\n"
     "\treturn out"
 )
 EDITOR_FIRST_THEME = (
@@ -1747,7 +1747,7 @@ EDITOR_FILE_OPTIONS = (
     "\texcept Exception:\n"
     "\t\treturn []\n"
     "\treturn [{'value': r['name'], 'label': r['name']}\n"
-    "\t        for r in rows if r['editable']]"
+    "\tfor r in rows if r['editable']]"
 )
 EDITOR_TEXT = (
     "\timport themepack\n"
@@ -1786,9 +1786,9 @@ EDITOR_SAVE = (
     "\t\treturn\n"
     "\ttry:\n"
     "\t\tresult = themepack.write_file(theme, filename,\n"
-    "\t\t                              self.view.custom.text)\n"
+    "\t\tself.view.custom.text)\n"
     "\t\tself.view.custom.status = ('Saved %s (%d bytes) and scanned'\n"
-    "\t\t                           % (filename, result['bytes']))\n"
+    "\t\t% (filename, result['bytes']))\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
@@ -1802,7 +1802,7 @@ EDITOR_REVERT = (
     "\ttry:\n"
     "\t\tthemepack.revert_file(self.view.custom.theme, filename)\n"
     "\t\tself.view.custom.status = ('Put back what the installer ships for %s'\n"
-    "\t\t                           % filename)\n"
+    "\t\t% filename)\n"
     "\t\tself.view.custom.nudge = self.view.custom.nudge + 1\n"
     "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
@@ -1874,19 +1874,19 @@ EDITOR_TOKEN_ROWS = (
     "\t\treturn []\n"
     "\tif needle:\n"
     "\t\trows = [r for r in rows\n"
-    "\t\t        if needle in r['name'].lower()\n"
-    "\t\t        or needle in (r.get('what') or '').lower()\n"
-    "\t\t        or needle in (r.get('group') or '').lower()\n"
-    "\t\t        or needle in (r['value'] or '').lower()]\n"
+    "\t\tif needle in r['name'].lower()\n"
+    "\t\tor needle in (r.get('what') or '').lower()\n"
+    "\t\tor needle in (r.get('group') or '').lower()\n"
+    "\t\tor needle in (r['value'] or '').lower()]\n"
     "\tout = []\n"
     "\tlast = None\n"
     "\tfor r in rows:\n"
     "\t\tgroup = r['group']\n"
     "\t\tout.append({'group': group if group != last else '',\n"
-    "\t\t            'name': r['name'],\n"
-    "\t\t            'what': r.get('what', ''),\n"
-    "\t\t            'swatch': r['swatch'],\n"
-    "\t\t            'value': r['value']})\n"
+    "\t\t'name': r['name'],\n"
+    "\t\t'what': r.get('what', ''),\n"
+    "\t\t'swatch': r['swatch'],\n"
+    "\t\t'value': r['value']})\n"
     "\t\tlast = group\n"
     "\treturn out"
 )
@@ -1934,7 +1934,7 @@ EDITOR_UNDO = (
 EDITOR_START_OPTIONS = (
     "\timport themepack\n"
     "\treturn [{'value': r['id'], 'label': r['label']}\n"
-    "\t        for r in themepack.start_points()]"
+    "\tfor r in themepack.start_points()]"
 )
 EDITOR_START_WARNING = (
     "\timport themepack\n"
@@ -2006,7 +2006,7 @@ EDITOR_SAVE_TOKEN = (
     "\t\t# the user which is which. It also refuses a value that would\n"
     "\t\t# stop the token working, which is why this can fail loudly.\n"
     "\t\tresult = themepack.set_any_token(self.view.custom.theme,\n"
-    "\t\t                                 name, value)\n"
+    "\t\tname, value)\n"
     "\t\t# Remember what it replaced. Nobody remembers the hex they\n"
     "\t\t# overwrote, and there was no way back from a wrong save.\n"
     "\t\tself.view.custom.undo_name = name\n"
@@ -2040,7 +2040,7 @@ EDITOR_KIND_LABEL = (
     "\t# here it falls through to 'light' -- and called every copy of a\n"
     "\t# dark theme light.\n"
     "\tbase = (themepack.user_base_of(theme) if kind == 'user'\n"
-    "\t        else themepack.base_of(theme))\n"
+    "\telse themepack.base_of(theme))\n"
     "\t# Plain ASCII, and a sentence rather than dash-separated fragments.\n"
     "\t# A non-ASCII character in a Jython 2 str literal is BYTES, not a code\n"
     "\t# point: the separator here arrived on the page as mojibake.\n"
@@ -2094,7 +2094,7 @@ EDITOR_NEW = (
     "\t\tself.view.custom.file = 'variables.css'\n"
     "\t\tself.view.custom.status = ('Created %s from %s -- it looks exactly "
     "like it until you change something'\n"
-    "\t\t                           % (name, self.view.custom.new_base))\n"
+    "\t\t% (name, self.view.custom.new_base))\n"
     "\texcept Exception as e:\n"
     "\t\tself.view.custom.status = str(e)"
 )
