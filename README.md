@@ -135,7 +135,9 @@ theme listing overridden variables, and a `SWATCH` line per theme with its ten
 `--qual-*` hex values, and an `A11Y` line for every colour it moved to reach
 a contrast threshold. It exits non-zero only on a hard error in the mapping
 itself. `tools/check_contrast.py` checks the generated themes against WCAG 2.1
-AA; `package.sh` runs it and refuses to package on a failure.
+AA; `tools/check_alarm_contrast.py` does the same for each alarm severity's
+text, time and badge against that row's own rendered background; `package.sh`
+runs both and refuses to package on a failure.
 
 `VERSION` is a plain one-line file, bumped by hand before packaging; neither
 `build_installer.py` nor `package.sh` touches it. `package.sh` refuses to run

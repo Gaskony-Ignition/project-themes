@@ -109,7 +109,7 @@
  "alarms/time": {
   "base": {
    "style": {
-    "color": "#5b6b74",
+    "color": "#5a6972",
     "fontSize": "11.5px"
    }
   }
