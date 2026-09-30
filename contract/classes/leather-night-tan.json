@@ -62,8 +62,8 @@
  "alarms/row-low": {
   "base": {
    "style": {
-    "backgroundColor": "#526274",
-    "borderLeftColor": "#3e6089",
+    "backgroundColor": "#7fa9d6",
+    "borderLeftColor": "#58a6ff",
     "borderLeftStyle": "solid",
     "borderLeftWidth": "3px",
     "borderRadius": "6px",
@@ -101,7 +101,7 @@
  "alarms/text": {
   "base": {
    "style": {
-    "color": "#ece0cb",
+    "color": "#1b120a",
     "fontSize": "13px"
    }
   }
@@ -109,7 +109,7 @@
  "alarms/time": {
   "base": {
    "style": {
-    "color": "#6b5b49",
+    "color": "#382f26",
     "fontSize": "11.5px"
    }
   }

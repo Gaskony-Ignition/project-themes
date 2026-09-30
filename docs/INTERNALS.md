@@ -246,6 +246,15 @@ on those events keep working.
 and checks every pair above, plus the contract's own text pairs. It prints
 each pair it could not check. `package.sh` will not package a failing theme.
 
+`alarms/text` and `alarms/time` are each a single colour shared by all four
+`alarms/row-<severity>` classes, and `alarms/pri-<severity>` is a badge
+colour painted on its own row -- none of that is covered by the pairs above,
+because a row's rendered background depends on which severity classes land
+on it. `tools/check_alarm_contrast.py` reads each generated theme's alarm
+classes and checks text/time (4.5:1) and the badge (3:1) against each of the
+four rows' own composited background. `package.sh` will not package a
+failing theme.
+
 Some failures are Perspective's own markup, and no theme can fix them:
 
 - the page has no `lang` attribute;

@@ -782,8 +782,8 @@ button[class*="/buttons/danger"] {
 }
 
 .psc-st\/alarms\/row-low.psc-st\/alarms\/row-low {
-  background-color: #8ca5bd;
-  border-left-color: #7acdf2;
+  background-color: #2f5d8a;
+  border-left-color: #0ea5e9;
   border-left-style: solid;
   border-left-width: 3px;
   border-radius: 8px;
@@ -812,12 +812,12 @@ button[class*="/buttons/danger"] {
 }
 
 .psc-st\/alarms\/text.psc-st\/alarms\/text {
-  color: #2b2620;
+  color: #fdf6e8;
   font-size: 13px;
 }
 
 .psc-st\/alarms\/time.psc-st\/alarms\/time {
-  color: #96856c;
+  color: #f9f9f7;
   font-size: 12px;
 }
 
