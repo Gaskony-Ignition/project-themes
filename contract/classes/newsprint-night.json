@@ -65,16 +65,15 @@
  "alarms/row-low": {
   "base": {
    "style": {
-    "backgroundColor": "#20303a",
+    "backgroundColor": "#252c2e",
     "borderBottomColor": "#3a3630",
     "borderBottomStyle": "solid",
     "borderBottomWidth": "1px",
-    "borderLeftColor": "#6f9dbd",
+    "borderLeftColor": "#4c6270",
     "borderLeftStyle": "solid",
     "borderLeftWidth": "2px",
     "borderRadius": "0",
     "fontSize": "12.5px",
-    "opacity": ".5",
     "padding": "8px 10px"
    }
   }

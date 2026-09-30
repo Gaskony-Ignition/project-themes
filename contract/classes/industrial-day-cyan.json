@@ -67,14 +67,13 @@
    "style": {
     "backgroundColor": "#FFFFFF",
     "borderColor": "#D1D5DB",
-    "borderLeftColor": "#B0B8C4",
+    "borderLeftColor": "#C6CCD5",
     "borderLeftStyle": "solid",
     "borderLeftWidth": "4px",
     "borderRadius": "2px",
     "borderStyle": "solid",
     "borderWidth": "1px",
     "fontSize": "12px",
-    "opacity": ".72",
     "padding": "5px 8px"
    }
   }

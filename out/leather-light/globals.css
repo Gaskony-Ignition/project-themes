@@ -782,13 +782,12 @@ button[class*="/buttons/danger"] {
 }
 
 .psc-st\/alarms\/row-low.psc-st\/alarms\/row-low {
-  background-color: #2f5d8a;
-  border-left-color: #0ea5e9;
+  background-color: #8ca5bd;
+  border-left-color: #7acdf2;
   border-left-style: solid;
   border-left-width: 3px;
   border-radius: 8px;
   font-size: 13px;
-  opacity: .55;
   padding: 8px 10px;
 }
 
