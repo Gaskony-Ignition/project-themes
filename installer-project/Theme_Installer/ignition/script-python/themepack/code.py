@@ -265,6 +265,22 @@ def uninstall_all():
     return removed
 
 
+def install_some(names):
+    """Install the named themes with one scan. Names outside THEMES are
+    skipped, not raised: the selection can hold stock or user rows."""
+    done = [n for n in THEME_ORDER if n in (names or [])]
+    for name in done:
+        _write_theme_files(name)
+    if done:
+        _rescan()
+    return done
+
+
+def uninstall_some(names):
+    """Remove the named themes. Same whitelist as install_some()."""
+    return [n for n in THEME_ORDER if n in (names or []) and uninstall(n)]
+
+
 # ---- optional stock-theme update ----------------------------------------
 # Installing the custom themes NEVER touches a stock theme. Separately and
 # optionally, the four ON-DISK stock variants can take a small additions

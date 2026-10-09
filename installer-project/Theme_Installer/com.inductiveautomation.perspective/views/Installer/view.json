@@ -2,6 +2,7 @@
   "custom": {
     "tick": 0,
     "themes": [],
+    "selected": [],
     "tblheight": "740px"
   },
   "params": {},
@@ -313,7 +314,7 @@
                       "basis": "auto"
                     },
                     "props": {
-                      "text": "The ones this project carries. Writes them to this gateway as Perspective config resources and runs a scan, so they are in every project's Theme menu with no gateway restart -- a session already open picks them up when it reloads. Safe to re-run: it overwrites the gateway's copies, which is also how you repair them after an Ignition upgrade.",
+                      "text": "The ones this project carries. Writes them to this gateway as Perspective config resources and runs a scan, so they are in every project's Theme menu with no gateway restart -- a session already open picks them up when it reloads. Safe to re-run: it overwrites the gateway's copies, which is also how you repair them after an Ignition upgrade. To install or remove only some, select their rows in the table below (Ctrl-click for more than one).",
                       "style": {
                         "fontSize": "12.5px",
                         "lineHeight": "1.5",
@@ -383,7 +384,7 @@
                           "basis": "auto"
                         },
                         "props": {
-                          "text": "Install",
+                          "text": "Install all",
                           "style": {
                             "whiteSpace": "nowrap",
                             "height": "32px"
@@ -412,7 +413,7 @@
                           "basis": "auto"
                         },
                         "props": {
-                          "text": "Remove",
+                          "text": "Remove all",
                           "style": {
                             "whiteSpace": "nowrap",
                             "height": "32px",
@@ -428,6 +429,88 @@
                               },
                               "scope": "G",
                               "type": "script"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "install_some_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Install selected",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px",
+                            "backgroundColor": "var(--containerNested)",
+                            "color": "var(--label)"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\timport themepack\n\tpicked = set(r['label'] for r in self.view.custom.selected or [])\n\tnames = [t['id'] for t in self.view.custom.themes\n\t\tif t['label'] in picked and t['kind'] == 'custom']\n\tthemepack.install_some(names)\n\tself.view.custom.selected = []\n\tself.view.custom.tick += 1"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        },
+                        "propConfig": {
+                          "props.enabled": {
+                            "binding": {
+                              "type": "expr",
+                              "config": {
+                                "expression": "len({view.custom.selected}) > 0"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "ia.input.button",
+                        "meta": {
+                          "name": "remove_some_btn"
+                        },
+                        "position": {
+                          "grow": 0,
+                          "shrink": 0,
+                          "basis": "auto"
+                        },
+                        "props": {
+                          "text": "Remove selected",
+                          "style": {
+                            "whiteSpace": "nowrap",
+                            "height": "32px",
+                            "backgroundColor": "var(--containerNested)",
+                            "color": "var(--label)"
+                          }
+                        },
+                        "events": {
+                          "component": {
+                            "onActionPerformed": {
+                              "config": {
+                                "script": "\timport themepack\n\tpicked = set(r['label'] for r in self.view.custom.selected or [])\n\tnames = [t['id'] for t in self.view.custom.themes\n\t\tif t['label'] in picked and t['kind'] == 'custom']\n\tthemepack.uninstall_some(names)\n\tself.view.custom.selected = []\n\tself.view.custom.tick += 1"
+                              },
+                              "scope": "G",
+                              "type": "script"
+                            }
+                          }
+                        },
+                        "propConfig": {
+                          "props.enabled": {
+                            "binding": {
+                              "type": "expr",
+                              "config": {
+                                "expression": "len({view.custom.selected}) > 0"
+                              }
                             }
                           }
                         }
@@ -784,6 +867,11 @@
             "top": false,
             "bottom": false
           },
+          "selection": {
+            "mode": "multiple interval",
+            "enableRowSelection": true,
+            "data": []
+          },
           "columns": [
             {
               "field": "preview",
@@ -839,6 +927,15 @@
               "type": "property",
               "config": {
                 "path": "view.custom.tblheight"
+              }
+            }
+          },
+          "props.selection.data": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.selected",
+                "bidirectional": true
               }
             }
           }

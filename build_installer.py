@@ -363,6 +363,22 @@ def build_themepack_code(themes, version):
     lines.append('    return removed')
     lines.append('')
     lines.append('')
+    lines.append('def install_some(names):')
+    lines.append('    """Install the named themes with one scan. Names outside THEMES are')
+    lines.append('    skipped, not raised: the selection can hold stock or user rows."""')
+    lines.append('    done = [n for n in THEME_ORDER if n in (names or [])]')
+    lines.append('    for name in done:')
+    lines.append('        _write_theme_files(name)')
+    lines.append('    if done:')
+    lines.append('        _rescan()')
+    lines.append('    return done')
+    lines.append('')
+    lines.append('')
+    lines.append('def uninstall_some(names):')
+    lines.append('    """Remove the named themes. Same whitelist as install_some()."""')
+    lines.append('    return [n for n in THEME_ORDER if n in (names or []) and uninstall(n)]')
+    lines.append('')
+    lines.append('')
     lines.append('# ---- optional stock-theme update ----------------------------------------')
     lines.append('# Installing the custom themes NEVER touches a stock theme. Separately and')
     lines.append('# optionally, the four ON-DISK stock variants can take a small additions')
@@ -668,6 +684,7 @@ def build_view_json(themes, version):
         "custom": {
             "tick": 0,
             "themes": [],
+            "selected": [],
             # A table gets an explicit height or it renders as a header with
             # nothing under it, and the row count is no longer a constant now
             # that anyone can make a theme.
@@ -739,6 +756,9 @@ def build_view_json(themes, version):
                     "props": {
                         "data": [],
                         "pager": {"top": False, "bottom": False},
+                        "selection": {"mode": "multiple interval",
+                                      "enableRowSelection": True,
+                                      "data": []},
                         "columns": [
                             {
                                 # The picture first, so the table reads as the
@@ -784,6 +804,13 @@ def build_view_json(themes, version):
                             "binding": {
                                 "type": "property",
                                 "config": {"path": "view.custom.tblheight"},
+                            }
+                        },
+                        "props.selection.data": {
+                            "binding": {
+                                "type": "property",
+                                "config": {"path": "view.custom.selected",
+                                           "bidirectional": True},
                             }
                         },
                     },
@@ -1450,8 +1477,30 @@ def _action_scripts():
         "\t\tposition={'width': 560, 'height': 590})"
     )
 
+    # The table writes its selected rows to view.custom.selected. Those rows
+    # carry only the shown columns, not id, so map back through the label.
+    pick = (
+        "\tpicked = set(r['label'] for r in self.view.custom.selected or [])\n"
+        "\tnames = [t['id'] for t in self.view.custom.themes\n"
+        "\t\tif t['label'] in picked and t['kind'] == 'custom']\n"
+    )
+    install_some_script = (
+        "\timport themepack\n" + pick +
+        "\tthemepack.install_some(names)\n"
+        "\tself.view.custom.selected = []\n"
+        "\tself.view.custom.tick += 1"
+    )
+    remove_some_script = (
+        "\timport themepack\n" + pick +
+        "\tthemepack.uninstall_some(names)\n"
+        "\tself.view.custom.selected = []\n"
+        "\tself.view.custom.tick += 1"
+    )
+
     return {"install": install_all_script,
             "remove": remove_all_script,
+            "install_some": install_some_script,
+            "remove_some": remove_some_script,
             "update_stock": update_stock_script,
             "restore_stock": restore_stock_script,
             "switcher": open_switcher_script}
@@ -1528,6 +1577,13 @@ def _act_button(name, text, script, kind="normal"):
                 "config": {"script": script}, "scope": "G", "type": "script"}}}}
 
 
+def _when_selected(button):
+    button["propConfig"] = {"props.enabled": {"binding": {
+        "type": "expr",
+        "config": {"expression": "len({view.custom.selected}) > 0"}}}}
+    return button
+
+
 def _action_grid(themes):
     """The top of the Installer: three cards of related buttons.
 
@@ -1560,11 +1616,19 @@ def _action_grid(themes):
                      "gateway restart -- a session already open picks them up "
                      "when it reloads. Safe to re-run: it overwrites the "
                      "gateway's copies, which is also how you repair them "
-                     "after an Ignition upgrade.",
-                     [_act_button("install_all_btn", "Install",
+                     "after an Ignition upgrade. To install or remove only "
+                     "some, select their rows in the table below (Ctrl-click "
+                     "for more than one).",
+                     [_act_button("install_all_btn", "Install all",
                                   scripts["install"], kind="primary"),
-                      _act_button("remove_all_btn", "Remove",
-                                  scripts["remove"])],
+                      _act_button("remove_all_btn", "Remove all",
+                                  scripts["remove"]),
+                      _when_selected(_act_button(
+                          "install_some_btn", "Install selected",
+                          scripts["install_some"])),
+                      _when_selected(_act_button(
+                          "remove_some_btn", "Remove selected",
+                          scripts["remove_some"]))],
                      # Says PRE-PACKAGED, because a theme
                      # made in the Editor is not one of them and must not read
                      # as something Remove would take away. install()/
