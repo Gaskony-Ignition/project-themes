@@ -5,7 +5,7 @@ same two. This project adds ten more as native gateway config resources, so
 they restyle every stock component on every project on the gateway with no
 parent project, no project stylesheet and no style classes required.
 
-> **Not an Inductive Automation product, and not supported by Inductive Automation.** Personal work, largely built with AI tools and tested for one purpose on one gateway. Take the ideas; fork and review it before it goes near production. [NOTICE.md](NOTICE.md) says more.
+> **Not an Inductive Automation product, and not supported by Inductive Automation.** Independent work, largely built with AI tools and tested for one purpose on one gateway. Take the ideas; fork and review it before it goes near production. [NOTICE.md](NOTICE.md) says more.
 
 ## Why this exists
 
