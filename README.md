@@ -1,5 +1,7 @@
 # Ignition Themes — ten Perspective gateway themes
 
+**Archived.** The ten themes, their generator and the installer now live in [toolbox-theme-manager](https://github.com/Gaskony-Ignition/toolbox-theme-manager). Releases here stay downloadable.
+
 Stock Ignition gives a Perspective session six themes, all variations on the
 same two. This project adds ten more as native gateway config resources, so
 they restyle every stock component on every project on the gateway with no
