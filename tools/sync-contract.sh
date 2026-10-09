@@ -43,4 +43,4 @@ for f in packs/*.json; do
   V2="$V2" PACK="$pack" STOP="$CHROME_START" python3 tools/_sync_contract_pack.py
 done
 
-echo "contract synced from $SRC -- rerun build_theme.py + build_installer.py"
+echo "contract synced from $SRC -- rerun build_theme.py"

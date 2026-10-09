@@ -1,4 +1,4 @@
-# Ignition Themes — ten Perspective gateway themes, installed by one button
+# Ignition Themes — ten Perspective gateway themes
 
 Stock Ignition gives a Perspective session six themes, all variations on the
 same two. This project adds ten more as native gateway config resources, so
@@ -12,8 +12,7 @@ parent project, no project stylesheet and no style classes required.
 A look and feel that every project on a gateway should share is normally a
 parent project every consumer must inherit. A theme is a gateway config
 resource instead — it reaches every project without anyone inheriting
-anything, and it installs by importing one Perspective project and pressing a
-button.
+anything, and it installs by copying a folder of CSS and running a config scan.
 
 ## What it looks like
 
@@ -57,46 +56,21 @@ parent project — see [docs/INTERNALS.md](docs/INTERNALS.md#the-style-class-con
 Every theme meets WCAG 2.1 AA colour contrast for text and control edges,
 draws a 2px keyboard focus ring, and honours the operating system's reduced
 motion setting. The build fails if a theme drops below the thresholds — see
-[docs/INTERNALS.md](docs/INTERNALS.md#accessibility). The installer's own screens
-meet WCAG 2.1 AA too, apart from limits in Perspective itself: there is no page
-language setting, and some chart and table internals are out of reach.
+[docs/INTERNALS.md](docs/INTERNALS.md#accessibility).
 
 `out/themes.json` carries the same theme list as data (`id`, `label`, `dark`,
 `source_pack`) for anything that wants to build a picker from it.
 
 ## How to use it
 
-### Install (Theme Installer project)
+### Install
 
-`Theme_Installer-<VERSION>.zip` comes with each release. It embeds every
-theme's files as data inside a gateway-scope script, so importing the project
-*is* shipping the payload:
+The easiest way is the
+[Toolbox Theme Manager](https://github.com/Gaskony-Ignition/toolbox-theme-manager)
+project, which installs any or all of the ten from a page, with no shell access
+and no separate scan.
 
-1. Gateway web UI → **Config → Projects → Import**, pick
-   `Theme_Installer-<VERSION>.zip`.
-2. Open `<gateway>/data/perspective/client/Theme_Installer`.
-3. Press **Install**. It writes the files and runs the config scan itself —
-   no separate "Scan File System" step, no gateway restart and no credential.
-   The status table flips to "Installed" a couple of seconds later.
-4. Optional: delete the `Theme_Installer` project afterwards. It is
-   parent-free, and removing it does not touch the themes it wrote — those are
-   gateway config resources, not project resources.
-
-**Install** is safe to re-run — it overwrites the gateway's copies with the
-embedded ones, which is also the repair path if an Ignition upgrade damages an
-installed theme. **Remove** deletes them through `system.config.delete()`.
-Both only ever touch these ten — a stock theme, or one you made yourself, is
-left alone.
-
-Two further buttons are optional: **Update** adds themed scrollbars and a
-`color-scheme` declaration to Ignition's four on-disk stock variants without
-changing their look, and **Restore** puts them back. See
-[docs/INTERNALS.md](docs/INTERNALS.md#updating-the-stock-themes-optional).
-
-A **Customise** page lets you make a theme of your own from any of the ten,
-with a live preview that repaints on every save.
-
-Prefer installing the files directly — `./install.sh --data-dir`,
+Or install the files directly — `./install.sh --data-dir`,
 `--docker <container>` or `--ssh <host> --data-dir` — to inspect or script the
 install without a Gateway UI round-trip, or to deploy to several gateways from
 one place. See [docs/INTERNALS.md](docs/INTERNALS.md#installing-the-files-by-hand).
@@ -111,8 +85,8 @@ new theme. No gateway restart is required.
 A session's theme is `session.props.theme` — bindable and session-wide, as
 opposed to the page-scoped `system.perspective.setTheme()`. Bind a dropdown to
 it, build the options from `out/themes.json`, or use one of the two copy-me
-switchers that ship with `Theme_Installer`: `views/ThemeDropdown` (a 34px
-dropdown) and `views/SelectorPopup` (a swatch-grid popup). Both list what the
+switchers in `selector-popup/`: `ThemeDropdown` (a 34px dropdown) and
+`SelectorPopup` (a swatch-grid popup). Both list what the
 gateway has rather than what this repo ships. See
 [selector-popup/README.md](selector-popup/README.md) for how to embed either
 one in another project.
@@ -123,9 +97,7 @@ one in another project.
 
 ```bash
 python3 build_theme.py       # regenerate out/ (always wipes + rebuilds)
-python3 build_installer.py   # regenerate installer-project/ from out/
 ./package.sh                 # -> dist/ignition-themes-<VERSION>.zip
-                             # -> dist/Theme_Installer-<VERSION>.zip
 ```
 
 No third-party dependencies — the chart-scale generator uses only the
@@ -141,11 +113,9 @@ AA; `tools/check_alarm_contrast.py` does the same for each alarm severity's
 text, time and badge against that row's own rendered background; `package.sh`
 runs both and refuses to package on a failure.
 
-`VERSION` is a plain one-line file, bumped by hand before packaging; neither
-`build_installer.py` nor `package.sh` touches it. `package.sh` refuses to run
-if `out/`, `out/themes.json` or
-`installer-project/Theme_Installer/project.json` is missing, rather than
-silently packaging a stale or empty `dist/`. It also runs the repo's
+`VERSION` is a plain one-line file, bumped by hand before packaging; `package.sh`
+does not touch it. `package.sh` refuses to run if `out/` or `out/themes.json`
+is missing, rather than silently packaging a stale or empty `dist/`. It also runs the repo's
 README/tree gate first; bypass deliberately with `--skip-readme-check`.
 
 ## Boundaries

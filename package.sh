@@ -1,13 +1,10 @@
 #!/bin/sh
 # package.sh -- build dist/ignition-themes-<VERSION>.zip
-# AND dist/Theme_Installer-<VERSION>.zip.
 #
-# POSIX sh. Does NOT regenerate anything -- run
-# `python3 build_theme.py` (rebuilds out/) and
-# `python3 build_installer.py` (rebuilds
-# installer-project/Theme_Installer/ from out/) first. This always packages
-# the current state of both, not a stale one. Refuses to run if either input
-# is missing, rather than silently packaging an empty/partial release.
+# POSIX sh. Does NOT regenerate anything -- run `python3 build_theme.py`
+# (rebuilds out/) first. This always packages the current state of out/, not a
+# stale one. Refuses to run if it is missing, rather than silently packaging
+# an empty/partial release.
 #
 # Contents of ignition-themes-<VERSION>.zip (all inside one top-level
 # ignition-themes-<VERSION>/ folder, so extracting it never sprays files into
@@ -17,14 +14,6 @@
 #   - install.sh (this repo's copy -- see below for why it's shared)
 #   - RELEASE-README.md
 #   - LICENSE (Apache-2.0; the project is public, so the artefact carries it)
-#
-# Contents of Theme_Installer-<VERSION>.zip: the CONTENTS of
-# installer-project/Theme_Installer/ (project.json at the zip root, no
-# wrapping folder) -- an Ignition 8.3 project import zip, the same layout
-# tools/build_exports.py uses for this repo's own exports/*.zip (verified
-# against a real Exchange package export; not inferred). Import it in the
-# Designer or the Gateway's Projects page, open
-# /data/perspective/client/Theme_Installer, click "Install all themes".
 #
 # RELEASE-README.md's quick start mirrors README.md's "How to use it" by hand; edit both if install steps change.
 #
@@ -50,21 +39,6 @@ if [ "$_skip" -ne 1 ]; then
     else
         echo "readme-gate.sh not found above $_repo; gate skipped" >&2
     fi
-fi
-
-# Accessibility gate (a11y.json). Checks the installer as deployed, so deploy
-# the current build first. Blocking; bypass deliberately with --skip-a11y-check.
-_skip_a11y=0
-for _a in "$@"; do [ "$_a" = "--skip-a11y-check" ] && _skip_a11y=1; done
-if [ "$_skip_a11y" -ne 1 ]; then
-    _repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
-    _a11y=""; _d="$_repo"
-    while [ "$_d" != / ]; do
-        [ -x "$_d/modules/a11y-gate.sh" ] && { _a11y="$_d/modules/a11y-gate.sh"; break; }
-        _d=$(dirname "$_d")
-    done
-    [ -n "$_a11y" ] || { echo "a11y-gate.sh not found above $_repo; pass --skip-a11y-check" >&2; exit 1; }
-    "$_a11y" "$_repo" || { echo "accessibility gate failed: fix the findings or pass --skip-a11y-check" >&2; exit 1; }
 fi
 
 # Lint gate (ign-lint + pylint via modules/lint-gate.sh). Blocking; bypass deliberately with --skip-lint-check.
@@ -95,7 +69,6 @@ python3 tools/check_alarm_contrast.py || { echo "package.sh: an alarm row misses
 [ -f install.sh ] || { echo "package.sh: install.sh not found" >&2; exit 1; }
 [ -f RELEASE-README.md ] || { echo "package.sh: RELEASE-README.md not found" >&2; exit 1; }
 [ -f LICENSE ] || { echo "package.sh: LICENSE not found" >&2; exit 1; }
-[ -f installer-project/Theme_Installer/project.json ] || { echo "package.sh: installer-project/Theme_Installer/project.json not found -- run build_installer.py first" >&2; exit 1; }
 
 RELEASE_NAME="ignition-themes-$VERSION"
 DIST_DIR="dist"
@@ -126,8 +99,6 @@ cp out/themes.json "$STAGE_DIR/themes.json"
 cp install.sh "$STAGE_DIR/install.sh"
 chmod +x "$STAGE_DIR/install.sh"
 cp RELEASE-README.md "$STAGE_DIR/RELEASE-README.md"
-# The project zip below is a strict Ignition project import zip and takes no
-# stray files, so the licence travels in this pack only. Both are Apache-2.0.
 cp LICENSE "$STAGE_DIR/LICENSE"
 
 ( cd "$DIST_DIR" && rm -f "$RELEASE_NAME.zip" && zip -rq "$RELEASE_NAME.zip" "$RELEASE_NAME" )
@@ -137,25 +108,3 @@ rm -rf "$STAGE_DIR"
 echo "package.sh: wrote $ZIP_PATH ($theme_count theme(s))"
 echo "package.sh: contents:"
 unzip -l "$ZIP_PATH"
-
-# ---------------------------------------------------------------------------
-# Theme_Installer-<VERSION>.zip -- a project import zip. project.json goes at
-# the zip ROOT (no wrapping folder), same layout tools/build_exports.py uses
-# for this repo's own exports/*.zip -- see that script's docstring, it
-# verified the format against a real Exchange package export rather than
-# guessing. Zipped straight from installer-project/Theme_Installer/ itself
-# (no staging copy needed -- there's nothing to filter out, build_installer.py
-# writes only project files there).
-# ---------------------------------------------------------------------------
-
-INSTALLER_ZIP_NAME="Theme_Installer-$VERSION"
-INSTALLER_ZIP_PATH="$DIST_DIR/$INSTALLER_ZIP_NAME.zip"
-
-echo "package.sh: building $INSTALLER_ZIP_PATH"
-
-rm -f "$INSTALLER_ZIP_PATH"
-( cd installer-project/Theme_Installer && zip -rq "$OLDPWD/$INSTALLER_ZIP_PATH" . -x '__pycache__/*' )
-
-echo "package.sh: wrote $INSTALLER_ZIP_PATH"
-echo "package.sh: contents:"
-unzip -l "$INSTALLER_ZIP_PATH"

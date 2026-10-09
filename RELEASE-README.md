@@ -23,18 +23,13 @@ Every theme covers 110 of the gateway's 120 built-in theme-variable surface, not
 
 ## Quick start
 
-1. Gateway web UI → **Config → Projects → Import**, pick `Theme_Installer-<VERSION>.zip` (shipped alongside this zip).
-2. Open `<gateway>/data/perspective/client/Theme_Installer`.
-3. Press **Install**. It writes the files and runs the config scan itself — no separate "Scan File System" step, no gateway restart, no credential. The status table flips to "Installed" for all ten rows a couple of seconds later.
-4. Optional: delete the `Theme_Installer` project afterwards — it is parent-free, and removing it does not touch the themes it wrote.
+The easiest way is the Toolbox Theme Manager project (https://github.com/Gaskony-Ignition/toolbox-theme-manager), which installs any or all of the ten from a page and runs the config scan for you.
 
-Re-running **Install** overwrites the gateway's copies with the embedded ones — the repair path if an Ignition upgrade damages an installed theme. **Remove** deletes them through `system.config.delete()`, no scan needed. Neither ever touches a stock theme.
-
-Once installed, the page's **Theme switcher** button opens a popup of swatches, and the **Theme** dropdown beside it lists the same themes in a smaller control. Both are copy-me artefacts that list what **the gateway** has rather than what this release ships, so either works unchanged in a project on a gateway with none of these themes: copy `views/ThemeDropdown` and place it with an Embedded View component (`props.path = "ThemeDropdown"`, about 260×34), or copy `views/SelectorPopup` and open it with `system.perspective.openPopup('theme-selector', 'SelectorPopup', title='Theme switcher', modal=True, draggable=True, resizable=False, overlayDismiss=True, viewportBound=True, position={'width': 560, 'height': 590})`. Neither needs a script package, a parent project or any prop wiring.
-
-Prefer the `install.sh` route (`--data-dir`, `--docker <container>`, or `--ssh <host> --data-dir`) to inspect or script the install without a Designer/Gateway UI round-trip, or to deploy to several gateways from one place — it copies every theme directory into `<data-dir>/config/resources/core/com.inductiveautomation.perspective/themes/<theme-id>/`, idempotent and safe to re-run, and refuses to touch `light`, `dark`, `light-cool`, `light-warm`, `dark-cool`, `dark-warm`.
+Or use the `install.sh` route (`--data-dir`, `--docker <container>`, or `--ssh <host> --data-dir`) to inspect or script the install without a Gateway UI round-trip, or to deploy to several gateways from one place — it copies every theme directory into `<data-dir>/config/resources/core/com.inductiveautomation.perspective/themes/<theme-id>/`, idempotent and safe to re-run, and refuses to touch `light`, `dark`, `light-cool`, `light-warm`, `dark-cool`, `dark-warm`.
 
 Themes are gateway **config resources**, not project resources: register them via **Config → Platform → Overview → "Scan File System"** — a different button from the Projects page's own scan, which will not register a new theme. No gateway restart is required.
+
+The repo's `selector-popup/` folder has two copy-me views (a swatch popup and a dropdown) that let a user switch their own session's theme and list whatever the gateway has.
 
 Select a theme by binding `session.props.theme` (bindable, session-wide — not page-scoped; that's `system.perspective.setTheme()` instead). `themes.json` (included in this pack) carries the id/label/dark-flag list as data if you'd rather build the options dynamically than hand-write them.
 

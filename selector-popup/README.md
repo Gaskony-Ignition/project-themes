@@ -3,8 +3,8 @@
 Two copy-me views, either of which lets a user change the theme of their own
 session. A project takes whichever suits it, or both:
 
-| File | `Theme_Installer` view | What it is |
-| ---- | ---------------------- | ---------- |
+| File | Project view | What it is |
+| ---- | ------------ | ---------- |
 | `SelectorPopup.view.json` | `views/SelectorPopup` | The swatch grid, opened as a popup. Each theme is a button in its own colours. |
 | `ThemeDropdown.view.json` | `views/ThemeDropdown` | One dropdown, 34px tall. Embeds in a header or a settings row. |
 

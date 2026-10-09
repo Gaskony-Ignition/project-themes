@@ -6,30 +6,14 @@ view works, and where everything lives in the repo.
 
 ## Updating the stock themes (optional)
 
-Ignition's stock themes ship no scrollbar styling and no `color-scheme`
-declaration, so a dark stock session shows the OS's light scrollbar and
-Chrome's auto dark mode can repaint SVG fills. **Update** adds
-exactly those two things to the four on-disk stock variants (`light-cool`,
-`light-warm`, `dark-cool`, `dark-warm`) as one `theme-additions.css` plus one
-`@import` line appended to each variant's `index.css`. Their look does not
-change — verified, the served CSS diff is purely the appended block — and the
-additions read the variant's own `var(--border)` so the scrollbar matches each
-variant. **Restore** deletes the file and the line, verified
-byte-identical served CSS afterwards.
-
-`light` and `dark` live inside the Perspective module jar with no files on
-disk, so they are never touched; pick `light-cool`/`dark-cool` to get the
-additions.
-
-Upgrades were tested empirically on a throwaway gateway, 8.3.8 → 8.3.9 on the
-same data volume: the custom themes and the updated stock variants all
-survived intact. A future version that ships changed stock themes may still
-replace the variants' files — if a variant's row ever drops back to "Stock -
-not modified", press **Update** again.
+Adding themed scrollbars and a `color-scheme` line to Ignition's four on-disk
+stock variants, and taking them back off, is done by the
+[Toolbox Theme Manager](https://github.com/Gaskony-Ignition/toolbox-theme-manager);
+its docs describe the mechanism.
 
 ## Adding a theme switcher
 
-`Theme_Installer` ships **two**, either of which drops into any project to let
+This repo ships **two** in `selector-popup/`, either of which drops into any project to let
 a user change their own session's theme, with no parent project and no style
 classes:
 
@@ -85,9 +69,7 @@ clicked; nothing else needs wiring up.
 
 Both views are hand-authored and commit-tracked at
 `selector-popup/SelectorPopup.view.json` and
-`selector-popup/ThemeDropdown.view.json`; `build_installer.py` copies them into
-the generated project verbatim, and only their `resource.json` is built fresh
-each run.
+`selector-popup/ThemeDropdown.view.json`.
 
 ## What a theme covers
 
@@ -300,9 +282,6 @@ props). Doubling the class — `.psc-st\/x\/y.psc-st\/x\/y`, specificity 0-2-0 �
 beats IA's 0-1-0 component rules and still loses to inline, which is exactly
 how a real style class behaves.
 
-The installer's Customise page says how many classes a theme publishes and
-whether that is the standard contract, read from the gateway live.
-
 ## Installing the files by hand
 
 See [../README.md#how-to-use-it](../README.md#how-to-use-it) for the manual
@@ -354,32 +333,15 @@ Everything else about the repo layout and the build steps is in
   scales, writes `out/<id>/`.
 - `build_contract.py` — appends the `--st-*` / `st/...` contract payload to
   each theme's `globals.css`. Its inputs are vendored under `contract/`.
-- `build_installer.py` — regenerates `installer-project/Theme_Installer/` from
-  scratch, embedding every theme's file contents as data in a gateway-scope
-  script (`ignition/script-python/themepack/code.py`). Data-dir resolution is
-  `IgnitionGateway.get().getSystemManager().getDataDir()`, verified live on
-  8.3.8. Install writes the files then requests one config scan; uninstall
-  goes through `system.config.delete()` instead. Every write is whitelisted
-  against whatever `out/` held at build time — there is no code path that can
-  reach `light`, `dark`, `light-cool`, `light-warm`, `dark-cool` or
-  `dark-warm`.
 - `out/<theme-id>/` — the ten generated theme directories, each with
   `config.json`, `index.css`, `variables.css`, `globals.css` and
   `resource.json`. This is exactly what gets deployed to
   `data/config/resources/core/com.inductiveautomation.perspective/themes/<id>/`.
-- `insight/` — the capture scripts for reading a live gateway's stock
-  palettes, for the audits above.
-- `editor/` — the hand-authored half of the Customise page's script library,
-  appended verbatim to the generated `themepack/code.py` by
-  `build_installer.py`.
 - `selector-popup/` — the two copy-me switcher views as hand-authored JSON.
-  `build_installer.py` copies them into the generated project verbatim and
-  builds only their `resource.json`.
 - `themes-test-project/Themes_Test/` — a bare Perspective project with no
   parent, no stylesheet resource and no style classes, for proving a theme
   restyles a project on its own and for shooting the README screenshots.
-  Import it alongside the installer if you want to see a theme applied to
-  something other than the installer's own pages.
+  Import it to see a theme applied to a project that has nothing of its own.
 - `tools/sync-packs.sh` — refuses to run: `packs/` here is now the source of
   truth for these ten, not a mirror of anything else.
 - `docs/THEMES-EVALUATION.md` — the evaluation this project grew out of: what

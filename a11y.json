@@ -1,8 +1,0 @@
-{
-  "gateway": "module-testing",
-  "projects": [
-    {"name": "Theme-Installer",
-     "pageConfig": "installer-project/Theme_Installer/com.inductiveautomation.perspective/page-config/config.json"}
-  ],
-  "exceptions": []
-}

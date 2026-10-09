@@ -17,8 +17,7 @@ if [ ! -d "$SRC" ]; then
   echo "sync-packs: no pack source at $SRC" >&2
   echo "sync-packs: ignition-styles-template-v2 is retired and no copy is" >&2
   echo "            known to exist. packs/ here is the source of truth;" >&2
-  echo "            edit those files directly, then rerun build_theme.py and" >&2
-  echo "            build_installer.py." >&2
+  echo "            edit those files directly, then rerun build_theme.py." >&2
   exit 1
 fi
 
@@ -27,4 +26,4 @@ for p in aurora-violet aurora-teal leather-night-tan leather-parchment-tan \
          industrial-control-cyan industrial-day-cyan; do
   cp "$SRC/$p.json" packs/
 done
-echo "packs synced from $SRC -- rerun build_theme.py + build_installer.py"
+echo "packs synced from $SRC -- rerun build_theme.py"
